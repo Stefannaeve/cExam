@@ -143,8 +143,12 @@ void freeLinkedList(LIST *list) {
     }
 }
 
-void printAllNodes(LIST *list) {
+int printAllNodes(LIST *list) {
     TABLERESERVATION *current = list->pHead;
+    if(current == NULL) {
+        printf("You have no reservations\n");
+        return -1;
+    }
     while (current != NULL) {
         printf("Table Number: %d\n", current->iTableNumber);
         printf("Seats: %d\n", current->seats);
@@ -153,6 +157,7 @@ void printAllNodes(LIST *list) {
         current = current->pNextReservation;
     }
     printf("\n");
+    return 0;
 }
 
 void printAllNodesBackwards(LIST *list) {
@@ -248,10 +253,11 @@ int printReservationOrdersAndSum(LIST *list, const char *name) {
     return 0;
 }
 
-int deleteSpecificReservation(LIST *list, int index) {
+int deleteSpecificReservation(LIST *list, int tableNumber) {
+    int index = tableNumber - 1;
     if (index < 0) {
         errno = EINVAL;
-        printf("index position cannot be negative - Error message: %s\n", strerror(errno));
+        printf("tableNumber position cannot be negative - Error message: %s\n", strerror(errno));
         return -1;
     }
 

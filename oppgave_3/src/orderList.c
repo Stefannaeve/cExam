@@ -74,13 +74,17 @@ void orderFreeLinkedList(ORDER_LIST *list) {
 }
 
 void orderPrintAllOrders(ORDER_LIST *list) {
+    int count = 0;
     ORDER *current = list->pHead;
     while (current != NULL) {
-        printf("Food:\n");
+        if(count == 0){
+            printf("Food:\n");
+        }
         printf("     Name: %s\n", current->name);
         printf("     Food Description: %s\n", current->foodDescription);
-        printf("     Price: %d\n", current->price);
+        printf("     Price: %d\n\n", current->price);
         current = current->pNextOrder;
+        count++;
     }
     printf("\n");
 }

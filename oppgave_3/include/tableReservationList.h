@@ -32,10 +32,10 @@ typedef struct LIST {
 int add(LIST *list, const SENT_TABLE_RESERVATION *sentTableReservation);
 int addAt(LIST *list, const SENT_TABLE_RESERVATION *sentTableReservation, int indexOffset, int position);
 void freeLinkedList(LIST *list);
-void printAllNodes(LIST *list);
+int printAllNodes(LIST *list);
 void printAllNodesBackwards(LIST *list);
 int printSpecificNodeAndFood(LIST *list, int tableNumber);
-int deleteSpecificReservation(LIST *list, int index);
+int deleteSpecificReservation(LIST *list, int tableNumber);
 int addFoodToSpecificReservation(LIST *list, int tableNumber, const SENT_ORDER *sentOrder);
 
 #endif //TASK_TABLERESERVATIONLIST_H
