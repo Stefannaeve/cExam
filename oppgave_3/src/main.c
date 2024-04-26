@@ -1,12 +1,15 @@
 #include <stdio.h>
 #include "tableReservationList.h"
 #include "orderList.h"
+#include "menuApplication.h"
 
 int main(int argc, char *argv[]){
     if (argc != 1){
         printf("%s takes no arguments\n", argv[0]);
         return -1;
     }
+
+    menuApplication();
 
     LIST list = {NULL, NULL, 0};
     SENT_TABLE_RESERVATION sentTableReservation = { 1, 4, 12, "Fredrik"};

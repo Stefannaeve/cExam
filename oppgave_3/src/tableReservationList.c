@@ -52,6 +52,7 @@ int add(LIST *list, const SENT_TABLE_RESERVATION *sentTableReservation) {
     if (list->pHead == NULL) {
         list->pHead = temp;
         list->pTail = temp;
+        temp->iReservationNumber = 1;
         return 0;
     }
 

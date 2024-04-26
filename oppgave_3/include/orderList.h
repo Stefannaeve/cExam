@@ -2,8 +2,8 @@
 // Created by stefannaeve on 4/26/24.
 //
 
-#ifndef TASK_ORDERLIST_H
-#define TASK_ORDERLIST_H
+#ifndef __TASK_ORDERLIST_H__
+#define __TASK_ORDERLIST_H__
 
 typedef struct _SENT_ORDER {
     char *name;
@@ -33,4 +33,4 @@ void printSumForSpecificName(ORDER_LIST *list, char *name);
 int orderPrintSpecificNode(ORDER_LIST *list, int index);
 int orderDeleteSpecificNode(ORDER_LIST *list, int index);
 
-#endif //TASK_ORDERLIST_H
+#endif //__TASK_ORDERLIST_H__

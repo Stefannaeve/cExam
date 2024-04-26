@@ -11,4 +11,6 @@ add_executable(task
         src/tableReservationList.c
         include/tableReservationList.h
         src/orderList.c
-        include/orderList.h)
+        include/orderList.h
+        src/menuApplication.c
+        include/menuApplication.h)

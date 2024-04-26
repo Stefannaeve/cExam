@@ -1,7 +1,7 @@
 #include "orderList.h"
 
-#ifndef TASK_TABLERESERVATIONLIST_H
-#define TASK_TABLERESERVATIONLIST_H
+#ifndef __TASK_TABLERESERVATIONLIST_H__
+#define __TASK_TABLERESERVATIONLIST_H__
 
 #define START 0
 #define END 1
@@ -42,4 +42,4 @@ int printReservationOrdersAndSum(LIST *list, const int reservationNumber);
 int deleteSpecificReservation(LIST *list, int reservationNumber);
 int addFoodToSpecificReservation(LIST *list, int reservationNumber, const SENT_ORDER *sentOrder);
 
-#endif //TASK_TABLERESERVATIONLIST_H
+#endif //__TASK_TABLERESERVATIONLIST_H__

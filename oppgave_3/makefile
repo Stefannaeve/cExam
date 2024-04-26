@@ -11,10 +11,10 @@ RM = rm -f
 OBJDIR = obj
 
 # PATHS
-_DEPS = main.h tableReservationList.h orderList.h
+_DEPS = main.h tableReservationList.h orderList.h menuApplication.h
 DEPS = $(patsubst %, $(INCLDIR)/%, $(_DEPS))
 
-_OBJS = main.o tableReservationList.o orderList.o
+_OBJS = main.o tableReservationList.o orderList.o menuApplication.o
 OBJS = $(patsubst %, $(OBJDIR)/%, $(_OBJS))
 
 # RULES
