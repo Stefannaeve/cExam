@@ -1,4 +1,6 @@
 #ifndef __TASK_EKSAMEN_V24_OPPGAVE2_ALL_UPPER_H__
 #define __TASK_EKSAMEN_V24_OPPGAVE2_ALL_UPPER_H__
 
+bool isUpperCase(const char* str);
+
 #endif //__TASK_EKSAMEN_V24_OPPGAVE2_ALL_UPPER_H__

@@ -1,4 +1,6 @@
 #ifndef __TASK_EKSAMEN_V24_OPPGAVE2_HETEROGRAM_H__
 #define __TASK_EKSAMEN_V24_OPPGAVE2_HETEROGRAM_H__
 
+bool isHeterogram(const char* word);
+
 #endif //__TASK_EKSAMEN_V24_OPPGAVE2_HETEROGRAM_H__
