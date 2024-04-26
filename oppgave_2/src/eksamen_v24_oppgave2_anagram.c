@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
+#include "eksamen_v24_oppgave2_anagram.h"
 
 /* This function takes two pointers to words (char pointers) as arguments and returns true if the words are anagrams, and false if they are not.
 

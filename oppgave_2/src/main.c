@@ -9,6 +9,8 @@
 #include "eksamen_v24_oppgave2_heterogram.h"
 #include "eksamen_v24_oppgave2_palindrom.h"
 
+#include "main.h"
+
 #define MAX_STRINGS 20
 #define MAX_STRING_LENGTH 1024
 
@@ -21,11 +23,15 @@ typedef struct _TASK2_WORD_METADATA {
     bool bIsAnagram;
     bool bIsDisjoint;
     int iSize; // The length word (number of chars)
-    char szWord[]; // The word written «after» the struct
+    char *szWord; // The word written «after» the struct
 } TASK2_WORD_METADATA;
 
 int main(int argc, char *argv[]) {
     char strings[MAX_STRINGS][MAX_STRING_LENGTH];
+    int i = 0;
+    int length;
+    int index = 0;
+    FILE *binaryFile;
 
     memset(strings, 0, sizeof(strings));
 
@@ -35,27 +41,119 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    int index = 0;
+    index = 0;
     while (index < MAX_STRINGS && fgets(strings[index], MAX_STRING_LENGTH, file) != NULL) {
-        // Remove the newline character if necessary
-        strings[index][strcspn(strings[index], "\n")] = '\0';
+        strings[index][strcspn(strings[index], "\r")] = '\0';
         index++;
     }
 
-    TASK2_WORD_METADATA *pWordMetadata = (TASK2_WORD_METADATA *) malloc(sizeof(TASK2_WORD_METADATA) * index);
-
-    int i = 0;
-    while(i < index){
-        TASK2_WORD_METADATA *pWord = (TASK2_WORD_METADATA *) malloc(sizeof(TASK2_WORD_METADATA) + strlen(strings[i]) + 1);
-        pWord->iIndex = i + 1;
-        pWord->iSize = strlen(strings[i]);
-        strcpy(pWord->szWord, strings[i]);
-        pWord->bIsPalindrom = isPalindrome(pWord->szWord);
-
-        i++;
-    }
-
     fclose(file);
+
+    TASK2_WORD_METADATA *pWordMetadata = (TASK2_WORD_METADATA *) malloc(sizeof(TASK2_WORD_METADATA) * index);
+    if (pWordMetadata == NULL) {
+        printf("Memory allocation failed\n");
+    } else {
+        while (i < index) {
+            length = strlen(strings[i]);
+            TASK2_WORD_METADATA *pWord = (TASK2_WORD_METADATA *) malloc(sizeof(TASK2_WORD_METADATA) + length + 1);
+            if (pWord == NULL) {
+                printf("Memory allocation failed\n");
+                break;
+            }
+            pWord->iIndex = i + 1;
+            pWord->iSize = length;
+            pWord->szWord = (char *) malloc(sizeof(char) * length + 1);
+            if (pWord->szWord == NULL) {
+                printf("Memory allocation failed\n");
+                break;
+            }
+            strcpy(pWord->szWord, strings[i]);
+            pWord->bIsPalindrom = isPalindrome(pWord->szWord);
+            pWord->bIsHeterogram = isHeterogram(pWord->szWord);
+            pWord->bIsUppercase = isUpperCase(pWord->szWord);
+            pWord->bIsLowercase = isLowerCase(pWord->szWord);
+
+            if (i > 0) {
+                pWord->bIsAnagram = isAnagram(pWordMetadata[0].szWord, pWord->szWord);
+                pWord->bIsDisjoint = areDisjoint(pWordMetadata[0].szWord, pWord->szWord);
+            } else {
+                pWord->bIsAnagram = false;
+                pWord->bIsDisjoint = false;
+            }
+
+            /* LEGACY CODE
+            if(i > 0){
+                pWordMetadata[i - 1].bIsAnagram = isAnagram(pWordMetadata[i - 1].szWord, pWord->szWord);
+                pWordMetadata[i - 1].bIsDisjoint = areDisjoint(pWordMetadata[i - 1].szWord, pWord->szWord);
+            } else {
+                pWordMetadata[i].bIsAnagram = false;
+                pWordMetadata[i].bIsDisjoint = false;
+            }
+             */
+
+            pWordMetadata[i] = *pWord;
+
+            free(pWord);
+
+            i++;
+        }
+
+        for (int j = 0; j < index; ++j) {
+            printf("Word %d: %s\n", pWordMetadata[j].iIndex, pWordMetadata[j].szWord);
+            printf("Is Palindrom: %s\n", pWordMetadata[j].bIsPalindrom ? "True" : "False");
+            printf("Is Heterogram: %s\n", pWordMetadata[j].bIsHeterogram ? "True" : "False");
+            printf("Is Uppercase: %s\n", pWordMetadata[j].bIsUppercase ? "True" : "False");
+            printf("Is Lowercase: %s\n", pWordMetadata[j].bIsLowercase ? "True" : "False");
+            printf("Is Anagram: %s\n", pWordMetadata[j].bIsAnagram ? "True" : "False");
+            printf("Is Disjoint: %s\n", pWordMetadata[j].bIsDisjoint ? "True" : "False");
+            printf("\n");
+        }
+
+        binaryFile = fopen("eksamen_v24_oppgave2.bin", "w+b");
+        if (binaryFile == NULL) {
+            printf("Binary file not found\n");;
+        } else {
+            TASK2_WORD_METADATA *buffer = malloc(index * sizeof(TASK2_WORD_METADATA));
+            if (buffer == NULL) {
+                printf("Memory allocation failed\n");
+            } else {
+
+                for (int j = 0; j < index; ++j) {
+                    fwrite(&pWordMetadata[j], sizeof(TASK2_WORD_METADATA), 1, binaryFile);
+                    fwrite(pWordMetadata[j].szWord, sizeof(char), pWordMetadata[j].iSize, binaryFile);
+                }
+
+                fseek(binaryFile, 0, SEEK_SET);
+
+                fread(buffer, sizeof(TASK2_WORD_METADATA), index, binaryFile);
+
+                for (int j = 0; j < index; ++j) {
+                    printf("Word %d: %s\n", buffer[j].iIndex, buffer[j].szWord);
+                    printf("Is Palindrom: %s\n", buffer[j].bIsPalindrom ? "True" : "False");
+                    printf("Is Heterogram: %s\n", buffer[j].bIsHeterogram ? "True" : "False");
+                    printf("Is Uppercase: %s\n", buffer[j].bIsUppercase ? "True" : "False");
+                    printf("Is Lowercase: %s\n", buffer[j].bIsLowercase ? "True" : "False");
+                    printf("Is Anagram: %s\n", buffer[j].bIsAnagram ? "True" : "False");
+                    printf("Is Disjoint: %s\n", buffer[j].bIsDisjoint ? "True" : "False");
+                    printf("\n");
+                }
+
+                fclose(binaryFile);
+
+                free(buffer);
+            } // malloc of buffer
+        } // open binary file
+
+        for (int k = 0; k < index; ++k) {
+            free(pWordMetadata[k].szWord);
+        }
+        free(pWordMetadata);
+
+    } // malloc of pWordMetadata
+
+
+
+    printf("\nClosing project...\n");
 
     return 0;
 }

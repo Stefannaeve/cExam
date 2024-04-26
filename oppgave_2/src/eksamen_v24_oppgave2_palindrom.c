@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
+#include "eksamen_v24_oppgave2_palindrom.h"
 
 /* This function takes a pointer to a word (a char pointer) as an argument and returns true if the word is a palindrome, and false if it is not.
 

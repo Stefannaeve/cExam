@@ -7,6 +7,12 @@ include_directories(include)
 
 add_executable(task
         src/main.c
+        src/eksamen_v24_oppgave2_all_lower.c
+        src/eksamen_v24_oppgave2_all_upper.c
+        src/eksamen_v24_oppgave2_anagram.c
+        src/eksamen_v24_oppgave2_disjoint.c
+        src/eksamen_v24_oppgave2_heterogram.c
+        src/eksamen_v24_oppgave2_palindrom.c
         include/eksamen_v24_oppgave2_all_lower.h
         include/eksamen_v24_oppgave2_all_upper.h
         include/eksamen_v24_oppgave2_anagram.h

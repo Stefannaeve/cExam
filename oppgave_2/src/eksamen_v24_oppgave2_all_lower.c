@@ -1,5 +1,5 @@
-
 #include <stdbool.h>
+#include "eksamen_v24_oppgave2_all_lower.h"
 
 /* In this function, we iterate through each character of the input string using a while loop. We then manually compare each character's ASCII value to the range of lowercase letters ('a' to 'z').
 
