@@ -7,4 +7,7 @@ include_directories(include)
 
 add_executable(task
         src/main.c
-        include/main.h)
+        include/main.h
+        src/tableReservationList.c
+        include/tableReservationList.h
+        src/orderList.c)
