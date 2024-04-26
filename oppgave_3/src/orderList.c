@@ -1,38 +1,16 @@
 #include <malloc.h>
 #include <string.h>
+#include <errno.h>
+#include "orderList.h"
 
 #define START 0
 #define END 1
 
-typedef struct _SENT_ORDER {
-    char *name;
-    char *foodDescription;
-    int price;
-} SENT_ORDER;
-
-typedef struct _ORDER {
-    struct _ORDER *pNextOrder;
-    char *name;
-    char *foodDescription;
-    int price;
-} ORDER;
-
-typedef struct _LIST {
-    ORDER *pHead;
-    ORDER *pTail;
-    int size;
-} LIST;
-
-void addToEnd(LIST *list, ORDER *temp);
-void freeLinkedList(LIST *list);
-void printAllNodes(LIST *list);
-int printSpecificNode(LIST *list, int index);
-int deleteSpecificNode(LIST *list, int index);
-
-int addAt(LIST *list, const SENT_ORDER *sentOrder) {
+int orderAdd(ORDER_LIST *list, const SENT_ORDER *sentOrder) {
     if (sentOrder == NULL) {
-        printf("Invalid input\n");
-        return 1;
+        errno = EINVAL;
+        printf("Struct cannot be NULL- Error message: %s\n", strerror(errno));
+        return -1;
     }
 
     ORDER *temp;
@@ -41,21 +19,24 @@ int addAt(LIST *list, const SENT_ORDER *sentOrder) {
 
     temp = (ORDER *) malloc(sizeof(ORDER) + iLengthOfName + 1 + iLengthOfFoodDescription + 1);
     if (temp == NULL) {
-        printf("Memory allocation failed\n");
-        return 1;
+        errno = ENOMEM;
+        printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
+        return -1;
     }
 
     temp->name = (char *) malloc(iLengthOfName + 1);
     if (temp->name == NULL) {
-        printf("Memory allocation failed\n");
-        return 1;
+        errno = ENOMEM;
+        printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
+        return -1;
     }
     strcpy(temp->name, sentOrder->name);
 
     temp->foodDescription = (char *) malloc(iLengthOfFoodDescription + 1);
     if (temp->foodDescription == NULL) {
-        printf("Memory allocation failed\n");
-        return 1;
+        errno = ENOMEM;
+        printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
+        return -1;
     }
     strcpy(temp->foodDescription, sentOrder->foodDescription);
 
@@ -69,19 +50,19 @@ int addAt(LIST *list, const SENT_ORDER *sentOrder) {
         return 0;
     }
 
-    addToEnd(list, temp);
+    orderAddToEnd(list, temp);
 
     return 0;
 }
 
-void addToEnd(LIST *list, ORDER *temp) {
+void orderAddToEnd(ORDER_LIST *list, ORDER *temp) {
     list->pTail->pNextOrder = temp;
     list->pTail = temp;
 
     list->size++;
 }
 
-void freeLinkedList(LIST *list) {
+void orderFreeLinkedList(ORDER_LIST *list) {
     ORDER *current = list->pHead;
     ORDER *next;
     while (current != NULL) {
@@ -92,7 +73,7 @@ void freeLinkedList(LIST *list) {
     }
 }
 
-void printAllNodes(LIST *list) {
+void orderPrintAllNodes(ORDER_LIST *list) {
     ORDER *current = list->pHead;
     while (current != NULL) {
         printf("Name: %s\n", current->name);
@@ -103,9 +84,10 @@ void printAllNodes(LIST *list) {
     printf("\n");
 }
 
-int printSpecificNode(LIST *list, int index) {
+int orderPrintSpecificNode(ORDER_LIST *list, int index) {
     if (index < 0) {
-        printf("Error: Index cannot be negative!\n");
+        errno = EINVAL;
+        printf("index position cannot be negative - Error message: %s\n", strerror(errno));
         return -1;
     }
 
@@ -116,7 +98,8 @@ int printSpecificNode(LIST *list, int index) {
         counter++;
     }
     if (current == NULL) {
-        printf("Index out of range!\n");
+        errno = ERANGE;
+        printf("Index position cannot be more than size of list - Error message: %s\n", strerror(errno));
         return -1;
     }
 
@@ -127,15 +110,17 @@ int printSpecificNode(LIST *list, int index) {
     return 0;
 }
 
-int deleteSpecificNode(LIST *list, int index) {
+int orderDeleteSpecificNode(ORDER_LIST *list, int index) {
     if (index < 0) {
-        printf("Error: Index cannot be negative!\n");
-        return 1;
+        errno = EINVAL;
+        printf("index position cannot be negative - Error message: %s\n", strerror(errno));
+        return -1;
     }
 
     if (index > list->size) {
-        printf("Error: Index out of range!\n");
-        return 1;
+        errno = ERANGE;
+        printf("Index position cannot be more than size of list - Error message: %s\n", strerror(errno));
+        return -1;
     }
 
     ORDER *current = list->pHead;
@@ -149,8 +134,9 @@ int deleteSpecificNode(LIST *list, int index) {
     }
 
     if (current == NULL) {
-        printf("Error: Index out of range!\n");
-        return 1;
+        errno = ERANGE;
+        printf("Index position cannot be more than size of list - Error message: %s\n", strerror(errno));
+        return -1;
     }
 
     if (previous == NULL) {
