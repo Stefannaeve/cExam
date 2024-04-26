@@ -113,35 +113,14 @@ int main(int argc, char *argv[]) {
         if (binaryFile == NULL) {
             printf("Binary file not found\n");;
         } else {
-            TASK2_WORD_METADATA *buffer = malloc(index * sizeof(TASK2_WORD_METADATA));
-            if (buffer == NULL) {
-                printf("Memory allocation failed\n");
-            } else {
 
-                for (int j = 0; j < index; ++j) {
-                    fwrite(&pWordMetadata[j], sizeof(TASK2_WORD_METADATA), 1, binaryFile);
-                    fwrite(pWordMetadata[j].szWord, sizeof(char), pWordMetadata[j].iSize, binaryFile);
-                }
+            for (int j = 0; j < index; ++j) {
+                fwrite(&pWordMetadata[j], sizeof(TASK2_WORD_METADATA), 1, binaryFile);
+                fwrite(pWordMetadata[j].szWord, sizeof(char), pWordMetadata[j].iSize, binaryFile);
+            }
 
-                fseek(binaryFile, 0, SEEK_SET);
+            fclose(binaryFile);
 
-                fread(buffer, sizeof(TASK2_WORD_METADATA), index, binaryFile);
-
-                for (int j = 0; j < index; ++j) {
-                    printf("Word %d: %s\n", buffer[j].iIndex, buffer[j].szWord);
-                    printf("Is Palindrom: %s\n", buffer[j].bIsPalindrom ? "True" : "False");
-                    printf("Is Heterogram: %s\n", buffer[j].bIsHeterogram ? "True" : "False");
-                    printf("Is Uppercase: %s\n", buffer[j].bIsUppercase ? "True" : "False");
-                    printf("Is Lowercase: %s\n", buffer[j].bIsLowercase ? "True" : "False");
-                    printf("Is Anagram: %s\n", buffer[j].bIsAnagram ? "True" : "False");
-                    printf("Is Disjoint: %s\n", buffer[j].bIsDisjoint ? "True" : "False");
-                    printf("\n");
-                }
-
-                fclose(binaryFile);
-
-                free(buffer);
-            } // malloc of buffer
         } // open binary file
 
         for (int k = 0; k < index; ++k) {
@@ -150,8 +129,6 @@ int main(int argc, char *argv[]) {
         free(pWordMetadata);
 
     } // malloc of pWordMetadata
-
-
 
     printf("\nClosing project...\n");
 
