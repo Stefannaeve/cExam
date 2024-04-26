@@ -73,15 +73,44 @@ void orderFreeLinkedList(ORDER_LIST *list) {
     }
 }
 
-void orderPrintAllNodes(ORDER_LIST *list) {
+void orderPrintAllOrders(ORDER_LIST *list) {
     ORDER *current = list->pHead;
     while (current != NULL) {
-        printf("Name: %s\n", current->name);
-        printf("Food Description: %s\n", current->foodDescription);
-        printf("Price: %d\n", current->price);
+        printf("Food:\n");
+        printf("     Name: %s\n", current->name);
+        printf("     Food Description: %s\n", current->foodDescription);
+        printf("     Price: %d\n", current->price);
         current = current->pNextOrder;
     }
     printf("\n");
+}
+
+void orderPrintAllOrdersAndSum(ORDER_LIST *list) {
+    ORDER *current = list->pHead;
+    int sum = 0;
+    while (current != NULL) {
+        if(sum == 0){
+            printf("Food:\n");
+        }
+        printf("     Name: %s\n", current->name);
+        printf("     Food Description: %s\n", current->foodDescription);
+        printf("     Price: %d\n\n", current->price);
+        sum += current->price;
+        current = current->pNextOrder;
+    }
+    printf("Total price: %d\n", sum);
+}
+
+void printSumForSpecificName(ORDER_LIST *list, char *name) {
+    ORDER *current = list->pHead;
+    int sum = 0;
+    while (current != NULL) {
+        if (strcmp(current->name, name) == 0) {
+            sum += current->price;
+        }
+        current = current->pNextOrder;
+    }
+    printf("Total price for %s: %d\n", name, sum);
 }
 
 int orderPrintSpecificNode(ORDER_LIST *list, int index) {

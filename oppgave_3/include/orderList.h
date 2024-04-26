@@ -27,7 +27,9 @@ typedef struct _ORDER_LIST {
 int orderAdd(ORDER_LIST *list, const SENT_ORDER *sentOrder);
 void orderAddToEnd(ORDER_LIST *list, ORDER *temp);
 void orderFreeLinkedList(ORDER_LIST *list);
-void orderPrintAllNodes(ORDER_LIST *list);
+void orderPrintAllOrders(ORDER_LIST *list);
+void orderPrintAllOrdersAndSum(ORDER_LIST *list);
+void printSumForSpecificName(ORDER_LIST *list, char *name);
 int orderPrintSpecificNode(ORDER_LIST *list, int index);
 int orderDeleteSpecificNode(ORDER_LIST *list, int index);
 

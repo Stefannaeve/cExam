@@ -5,40 +5,8 @@
 #include "tableReservationList.h"
 #include "orderList.h"
 
-#define START 0
-#define END 1
-
-typedef struct _SENT_TABLE_RESERVATION {
-    int iTableNumber;
-    int seats;
-    int time;
-    char *name;
-} SENT_TABLE_RESERVATION;
-
-typedef struct _TABLERESERVATION {
-    struct _TABLERESERVATION *pNextReservation;
-    struct _TABLERESERVATION *pPrevReservation;
-    int iTableNumber;
-    int seats;
-    int time;
-    char *name;
-    ORDER_LIST *foodOrders;
-} TABLERESERVATION;
-
-typedef struct LIST {
-    TABLERESERVATION *pHead;
-    TABLERESERVATION *pTail;
-    int size;
-} LIST;
-
-int add(LIST *list, const SENT_TABLE_RESERVATION *sentTableReservation);
-int addAt(LIST *list, const SENT_TABLE_RESERVATION *sentTableReservation, int indexOffset, int position);
 void addToEnd(LIST *list, TABLERESERVATION *temp);
 void addAtIndex(LIST *list, TABLERESERVATION *temp, int index);
-
-int main(){
-
-}
 
 int add(LIST *list, const SENT_TABLE_RESERVATION *sentTableReservation) {
     int status = addAt(list, sentTableReservation, 0, END);
@@ -165,7 +133,7 @@ void freeLinkedList(LIST *list) {
     while (current != NULL) {
         next = current->pNextReservation;
         current->pNextReservation = NULL;
-        if(current->foodOrders != NULL){
+        if (current->foodOrders != NULL) {
             orderFreeLinkedList(current->foodOrders);
             free(current->foodOrders);
         }
@@ -175,7 +143,7 @@ void freeLinkedList(LIST *list) {
     }
 }
 
-void printAllNodes(ORDER_LIST *list) {
+void printAllNodes(LIST *list) {
     TABLERESERVATION *current = list->pHead;
     while (current != NULL) {
         printf("Table Number: %d\n", current->iTableNumber);
@@ -199,16 +167,16 @@ void printAllNodesBackwards(LIST *list) {
     printf("\n");
 }
 
-int printSpecificNode(LIST *list, int index) {
-    if (index < 0) {
+int printSpecificNodeAndFood(LIST *list, int tableNumber) {
+    if (tableNumber-1 < 0) {
         errno = EINVAL;
-        printf("index position cannot be negative - Error message: %s\n", strerror(errno));
+        printf("tableNumber position cannot be negative - Error message: %s\n", strerror(errno));
         return -1;
     }
 
     TABLERESERVATION *current = list->pHead;
     int counter = 0;
-    while (current != NULL && counter < index) {
+    while (current != NULL && counter < tableNumber-1) {
         current = current->pNextReservation;
         counter++;
     }
@@ -221,10 +189,66 @@ int printSpecificNode(LIST *list, int index) {
     printf("Seats: %d\n", current->seats);
     printf("Time: %d\n", current->time);
     printf("Name: %s\n", current->name);
+    orderPrintAllOrders(current->foodOrders);
     return 0;
 }
 
-int deleteSpecificNode(LIST *list, int index) {
+int printReservationByName(LIST *list, const char *name) {
+    int foundReservation = 0;
+
+    if (name == NULL) {
+        errno = EINVAL;
+        printf("Name cannot be NULL - Error message: %s\n", strerror(errno));
+        return -1;
+    }
+
+    TABLERESERVATION *current = list->pHead;
+    while (current != NULL) {
+        if (strcmp(current->name, name) == 0) {
+            printf("Name: %s\n", current->name);
+            printf("Table Number: %d\n", current->iTableNumber);
+            printf("Time: %d\n\n", current->time);
+            foundReservation = 1;
+        }
+        current = current->pNextReservation;
+    }
+    if (foundReservation != 1) {
+        errno = ENOENT;
+        printf("Name not found - Error message: %s\n", strerror(errno));
+        return -1;
+    }
+    return 0;
+}
+
+int printReservationOrdersAndSum(LIST *list, const char *name) {
+    int foundReservation = 0;
+
+    if (name == NULL) {
+        errno = EINVAL;
+        printf("Name cannot be NULL - Error message: %s\n", strerror(errno));
+        return -1;
+    }
+
+    TABLERESERVATION *current = list->pHead;
+    while (current != NULL) {
+        if (strcmp(current->name, name) == 0) {
+            printf("Name: %s\n", current->name);
+            printf("Table Number: %d\n", current->iTableNumber);
+            printf("Time: %d\n", current->time);
+            orderPrintAllOrdersAndSum(current->foodOrders);
+            foundReservation = 1;
+        }
+        current = current->pNextReservation;
+    }
+    if (foundReservation != 1) {
+        errno = ENOENT;
+        printf("Name not found - Error message: %s\n", strerror(errno));
+        return -1;
+    }
+    return 0;
+}
+
+int deleteSpecificReservation(LIST *list, int index) {
     if (index < 0) {
         errno = EINVAL;
         printf("index position cannot be negative - Error message: %s\n", strerror(errno));
@@ -263,22 +287,28 @@ int deleteSpecificNode(LIST *list, int index) {
         current->pNextReservation->pPrevReservation = current->pPrevReservation;
     }
 
+    if (current->foodOrders != NULL) {
+        orderFreeLinkedList(current->foodOrders);
+        free(current->foodOrders);
+    }
+    free(current->name);
+
     free(current);
     list->size--;
 
     return 0;
 }
 
-int addFoodToSpecificReservation(LIST *list, int index, const SENT_ORDER *sentOrder) {
-    if (index < 0) {
+int addFoodToSpecificReservation(LIST *list, int tableNumber, const SENT_ORDER *sentOrder) {
+    if (tableNumber-1 < 0) {
         errno = EINVAL;
-        printf("index position cannot be negative - Error message: %s\n", strerror(errno));
+        printf("tableNumber position cannot be negative - Error message: %s\n", strerror(errno));
         return -1;
     }
 
     TABLERESERVATION *current = list->pHead;
     int counter = 0;
-    while (current != NULL && counter < index) {
+    while (current != NULL && counter < tableNumber - 1) {
         current = current->pNextReservation;
         counter++;
     }
