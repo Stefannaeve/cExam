@@ -9,10 +9,10 @@ int main(int argc, char *argv[]){
     }
 
     LIST list = {NULL, NULL, 0};
-    SENT_TABLE_RESERVATION sentTableReservation = {1, 4, 12, "Fredrik"};
-    SENT_TABLE_RESERVATION sentTableReservation2 = {2, 7, 13, "Bengt"};
-    SENT_TABLE_RESERVATION sentTableReservation3 = {3, 8, 14, "Amund"};
-    SENT_TABLE_RESERVATION sentTableReservation4 = {4, 6, 14, "Fredrik"};
+    SENT_TABLE_RESERVATION sentTableReservation = { 1, 4, 12, "Fredrik"};
+    SENT_TABLE_RESERVATION sentTableReservation2 = { 2, 7, 13, "Bengt"};
+    SENT_TABLE_RESERVATION sentTableReservation3 = { 3, 8, 14, "Amund"};
+    SENT_TABLE_RESERVATION sentTableReservation4 = { 4, 6, 14, "Fredrik"};
 
 
     add(&list, &sentTableReservation);
@@ -67,6 +67,8 @@ int main(int argc, char *argv[]){
     deleteSpecificReservation(&list, 1);
 
     printAllNodes(&list);
+
+    printReservationOrdersAndSum(&list, 3);
 
     freeLinkedList(&list);
 

@@ -9,15 +9,6 @@ void addToEnd(LIST *list, TABLERESERVATION *temp);
 void addAtIndex(LIST *list, TABLERESERVATION *temp, int index);
 
 int add(LIST *list, const SENT_TABLE_RESERVATION *sentTableReservation) {
-    int status = addAt(list, sentTableReservation, 0, END);
-    if (status != 0) {
-        printf("Failed to add reservation\n");
-        return -1;
-    }
-    return 0;
-}
-
-int addAt(LIST *list, const SENT_TABLE_RESERVATION *sentTableReservation, int indexOffset, int position) {
     if (sentTableReservation == NULL) {
         errno = EINVAL;
         printf("Struct cannot be NULL - Error message: %s\n", strerror(errno));
@@ -34,24 +25,11 @@ int addAt(LIST *list, const SENT_TABLE_RESERVATION *sentTableReservation, int in
         return -1;
     }
 
-    if (indexOffset < 0) {
-        errno = EINVAL;
-        printf("index position cannot be negative - Error message: %s\n", strerror(errno));
-        free(temp);
-        return -1;
-    }
-
-    if (indexOffset > list->size + 1) {
-        errno = ERANGE;
-        printf("Index position cannot be more than size of list - Error message: %s\n", strerror(errno));
-        free(temp);
-        return -1;
-    }
-
     temp->iTableNumber = sentTableReservation->iTableNumber;
     temp->seats = sentTableReservation->seats;
     temp->time = sentTableReservation->time;
     temp->name = (char *) malloc(iLengthOfName + 1);
+
     if (temp->name == NULL) {
         errno = ENOMEM;
         printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
@@ -77,24 +55,23 @@ int addAt(LIST *list, const SENT_TABLE_RESERVATION *sentTableReservation, int in
         return 0;
     }
 
-    switch (position) {
-        case 0:
-            addAtIndex(list, temp, indexOffset);
-            break;
-        case 1:
-            addToEnd(list, temp);
-            break;
-        default:
-            errno = ERANGE;
-            printf("Invalid position");
-            free(temp);
-            return -1;
+    TABLERESERVATION *current = list->pHead;
+    int counter = 0;
+    while (current != NULL) {
+        if (strcmp(current->name, temp->name) > 0) {
+            addAtIndex(list, temp, counter);
+            return 0;
+        }
+        current = current->pNextReservation;
+        counter++;
     }
+    addToEnd(list, temp);
     return 0;
 }
 
 void addToEnd(LIST *list, TABLERESERVATION *temp) {
     list->pTail->pNextReservation = temp;
+    temp->iReservationNumber = list->pTail->iReservationNumber + 1;
     temp->pPrevReservation = list->pTail;
     list->pTail = temp;
 
@@ -108,13 +85,13 @@ void addAtIndex(LIST *list, TABLERESERVATION *temp, int index) {
 
     if (index == list->size + 1) {
         addToEnd(list, temp);
-        printf("Added node to end of linked list. Method \"add\" can be used for this purpose instead..\n");
         return;
     }
     if (index == 0) {
         temp->pNextReservation = list->pHead;
         list->pHead->pPrevReservation = temp;
         list->pHead = temp;
+        temp->iReservationNumber = 1;
     } else {
         current = list->pHead;
         while (current->pNextReservation != NULL && counter < index - 1) {
@@ -123,12 +100,26 @@ void addAtIndex(LIST *list, TABLERESERVATION *temp, int index) {
         }
         temp->pNextReservation = current->pNextReservation;
         temp->pPrevReservation = current;
+        temp->iReservationNumber = current->iReservationNumber + 1;
         if (current->pNextReservation != NULL) {
             current->pNextReservation->pPrevReservation = temp;
         }
         current->pNextReservation = temp;
     }
+    fixReservationNumbersFromIndex(list, temp->iReservationNumber);
     list->size++;
+}
+
+void fixReservationNumbersFromIndex(LIST *list, int index) {
+    TABLERESERVATION *current = list->pHead;
+    int counter = 0;
+    while (current != NULL) {
+        if (counter >= index) {
+            current->iReservationNumber = counter + 1;
+        }
+        current = current->pNextReservation;
+        counter++;
+    }
 }
 
 void freeLinkedList(LIST *list) {
@@ -154,38 +145,28 @@ int printAllNodes(LIST *list) {
         return -1;
     }
     while (current != NULL) {
-        printf("Table Number: %d\n", current->iTableNumber);
-        printf("Seats: %d\n", current->seats);
-        printf("Time: %d\n", current->time);
+        printf("Reservation Number: %d\n", current->iReservationNumber);
         printf("Name: %s\n", current->name);
+        printf("  Table Number: %d\n", current->iTableNumber);
+        printf("  Seats: %d\n", current->seats);
+        printf("  Time: %d\n\n", current->time);
         current = current->pNextReservation;
     }
     printf("\n");
     return 0;
 }
 
-void printAllNodesBackwards(LIST *list) {
-    TABLERESERVATION *current = list->pTail;
-    while (current != NULL) {
-        printf("Table Number: %d\n", current->iTableNumber);
-        printf("Seats: %d\n", current->seats);
-        printf("Time: %d\n", current->time);
-        printf("Name: %s\n", current->name);
-        current = current->pPrevReservation;
-    }
-    printf("\n");
-}
-
-int printSpecificNodeAndFood(LIST *list, int tableNumber) {
-    if (tableNumber-1 < 0) {
+int printSpecificNodeAndFood(LIST *list, int reservationNumber) {
+    int index = reservationNumber - 1;
+    if (index < 0) {
         errno = EINVAL;
-        printf("tableNumber position cannot be negative - Error message: %s\n", strerror(errno));
+        printf("reservationNumber position cannot be negative - Error message: %s\n", strerror(errno));
         return -1;
     }
 
     TABLERESERVATION *current = list->pHead;
     int counter = 0;
-    while (current != NULL && counter < tableNumber-1) {
+    while (current != NULL && counter < index) {
         current = current->pNextReservation;
         counter++;
     }
@@ -194,10 +175,11 @@ int printSpecificNodeAndFood(LIST *list, int tableNumber) {
         printf("Index position cannot be more than size of list - Error message: %s\n", strerror(errno));
         return -1;
     }
-    printf("Table Number: %d\n", current->iTableNumber);
-    printf("Seats: %d\n", current->seats);
-    printf("Time: %d\n", current->time);
     printf("Name: %s\n", current->name);
+    printf("Reservation Number: %d\n", current->iReservationNumber);
+    printf("  Table Number: %d\n", current->iTableNumber);
+    printf("  Seats: %d\n", current->seats);
+    printf("  Time: %d\n", current->time);
     orderPrintAllOrders(current->foodOrders);
     return 0;
 }
@@ -215,8 +197,9 @@ int printReservationByName(LIST *list, const char *name) {
     while (current != NULL) {
         if (strcmp(current->name, name) == 0) {
             printf("Name: %s\n", current->name);
-            printf("Table Number: %d\n", current->iTableNumber);
-            printf("Time: %d\n\n", current->time);
+            printf("Reservation Number: %d\n", current->iReservationNumber);
+            printf("  Table Number: %d\n", current->iTableNumber);
+            printf("  Time: %d\n\n", current->time);
             foundReservation = 1;
         }
         current = current->pNextReservation;
@@ -229,59 +212,70 @@ int printReservationByName(LIST *list, const char *name) {
     return 0;
 }
 
-int printReservationOrdersAndSum(LIST *list, const char *name) {
-    int foundReservation = 0;
-
-    if (name == NULL) {
+int printReservationOrdersAndSum(LIST *list, const int reservationNumber) {
+    if (reservationNumber < 1) {
         errno = EINVAL;
-        printf("Name cannot be NULL - Error message: %s\n", strerror(errno));
+        printf("reservation number cannot be negative - Error message: %s\n", strerror(errno));
+        return -1;
+    }
+
+    if (reservationNumber - 1 > list->size) {
+        errno = ERANGE;
+        printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
         return -1;
     }
 
     TABLERESERVATION *current = list->pHead;
+    int counter = 0;
     while (current != NULL) {
-        if (strcmp(current->name, name) == 0) {
-            printf("Name: %s\n", current->name);
-            printf("Table Number: %d\n", current->iTableNumber);
-            printf("Time: %d\n", current->time);
-            orderPrintAllOrdersAndSum(current->foodOrders);
-            foundReservation = 1;
+        if(current->iReservationNumber == reservationNumber){
+            break;
         }
         current = current->pNextReservation;
+        counter++;
     }
-    if (foundReservation != 1) {
-        errno = ENOENT;
-        printf("Name not found - Error message: %s\n", strerror(errno));
+    if (current == NULL) {
+        errno = ERANGE;
+        printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
         return -1;
     }
+    printf("Name: %s\n", current->name);
+    printf("Reservation Number: %d\n", current->iReservationNumber);
+    printf("  Table Number: %d\n", current->iTableNumber);
+    printf("  Seats: %d\n", current->seats);
+    printf("  Time: %d\n", current->time);
+    orderPrintAllOrdersAndSum(current->foodOrders);
     return 0;
 }
 
-int deleteSpecificReservation(LIST *list, int tableNumber) {
-    int index = tableNumber - 1;
-    if (index < 0) {
+int deleteSpecificReservation(LIST *list, int reservationNumber) {
+    int index = reservationNumber - 1;
+    if (reservationNumber < 1) {
         errno = EINVAL;
-        printf("tableNumber position cannot be negative - Error message: %s\n", strerror(errno));
+        printf("Reservation number cannot be less than one - Error message: %s\n", strerror(errno));
         return -1;
     }
 
     if (index > list->size) {
         errno = ERANGE;
-        printf("Index position cannot be more than size of list - Error message: %s\n", strerror(errno));
+        printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
         return -1;
     }
 
     TABLERESERVATION *current = list->pHead;
     int counter = 0;
 
-    while (current != NULL && counter < index) {
+    while (current != NULL) {
+        if(current->iTableNumber == reservationNumber){
+            break;
+        }
         current = current->pNextReservation;
         counter++;
     }
 
     if (current == NULL) {
         errno = ERANGE;
-        printf("Index position cannot be more than size of list - Error message: %s\n", strerror(errno));
+        printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
         return -1;
     }
 
@@ -303,28 +297,44 @@ int deleteSpecificReservation(LIST *list, int tableNumber) {
     }
     free(current->name);
 
+    fixReservationNumbersFromIndex(list, current->iReservationNumber-1);
+
     free(current);
     list->size--;
 
     return 0;
 }
 
-int addFoodToSpecificReservation(LIST *list, int tableNumber, const SENT_ORDER *sentOrder) {
-    if (tableNumber-1 < 0) {
+int addFoodToSpecificReservation(LIST *list, int reservationNumber, const SENT_ORDER *sentOrder) {
+    if (sentOrder == NULL) {
         errno = EINVAL;
-        printf("tableNumber position cannot be negative - Error message: %s\n", strerror(errno));
+        printf("Struct cannot be NULL - Error message: %s\n", strerror(errno));
         return -1;
     }
 
+    if (reservationNumber < 1) {
+        errno = EINVAL;
+        printf("Reservation number cannot be less than one - Error message: %s\n", strerror(errno));
+        return -1;
+    }
+
+    if (reservationNumber - 1 > list->size) {
+        errno = ERANGE;
+        printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
+        return -1;
+    }
+
+
     TABLERESERVATION *current = list->pHead;
-    int counter = 0;
-    while (current != NULL && counter < tableNumber - 1) {
+    while (current != NULL) {
+        if(current->iReservationNumber == reservationNumber){
+            break;
+        }
         current = current->pNextReservation;
-        counter++;
     }
     if (current == NULL) {
         errno = ERANGE;
-        printf("Index position cannot be more than size of list - Error message: %s\n", strerror(errno));
+        printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
         return -1;
     }
 

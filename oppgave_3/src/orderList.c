@@ -80,7 +80,7 @@ void orderPrintAllOrders(ORDER_LIST *list) {
     ORDER *current = list->pHead;
     while (current != NULL) {
         if(count == 0){
-            printf("Food:\n");
+            printf("  Food:\n");
         }
         printf("     Name: %s\n", current->name);
         printf("     Food Description: %s\n", current->foodDescription);
@@ -96,7 +96,7 @@ void orderPrintAllOrdersAndSum(ORDER_LIST *list) {
     int sum = 0;
     while (current != NULL) {
         if(sum == 0){
-            printf("Food:\n");
+            printf("  Food:\n");
         }
         printf("     Name: %s\n", current->name);
         printf("     Food Description: %s\n", current->foodDescription);
