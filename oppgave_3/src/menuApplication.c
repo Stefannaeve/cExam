@@ -106,38 +106,61 @@ int addReservation(LIST *list) {
 
             printf("\nPlease insert the time of the reservation\n");
             char *tempTime = (char *) malloc(sizeof(char) * 4);
-            status = askUserQuestion("Time: ", tempTime, 4);
-
-            if (status == QUIT) {
-                printf("Quitting\n");
+            if (tempTime == NULL) {
+                status = ERROR;
+                errno = ENOMEM;
+                printf("Memory allocation issue - Error message: %s\n", strerror(errno));
             } else {
+                status = askUserQuestion("Time: ", tempTime, 4);
 
-                int *time = (int *) malloc(sizeof(int) * 1);
-                if (time == NULL) {
-                    errno = ENOMEM;
-                    printf("Memory allocation issue - Error message: %s\n", strerror(errno));
-                    return -1;
-                }
-                *time = atoi(tempTime);
-
-
-                printf("\nPlease insert the table number of the reservation\n");
-                char *tableNumber = (char *) malloc(sizeof(char) * 2);
-                status = askUserQuestion("Table number: ", tableNumber, 2);
                 if (status == QUIT) {
-                    return QUIT;
+                    printf("Quitting\n");
+                } else {
+
+                    int *time = (int *) malloc(sizeof(int) * 1);
+                    if (time == NULL) {
+                        status = ERROR;
+                        errno = ENOMEM;
+                        printf("Memory allocation issue - Error message: %s\n", strerror(errno));
+                    } else {
+                        *time = atoi(tempTime);
+
+
+                        printf("\nPlease insert the table number of the reservation\n");
+                        char *tableNumber = (char *) malloc(sizeof(char) * 2);
+
+                        if (tableNumber == NULL) {
+                            status = ERROR;
+                            errno = ENOMEM;
+                            printf("Memory allocation issue - Error message: %s\n", strerror(errno));
+                        } else {
+
+                            status = askUserQuestion("Table number: ", tableNumber, 2);
+                            if (status == QUIT) {
+                                printf("Quitting\n");
+                            } else {
+
+                                //SENT_TABLE_RESERVATION sentTableReservation = {atoi(tableNumber), atoi(seats), atoi(time), name};
+                                //add(list, &sentTableReservation);
+
+                                free(tableNumber);
+                            }
+                        }
+                        free(time);
+                    }
                 }
-                free(time);
-                free(tableNumber);
+                free(tempTime);
             }
-            free(tempTime);
         }
         free(seats);
+    }
+    free(name);
+    if (status == ERROR) {
+        return ERROR;
+    }
+    if (status == QUIT) {
         return QUIT;
     }
-    SENT_TABLE_RESERVATION sentTableReservation = {atoi(tableNumber), atoi(seats), atoi(time), name};
-    add(list, &sentTableReservation);
-    free(name);
     return TRUE;
 }
 
@@ -193,7 +216,7 @@ int menuHandling(char *array[], char *inputArray, int sizeOfArray) {
 
     printListOptions(array, sizeOfArray);
 
-    int result = inputWithCharLimit(inputArray, 1);
+    int result = inputWithCharLimit(inputArray, 2);
     if (result != TRUE) {
         printf("Issue with getting stream from user - Error message: %s", strerror(errno));
         return FALSE;
@@ -221,16 +244,9 @@ int inputWithCharLimit(char *charArray, int lengthOfArray) {
         return FALSE;
     }
 
-    int i = 0;
-    char character;
+    fread(charArray, sizeof(char), lengthOfArray, stdin);
 
-    while (((character = fgetc(stdin)) != '\n')) {
-        if (i < lengthOfArray) {
-            charArray[i++] = character;
-        }
-    }
-
-    charArray[i] = '\0';
+    charArray[lengthOfArray-1] = '\0';
 
     return TRUE;
 }
