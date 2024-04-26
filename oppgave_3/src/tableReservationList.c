@@ -37,12 +37,14 @@ int addAt(LIST *list, const SENT_TABLE_RESERVATION *sentTableReservation, int in
     if (indexOffset < 0) {
         errno = EINVAL;
         printf("index position cannot be negative - Error message: %s\n", strerror(errno));
+        free(temp);
         return -1;
     }
 
     if (indexOffset > list->size + 1) {
         errno = ERANGE;
         printf("Index position cannot be more than size of list - Error message: %s\n", strerror(errno));
+        free(temp);
         return -1;
     }
 
@@ -53,6 +55,7 @@ int addAt(LIST *list, const SENT_TABLE_RESERVATION *sentTableReservation, int in
     if (temp->name == NULL) {
         errno = ENOMEM;
         printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
+        free(temp);
         return -1;
     }
     strcpy(temp->name, sentTableReservation->name);
@@ -61,6 +64,7 @@ int addAt(LIST *list, const SENT_TABLE_RESERVATION *sentTableReservation, int in
     if (temp->foodOrders == NULL) {
         errno = ENOMEM;
         printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
+        free(temp);
         return -1;
     }
     temp->foodOrders->pHead = NULL;

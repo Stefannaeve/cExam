@@ -68,5 +68,7 @@ int main(int argc, char *argv[]){
 
     printAllNodes(&list);
 
+    freeLinkedList(&list);
+
     return 0;
 }
