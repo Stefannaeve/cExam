@@ -1,0 +1,3 @@
+/home/stefannaeve/cExam/oppgave_2/cmake-build-debug/CMakeFiles/task.dir
+/home/stefannaeve/cExam/oppgave_2/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/stefannaeve/cExam/oppgave_2/cmake-build-debug/CMakeFiles/rebuild_cache.dir
