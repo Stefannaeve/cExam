@@ -68,6 +68,8 @@ void orderFreeLinkedList(ORDER_LIST *list) {
     while (current != NULL) {
         next = current->pNextOrder;
         current->pNextOrder = NULL;
+        free(current->name);
+        free(current->foodDescription);
         free(current);
         current = next;
     }
