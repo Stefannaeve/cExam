@@ -2,6 +2,7 @@
 #include <malloc.h>
 #include <string.h>
 #include <stdbool.h>
+#include <errno.h>
 #include "eksamen_v24_oppgave2_all_lower.h"
 #include "eksamen_v24_oppgave2_all_upper.h"
 #include "eksamen_v24_oppgave2_anagram.h"
@@ -37,7 +38,7 @@ int main(int argc, char *argv[]) {
 
     FILE *file = fopen("eksamen_v24_oppgave2.txt", "r");
     if (file == NULL) {
-        printf("File not found\n");
+        printf("Failed to find file - Error message: %s\n", strerror(errno));
         return -1;
     }
 
@@ -51,20 +52,20 @@ int main(int argc, char *argv[]) {
 
     TASK2_WORD_METADATA *pWordMetadata = (TASK2_WORD_METADATA *) malloc(sizeof(TASK2_WORD_METADATA) * index);
     if (pWordMetadata == NULL) {
-        printf("Memory allocation failed\n");
+        printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
     } else {
         while (i < index) {
             length = strlen(strings[i]);
             TASK2_WORD_METADATA *pWord = (TASK2_WORD_METADATA *) malloc(sizeof(TASK2_WORD_METADATA) + length + 1);
             if (pWord == NULL) {
-                printf("Memory allocation failed\n");
+                printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
                 break;
             }
             pWord->iIndex = i + 1;
             pWord->iSize = length;
             pWord->szWord = (char *) malloc(sizeof(char) * length + 1);
             if (pWord->szWord == NULL) {
-                printf("Memory allocation failed\n");
+                printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
                 break;
             }
             strcpy(pWord->szWord, strings[i]);
@@ -111,7 +112,7 @@ int main(int argc, char *argv[]) {
 
         binaryFile = fopen("eksamen_v24_oppgave2.bin", "w+b");
         if (binaryFile == NULL) {
-            printf("Binary file not found\n");;
+            printf("Failed to find or create binary file - Error message: %s\n", strerror(errno));
         } else {
 
             for (int j = 0; j < index; ++j) {
