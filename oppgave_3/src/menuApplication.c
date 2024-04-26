@@ -98,20 +98,20 @@ int addReservation(LIST *list) {
     } else {
 
         printf("\nPlease insert the number of people in the reservation\n");
-        char *seats = (char *) malloc(sizeof(char) * 2);
-        status = askUserQuestion("Seats: ", seats, 2);
+        char *seats = (char *) malloc(sizeof(char) * 3);
+        status = askUserQuestion("Seats: ", seats, 3);
         if (status == QUIT) {
             printf("Quitting\n");
         } else {
 
             printf("\nPlease insert the time of the reservation\n");
-            char *tempTime = (char *) malloc(sizeof(char) * 4);
+            char *tempTime = (char *) malloc(sizeof(char) * 5);
             if (tempTime == NULL) {
                 status = ERROR;
                 errno = ENOMEM;
                 printf("Memory allocation issue - Error message: %s\n", strerror(errno));
             } else {
-                status = askUserQuestion("Time: ", tempTime, 4);
+                status = askUserQuestion("Time: ", tempTime, 5);
 
                 if (status == QUIT) {
                     printf("Quitting\n");
@@ -167,6 +167,7 @@ int addReservation(LIST *list) {
 int askUserQuestion(char *title, char *inputArray, int expectedSize) {
     while (1) {
         printf("%s", title);
+        fflush(stdout);
         int result = inputWithCharLimit(inputArray, expectedSize);
         if (result != TRUE) {
             printf("Error message: %s\nTry again", strerror(errno));
@@ -244,7 +245,14 @@ int inputWithCharLimit(char *charArray, int lengthOfArray) {
         return FALSE;
     }
 
-    fread(charArray, sizeof(char), lengthOfArray, stdin);
+    char szUserInput[USER_INPUT_SIZE] = {0};
+    fgets(szUserInput, USER_INPUT_SIZE-1, stdin);
+
+    while (szUserInput[strlen(szUserInput) - 1] == '\r' || szUserInput[strlen(szUserInput) - 1] == '\n') {
+        szUserInput[strlen(szUserInput) - 1] = 0;
+    }
+
+    strncpy(charArray, szUserInput, lengthOfArray);
 
     charArray[lengthOfArray-1] = '\0';
 
