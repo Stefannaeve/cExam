@@ -89,41 +89,47 @@ int menuApplication() {
 }
 
 int addReservation(LIST *list) {
+    int table = 0;
+    int seats = 0;
+    int time = 0;
+    int status = TRUE;
+
     printf("You will be asked to fill in a various number of values\n");
     printf("Please insert the name of the reservation holder\n");
     char *name = (char *) malloc(sizeof(char) * USER_INPUT_SIZE);
-    int status = askUserQuestion("Name: ", name, USER_INPUT_SIZE);
-    if (status == QUIT) {
-        printf("Quitting\n");
+    if (name == NULL) {
+        status = ERROR;
+        errno = ENOMEM;
+        printf("Memory allocation issue - Error message: %s\n", strerror(errno));
     } else {
-
-        printf("\nPlease insert the number of people in the reservation\n");
-        char *seats = (char *) malloc(sizeof(char) * 3);
-        status = askUserQuestion("Seats: ", seats, 3);
-        if (status == QUIT) {
-            printf("Quitting\n");
+        status = askUserQuestion("Name: ", name, USER_INPUT_SIZE);
+        if (status != TRUE) {
+            if (status == QUIT) {
+                printf("Quitting\n");
+            } else {
+                printf("Error message: %s\n", strerror(errno));
+            }
         } else {
 
-            printf("\nPlease insert the time of the reservation\n");
-            char *tempTime = (char *) malloc(sizeof(char) * 5);
-            if (tempTime == NULL) {
-                status = ERROR;
-                errno = ENOMEM;
-                printf("Memory allocation issue - Error message: %s\n", strerror(errno));
+            printf("\nPlease insert the number of people in the reservation\n");
+            char *tempSeats = (char *) malloc(sizeof(char) * 3);
+            status = askUserQuestion("Seats: ", tempSeats, 3);
+            if (status == QUIT) {
+                printf("Quitting\n");
             } else {
-                status = askUserQuestion("Time: ", tempTime, 5);
 
-                if (status == QUIT) {
-                    printf("Quitting\n");
+                printf("\nPlease insert the time of the reservation\n");
+                char *tempTime = (char *) malloc(sizeof(char) * 5);
+                if (tempTime == NULL) {
+                    status = ERROR;
+                    errno = ENOMEM;
+                    printf("Memory allocation issue - Error message: %s\n", strerror(errno));
                 } else {
+                    status = askUserQuestion("Time: ", tempTime, 5);
 
-                    int *time = (int *) malloc(sizeof(int) * 1);
-                    if (time == NULL) {
-                        status = ERROR;
-                        errno = ENOMEM;
-                        printf("Memory allocation issue - Error message: %s\n", strerror(errno));
+                    if (status == QUIT) {
+                        printf("Quitting\n");
                     } else {
-                        *time = atoi(tempTime);
 
 
                         printf("\nPlease insert the table number of the reservation\n");
@@ -140,21 +146,24 @@ int addReservation(LIST *list) {
                                 printf("Quitting\n");
                             } else {
 
-                                //SENT_TABLE_RESERVATION sentTableReservation = {atoi(tableNumber), atoi(seats), atoi(time), name};
-                                //add(list, &sentTableReservation);
+                                time = atoi(tempTime);
+                                table = atoi(tableNumber);
+                                seats = atoi(tempSeats);
 
-                                free(tableNumber);
+                                SENT_TABLE_RESERVATION sentTableReservation = {table, seats, time,
+                                                                               name};
+                                add(list, &sentTableReservation);
                             }
-                        }
-                        free(time);
+                            free(tableNumber);
+                        } // TABLE NUMBER
                     }
-                }
-                free(tempTime);
+                    free(tempTime);
+                } // TIME
             }
-        }
-        free(seats);
-    }
-    free(name);
+            free(tempSeats);
+        } // SEATS
+        free(name);
+    } // NAME
     if (status == ERROR) {
         return ERROR;
     }
@@ -205,7 +214,7 @@ int yesOrNo() {
                     return FALSE;
                 }
             default:
-                printf("Wrong input, it has to be \"y\" or \"n\"");
+                printf("Wrong input, it has to be \"y\" or \"n\"\n");
                 break;
         }
     }
@@ -246,7 +255,7 @@ int inputWithCharLimit(char *charArray, int lengthOfArray) {
     }
 
     char szUserInput[USER_INPUT_SIZE] = {0};
-    fgets(szUserInput, USER_INPUT_SIZE-1, stdin);
+    fgets(szUserInput, USER_INPUT_SIZE - 1, stdin);
 
     while (szUserInput[strlen(szUserInput) - 1] == '\r' || szUserInput[strlen(szUserInput) - 1] == '\n') {
         szUserInput[strlen(szUserInput) - 1] = 0;
@@ -254,7 +263,7 @@ int inputWithCharLimit(char *charArray, int lengthOfArray) {
 
     strncpy(charArray, szUserInput, lengthOfArray);
 
-    charArray[lengthOfArray-1] = '\0';
+    charArray[lengthOfArray - 1] = '\0';
 
     return TRUE;
 }

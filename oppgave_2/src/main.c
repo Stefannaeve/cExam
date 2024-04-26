@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
                 pWordMetadata[i].bIsAnagram = false;
                 pWordMetadata[i].bIsDisjoint = false;
             }
-             */
+            */
 
             pWordMetadata[i] = *pWord;
 

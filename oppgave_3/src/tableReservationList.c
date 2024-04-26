@@ -19,6 +19,7 @@ int add(LIST *list, const SENT_TABLE_RESERVATION *sentTableReservation) {
     int iLengthOfName = strlen(sentTableReservation->name);
 
     temp = (TABLERESERVATION *) malloc(sizeof(TABLERESERVATION) + iLengthOfName + 1);
+    memset(temp, 0, sizeof(TABLERESERVATION) + iLengthOfName + 1);
     if (temp == NULL) {
         errno = ENOMEM;
         printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
@@ -107,7 +108,7 @@ void addAtIndex(LIST *list, TABLERESERVATION *temp, int index) {
         }
         current->pNextReservation = temp;
     }
-    fixReservationNumbersFromIndex(list, temp->iReservationNumber);
+    fixReservationNumbersFromIndex(list, temp->iReservationNumber-1);
     list->size++;
 }
 
