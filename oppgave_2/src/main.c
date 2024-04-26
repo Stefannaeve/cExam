@@ -28,6 +28,12 @@ typedef struct _TASK2_WORD_METADATA {
 } TASK2_WORD_METADATA;
 
 int main(int argc, char *argv[]) {
+
+    if (argc != 1) {
+        printf("%s takes no arguments\n", argv[0]);
+        return -1;
+    }
+
     char strings[MAX_STRINGS][MAX_STRING_LENGTH];
     int i = 0;
     int length;
