@@ -119,6 +119,9 @@ void printSumForSpecificName(ORDER_LIST *list, char *name) {
     int sum = 0;
     while (current != NULL) {
         if (strcmp(current->name, name) == 0) {
+            printf("  Name: %s\n", current->name);
+            printf("  Food Description: %s\n", current->foodDescription);
+            printf("  Price: %d\n\n", current->price);
             sum += current->price;
         }
         current = current->pNextOrder;

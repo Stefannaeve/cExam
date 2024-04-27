@@ -235,7 +235,7 @@ int makeOrder(SENT_ORDER *sentOrder) {
     } else {
         sentOrder->name = (char *) malloc(sizeof(char) * strlen(name) + 1) ;
         strncpy(sentOrder->name, name, strlen(name));
-        sentOrder->name[strlen(name)-1] = '\0';
+        sentOrder->name[strlen(name)] = '\0';
         memset(name, 0, USER_INPUT_SIZE);
 
         printf("Please insert the food description\n");
@@ -249,7 +249,7 @@ int makeOrder(SENT_ORDER *sentOrder) {
         } else {
             sentOrder->foodDescription = (char *) malloc(sizeof(char) * strlen(name) + 1);
             strncpy(sentOrder->foodDescription, name, strlen(name));
-            sentOrder->foodDescription[strlen(name)-1] = '\0';
+            sentOrder->foodDescription[strlen(name)] = '\0';
             memset(name, 0, USER_INPUT_SIZE);
 
             printf("Please insert the price of the food\n");
