@@ -22,6 +22,8 @@ int addReservation(LIST *list);
 
 int menuHandling(char *array[], char *inputArray, int sizeOfArray);
 
+int addFoodToReservation(LIST *list);
+
 int deleteReservation(LIST *list);
 
 int getReservation(LIST *list, char *inputArray);
@@ -71,7 +73,7 @@ int menuApplication() {
                     status = deleteReservation(&list);
                     break;
                 case '4':
-                    //addFoodToReservation();
+                    addFoodToReservation(&list);
                     break;
                 case '5':
                     //printSpecificReservationWithSum();
@@ -136,7 +138,6 @@ int addFoodToReservation(LIST *list) {
                             addFoodToSpecificReservation(list, atoi(reservationNumber), sentOrder);
                         }
                     }
-                    //addFoodToSpecificReservation(list, atoi(reservationNumber));
                 } else {
                     printf("Adding food cancelled...\n");
                     printf("Returning\n");
@@ -191,11 +192,11 @@ int makeOrder(SENT_ORDER *sentOrder) {
                 sentOrder->price = atoi(name);
             }
         }
-        if (status == ERROR) {
-            return ERROR;
-        }
-        return TRUE;
     }
+    if (status == ERROR) {
+        return ERROR;
+    }
+    return TRUE;
 }
 
 int deleteReservation(LIST *list) {
