@@ -101,7 +101,7 @@ int main(int argc, char *argv[]) {
             printf("\n");
         }
 
-        binaryFile = fopen("eksamen_v24_oppgave2.bin", "w+b");
+        binaryFile = fopen("eksamen_v24_oppgave2.bin", "wb");
         if (binaryFile == NULL) {
             printf("Failed to find or create binary file - Error message: %s\n", strerror(errno));
         } else {
