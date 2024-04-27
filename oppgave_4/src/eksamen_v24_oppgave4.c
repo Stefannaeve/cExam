@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <semaphore.h>
 
 #define BUFFER_SIZE 4096
 #define NUM_THREADS 2
@@ -13,7 +14,9 @@ typedef struct _SEND_THREAD {
     unsigned char buffer[BUFFER_SIZE];
     pthread_mutex_t mutex;
     pthread_cond_t cond_full, cond_empty;
+    sem_t bufferFull, bufferCleared;
     int bytes_in_buffer;
+    int isDone;
 } SEND_THREAD;
 
 void *thread_A(void *sendThreadArg) {
@@ -48,7 +51,9 @@ void *thread_A(void *sendThreadArg) {
 
         // Signal the other thread that the file has ended
         if (read_bytes == 0 && feof(fp)) {
-            sendThread->bytes_in_buffer = -1;
+            sendThread->isDone = 1;
+            pthread_cond_signal(&sendThread->cond_full);
+            pthread_mutex_unlock(&sendThread->mutex);
             break;
         }
     }
@@ -62,18 +67,20 @@ void *thread_A(void *sendThreadArg) {
 void *thread_B(void *sendThreadArg) {
     SEND_THREAD *sendThread = (SEND_THREAD *) sendThreadArg;
 
+    int count = 0;
+
     memset(sendThread->count, 0, (BYTE_RANGE - 1) * sizeof(int));
 
     while (1) {
         // Lock the mutex
-        // Wait for the buffer to fill
         pthread_mutex_lock(&sendThread->mutex);
+        // Wait for the buffer to fill
         if (sendThread->bytes_in_buffer == 0) {
+            printf("Before %d\n", count);
             pthread_cond_wait(&sendThread->cond_full, &sendThread->mutex);
+            printf("%d\n", sendThread->isDone);
+            printf("After %d\n", count);
             // Check for signal from thread A that the file has ended
-            if (sendThread->bytes_in_buffer == -1) {
-                break;
-            }
         }
 
         // Count the bytes in the buffer
@@ -86,6 +93,11 @@ void *thread_B(void *sendThreadArg) {
         pthread_cond_signal(&sendThread->cond_empty);
         pthread_mutex_unlock(&sendThread->mutex);
 
+        if (sendThread->isDone) {
+            break;
+        }
+        count++;
+
 
     }
     for (int i = 0; i < BYTE_RANGE; i++) {
@@ -95,6 +107,16 @@ void *thread_B(void *sendThreadArg) {
 }
 
 int main(int argc, char *argv[]) {
+/*
+    if (argc > 2) {
+        printf("%s only has one argument\n", argv[0]);
+        return -1;
+    } else if (argc == 1) {
+        printf("%s has an argument for the file to use\n", argv[0]);
+        return -1;
+    }
+    */
+
     SEND_THREAD *sendThread = (SEND_THREAD *) malloc(sizeof(SEND_THREAD));
     if (sendThread == NULL) {
         printf("Failed to allocate memory for send_thread\n");
@@ -113,7 +135,18 @@ int main(int argc, char *argv[]) {
         perror("Could not initialize cond_empty");
         return -1;
     }
+
+    if(sem_init(&sendThread->bufferFull, 0, 0) != 0) {
+        perror("Could not initialize bufferFull");
+        return -1;
+    }
+    if(sem_init(&sendThread->bufferCleared, 0, 0) != 0) {
+        perror("Could not initialize bufferCleared");
+        return -1;
+    }
+
     sendThread->bytes_in_buffer = 0;
+    sendThread->isDone = 0;
 
 
     pthread_t threadA, threadB;
@@ -137,6 +170,8 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
+    sem_destroy(&sendThread->bufferFull);
+    sem_destroy(&sendThread->bufferCleared);
     pthread_mutex_destroy(&sendThread->mutex);
     pthread_cond_destroy(&sendThread->cond_full);
     pthread_cond_destroy(&sendThread->cond_empty);
