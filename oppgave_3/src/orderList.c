@@ -6,192 +6,194 @@
 #define START 0
 #define END 1
 
-int orderAdd(ORDER_LIST *list, SENT_ORDER *sentOrder) {
-    if (sentOrder == NULL) {
+int orderAdd(ORDER_LIST *psoList, SENT_ORDER *pssSentOrder) {
+    if (pssSentOrder == NULL) {
         errno = EINVAL;
         printf("Struct cannot be NULL- Error message: %s\n", strerror(errno));
         return -1;
     }
 
-    ORDER *temp;
-    int iLengthOfName = strlen(sentOrder->name);
-    int iLengthOfFoodDescription = strlen(sentOrder->foodDescription);
+    ORDER *psoTemp;
+    int iLengthOfName = strlen(pssSentOrder->name);
+    int iLengthOfFoodDescription = strlen(pssSentOrder->foodDescription);
+    psoTemp = (ORDER *) malloc(sizeof(ORDER) + iLengthOfName + 1 + iLengthOfFoodDescription + 1);
 
-    temp = (ORDER *) malloc(sizeof(ORDER) + iLengthOfName + 1 + iLengthOfFoodDescription + 1);
-    if (temp == NULL) {
+    if (psoTemp == NULL) {
         errno = ENOMEM;
         printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
         return -1;
     }
 
-    temp->name = (char *) malloc(iLengthOfName + 1);
-    if (temp->name == NULL) {
+    psoTemp->name = (char *) malloc(iLengthOfName + 1);
+    if (psoTemp->name == NULL) {
         errno = ENOMEM;
         printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
         return -1;
     }
-    strcpy(temp->name, sentOrder->name);
+    strcpy(psoTemp->name, pssSentOrder->name);
 
-    temp->foodDescription = (char *) malloc(iLengthOfFoodDescription + 1);
-    if (temp->foodDescription == NULL) {
+    psoTemp->foodDescription = (char *) malloc(iLengthOfFoodDescription + 1);
+    if (psoTemp->foodDescription == NULL) {
         errno = ENOMEM;
         printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
         return -1;
     }
-    strcpy(temp->foodDescription, sentOrder->foodDescription);
+    strcpy(psoTemp->foodDescription, pssSentOrder->foodDescription);
 
-    temp->price = sentOrder->price;
+    psoTemp->price = pssSentOrder->price;
 
-    temp->pNextOrder = NULL;
+    psoTemp->pNextOrder = NULL;
 
-    if (list->pHead == NULL) {
-        list->pHead = temp;
-        list->pTail = temp;
-        free(sentOrder->name);
-        free(sentOrder->foodDescription);
-        free(sentOrder);
+    if (psoList->pHead == NULL) {
+        psoList->pHead = psoTemp;
+        psoList->pTail = psoTemp;
+        free(pssSentOrder->name);
+        free(pssSentOrder->foodDescription);
+        free(pssSentOrder);
         return 0;
     }
 
-    free(sentOrder->name);
-    free(sentOrder->foodDescription);
-    free(sentOrder);
+    free(pssSentOrder->name);
+    free(pssSentOrder->foodDescription);
+    free(pssSentOrder);
 
-    orderAddToEnd(list, temp);
+    orderAddToEnd(psoList, psoTemp);
 
     return 0;
 }
 
-void orderAddToEnd(ORDER_LIST *list, ORDER *temp) {
-    list->pTail->pNextOrder = temp;
-    list->pTail = temp;
+void orderAddToEnd(ORDER_LIST *psoList, ORDER *psoTemp) {
+    psoList->pTail->pNextOrder = psoTemp;
+    psoList->pTail = psoTemp;
 
-    list->size++;
+    psoList->size++;
 }
 
-void orderFreeLinkedList(ORDER_LIST *list) {
-    ORDER *current = list->pHead;
-    ORDER *next;
-    while (current != NULL) {
-        next = current->pNextOrder;
-        current->pNextOrder = NULL;
-        free(current->name);
-        free(current->foodDescription);
-        free(current);
-        current = next;
+void orderFreeLinkedList(ORDER_LIST *psoList) {
+    ORDER *psoCurrent = psoList->pHead;
+    ORDER *psoNext;
+    while (psoCurrent != NULL) {
+        psoNext = psoCurrent->pNextOrder;
+        psoCurrent->pNextOrder = NULL;
+        free(psoCurrent->name);
+        free(psoCurrent->foodDescription);
+        free(psoCurrent);
+        psoCurrent = psoNext;
     }
 }
 
-void orderPrintAllOrders(ORDER_LIST *list) {
-    int count = 0;
-    ORDER *current = list->pHead;
-    while (current != NULL) {
-        if(count == 0){
+void orderPrintAllOrders(ORDER_LIST *psoList) {
+    int iCount = 0;
+    ORDER *psoCurrent = psoList->pHead;
+    while (psoCurrent != NULL) {
+        if(iCount == 0){
             printf("  Food:\n");
         }
-        printf("     Name: %s\n", current->name);
-        printf("     Food Description: %s\n", current->foodDescription);
-        printf("     Price: %d\n\n", current->price);
-        current = current->pNextOrder;
-        count++;
+        printf("     Name: %s\n", psoCurrent->name);
+        printf("     Food Description: %s\n", psoCurrent->foodDescription);
+        printf("     Price: %d\n\n", psoCurrent->price);
+        psoCurrent = psoCurrent->pNextOrder;
+        iCount++;
     }
     printf("\n");
 }
 
-void orderPrintAllOrdersAndSum(ORDER_LIST *list) {
-    ORDER *current = list->pHead;
-    int sum = 0;
-    while (current != NULL) {
-        if(sum == 0){
+void orderPrintAllOrdersAndSum(ORDER_LIST *psoList) {
+    ORDER *psoCurrent = psoList->pHead;
+    int iSum = 0;
+    while (psoCurrent != NULL) {
+        if(iSum == 0){
             printf("  Food:\n");
         }
-        printf("     Name: %s\n", current->name);
-        printf("     Food Description: %s\n", current->foodDescription);
-        printf("     Price: %d\n\n", current->price);
-        sum += current->price;
-        current = current->pNextOrder;
+        printf("     Name: %s\n", psoCurrent->name);
+        printf("     Food Description: %s\n", psoCurrent->foodDescription);
+        printf("     Price: %d\n\n", psoCurrent->price);
+        iSum += psoCurrent->price;
+        psoCurrent = psoCurrent->pNextOrder;
     }
-    printf("Total price: %d\n", sum);
+    printf("Total price: %d\n", iSum);
 }
 
-void printSumForSpecificName(ORDER_LIST *list, char *name) {
-    ORDER *current = list->pHead;
-    int sum = 0;
-    while (current != NULL) {
-        if (strcmp(current->name, name) == 0) {
-            printf("  Name: %s\n", current->name);
-            printf("  Food Description: %s\n", current->foodDescription);
-            printf("  Price: %d\n\n", current->price);
-            sum += current->price;
+void printSumForSpecificName(ORDER_LIST *psoList, char *pszName) {
+    ORDER *psoCurrent = psoList->pHead;
+    int iSum = 0;
+    while (psoCurrent != NULL) {
+        if (strcmp(psoCurrent->name, pszName) == 0) {
+            printf("  Name: %s\n", psoCurrent->name);
+            printf("  Food Description: %s\n", psoCurrent->foodDescription);
+            printf("  Price: %d\n\n", psoCurrent->price);
+            iSum += psoCurrent->price;
         }
-        current = current->pNextOrder;
+        psoCurrent = psoCurrent->pNextOrder;
     }
-    printf("Total price for %s: %d\n", name, sum);
+    printf("Total price for %s: %d\n", pszName, iSum);
 }
 
-int orderPrintSpecificNode(ORDER_LIST *list, int index) {
-    if (index < 0) {
+int orderPrintSpecificNode(ORDER_LIST *psoList, int iIndex) {
+    ORDER *psoCurrent = psoList->pHead;
+    int iCounter = 0;
+
+    if (iIndex < 0) {
         errno = EINVAL;
         printf("index position cannot be negative - Error message: %s\n", strerror(errno));
         return -1;
     }
 
-    ORDER *current = list->pHead;
-    int counter = 0;
-    while (current != NULL && counter < index) {
-        current = current->pNextOrder;
-        counter++;
+    while (psoCurrent != NULL && iCounter < iIndex) {
+        psoCurrent = psoCurrent->pNextOrder;
+        iCounter++;
     }
-    if (current == NULL) {
+    if (psoCurrent == NULL) {
         errno = ERANGE;
         printf("Index position cannot be more than size of list - Error message: %s\n", strerror(errno));
         return -1;
     }
 
-    printf("Name: %s\n", current->name);
-    printf("Food Description: %s\n", current->foodDescription);
-    printf("Price: %d\n", current->price);
+    printf("Name: %s\n", psoCurrent->name);
+    printf("Food Description: %s\n", psoCurrent->foodDescription);
+    printf("Price: %d\n", psoCurrent->price);
 
     return 0;
 }
 
-int orderDeleteSpecificNode(ORDER_LIST *list, int index) {
-    if (index < 0) {
+int orderDeleteSpecificNode(ORDER_LIST *psoList, int iIndex) {
+    ORDER *psoCurrent = psoList->pHead;
+    ORDER *psoPrevious = NULL;
+    int iCounter = 0;
+
+    if (iIndex < 0) {
         errno = EINVAL;
         printf("index position cannot be negative - Error message: %s\n", strerror(errno));
         return -1;
     }
 
-    if (index > list->size) {
+    if (iIndex > psoList->size) {
         errno = ERANGE;
         printf("Index position cannot be more than size of list - Error message: %s\n", strerror(errno));
         return -1;
     }
 
-    ORDER *current = list->pHead;
-    ORDER *previous = NULL;
-    int counter = 0;
 
-    while (current != NULL && counter < index) {
-        previous = current;
-        current = current->pNextOrder;
-        counter++;
+    while (psoCurrent != NULL && iCounter < iIndex) {
+        psoPrevious = psoCurrent;
+        psoCurrent = psoCurrent->pNextOrder;
+        iCounter++;
     }
 
-    if (current == NULL) {
+    if (psoCurrent == NULL) {
         errno = ERANGE;
         printf("Index position cannot be more than size of list - Error message: %s\n", strerror(errno));
         return -1;
     }
 
-    if (previous == NULL) {
-        list->pHead = current->pNextOrder;
+    if (psoPrevious == NULL) {
+        psoList->pHead = psoCurrent->pNextOrder;
     } else {
-        previous->pNextOrder = current->pNextOrder;
+        psoPrevious->pNextOrder = psoCurrent->pNextOrder;
     }
 
-    free(current);
-    list->size--;
+    free(psoCurrent);
+    psoList->size--;
 
     return 0;
 }
