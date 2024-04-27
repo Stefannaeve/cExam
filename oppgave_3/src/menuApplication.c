@@ -155,7 +155,6 @@ int addFoodToReservation(LIST *list) {
 int makeOrder(SENT_ORDER *sentOrder) {
     int status = TRUE;
     char *name = (char *) malloc(sizeof(char) * USER_INPUT_SIZE);
-    //char *foodDescription = (char *) malloc(sizeof(char) * USER_INPUT_SIZE);
 
     printf("Please insert the name of the person ordering\n");
     status = askUserQuestion("Name: ", name, USER_INPUT_SIZE);
@@ -166,8 +165,9 @@ int makeOrder(SENT_ORDER *sentOrder) {
             printf("Error message: %s\n", strerror(errno));
         }
     } else {
-        sentOrder->name = (char *) malloc(sizeof(char) + strlen(name));
-        strncpy(sentOrder->name, name, USER_INPUT_SIZE);
+        sentOrder->name = (char *) malloc(sizeof(char) * strlen(name) + 1) ;
+        strncpy(sentOrder->name, name, strlen(name));
+        sentOrder->name[strlen(name)-1] = '\0';
         memset(name, 0, USER_INPUT_SIZE);
 
         printf("Please insert the food description\n");
@@ -179,8 +179,9 @@ int makeOrder(SENT_ORDER *sentOrder) {
                 printf("Error message: %s\n", strerror(errno));
             }
         } else {
-            sentOrder->foodDescription = (char *) malloc(sizeof(char) + strlen(name));
-            strncpy(sentOrder->foodDescription, name, USER_INPUT_SIZE);
+            sentOrder->foodDescription = (char *) malloc(sizeof(char) * strlen(name) + 1);
+            strncpy(sentOrder->foodDescription, name, strlen(name));
+            sentOrder->foodDescription[strlen(name)-1] = '\0';
             memset(name, 0, USER_INPUT_SIZE);
 
             printf("Please insert the price of the food\n");

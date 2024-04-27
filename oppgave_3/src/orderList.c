@@ -47,9 +47,14 @@ int orderAdd(ORDER_LIST *list, SENT_ORDER *sentOrder) {
     if (list->pHead == NULL) {
         list->pHead = temp;
         list->pTail = temp;
+        free(sentOrder->name);
+        free(sentOrder->foodDescription);
+        free(sentOrder);
         return 0;
     }
 
+    free(sentOrder->name);
+    free(sentOrder->foodDescription);
     free(sentOrder);
 
     orderAddToEnd(list, temp);
