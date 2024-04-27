@@ -12,6 +12,7 @@
 typedef struct _SEND_THREAD {
     int count[BYTE_RANGE];
     unsigned char buffer[BUFFER_SIZE];
+    char *filename;
     pthread_mutex_t mutex;
     pthread_cond_t cond_full, cond_empty;
     sem_t bufferFull, bufferCleared;
@@ -22,7 +23,7 @@ typedef struct _SEND_THREAD {
 void *thread_A(void *sendThreadArg) {
     SEND_THREAD *sendThread = (SEND_THREAD *) sendThreadArg;
 
-    FILE *fp = fopen("eksamen_v24_oppgave4_pg2265.txt", "r");
+    FILE *fp = fopen(sendThread->filename, "r");
     if (!fp) {
         perror("Failed to open file");
         exit(EXIT_FAILURE);
@@ -53,7 +54,6 @@ void *thread_A(void *sendThreadArg) {
         if (read_bytes == 0 && feof(fp)) {
             sendThread->isDone = 1;
             sem_post(&sendThread->bufferFull);
-            pthread_mutex_unlock(&sendThread->mutex);
             break;
         }
     }
@@ -109,7 +109,7 @@ void *thread_B(void *sendThreadArg) {
 }
 
 int main(int argc, char *argv[]) {
-/*
+
     if (argc > 2) {
         printf("%s only has one argument\n", argv[0]);
         return -1;
@@ -117,7 +117,7 @@ int main(int argc, char *argv[]) {
         printf("%s has an argument for the file to use\n", argv[0]);
         return -1;
     }
-    */
+
 
     SEND_THREAD *sendThread = (SEND_THREAD *) malloc(sizeof(SEND_THREAD));
     if (sendThread == NULL) {
@@ -149,6 +149,7 @@ int main(int argc, char *argv[]) {
 
     sendThread->bytes_in_buffer = 0;
     sendThread->isDone = 0;
+    sendThread->filename = argv[1];
 
 
     pthread_t threadA, threadB;
