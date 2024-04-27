@@ -28,6 +28,8 @@ int deleteReservation(LIST *list);
 
 int getReservation(LIST *list, char *inputArray);
 
+int printSpecificReservationWithSum(LIST *list);
+
 int makeOrder(SENT_ORDER *sentOrder);
 
 void printListOptions(char *array[], int sizeOfArray);
@@ -76,7 +78,7 @@ int menuApplication() {
                     addFoodToReservation(&list);
                     break;
                 case '5':
-                    //printSpecificReservationWithSum();
+                    printSpecificReservationWithSum(&list);
                     break;
                 case '6':
                     //printTableSumFromOneName();
@@ -95,6 +97,29 @@ int menuApplication() {
     free(inputArray);
     freeLinkedList(&list);
     return TRUE;
+}
+
+int printSpecificReservationWithSum(LIST *list) {
+    int status = TRUE;
+    char *reservationNumber = (char *) malloc(sizeof(char) * USER_INPUT_SIZE);
+    if (reservationNumber == NULL) {
+        errno = ENOMEM;
+        printf("Memory allocation issue - Error message: %s\n", strerror(errno));
+        return ERROR;
+    } else {
+        printf("What is the reservation number you are after?\n");
+        status = askUserQuestion("Reservation number: ", reservationNumber, RESERVATION_NUMBER);
+        if (status != TRUE) {
+            if (status == QUIT) {
+                printf("Returning\n");
+            } else {
+                printf("Error message: %s\n", strerror(errno));
+            }
+        } else {
+            printReservationOrdersAndSum(list, atoi(reservationNumber));
+        }
+        free(reservationNumber);
+    }
 }
 
 int addFoodToReservation(LIST *list) {

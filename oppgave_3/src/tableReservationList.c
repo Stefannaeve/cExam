@@ -218,6 +218,7 @@ int printSpecificReservationByReservationNumber(LIST *list, int reservationNumbe
     printf("  Table Number: %d\n", current->iTableNumber);
     printf("  Seats: %d\n", current->seats);
     printf("  Time: %d\n", current->time);
+    orderPrintAllOrders(current->foodOrders);
     return 0;
 }
 
