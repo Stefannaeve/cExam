@@ -32,10 +32,10 @@ void *thread_A(void *sendThreadArg) {
 
         // Lock the mutex
         // Wait for the buffer to empty
-        pthread_mutex_lock(&sendThread->mutex);
         while (sendThread->bytes_in_buffer > 0) {
-            pthread_cond_wait(&sendThread->cond_empty, &sendThread->mutex);
+            sem_wait(&sendThread->bufferCleared);
         }
+        pthread_mutex_lock(&sendThread->mutex);
 
         // Read the file into the buffer
         int read_bytes = fread(sendThread->buffer + sendThread->bytes_in_buffer, 1,
@@ -46,13 +46,13 @@ void *thread_A(void *sendThreadArg) {
             printf("%c", sendThread->buffer[i]);
         }
 
-        pthread_cond_signal(&sendThread->cond_full);
         pthread_mutex_unlock(&sendThread->mutex);
+        sem_post(&sendThread->bufferFull);
 
         // Signal the other thread that the file has ended
         if (read_bytes == 0 && feof(fp)) {
             sendThread->isDone = 1;
-            pthread_cond_signal(&sendThread->cond_full);
+            sem_post(&sendThread->bufferFull);
             pthread_mutex_unlock(&sendThread->mutex);
             break;
         }
@@ -73,15 +73,15 @@ void *thread_B(void *sendThreadArg) {
 
     while (1) {
         // Lock the mutex
-        pthread_mutex_lock(&sendThread->mutex);
-        // Wait for the buffer to fill
         if (sendThread->bytes_in_buffer == 0) {
             printf("Before %d\n", count);
-            pthread_cond_wait(&sendThread->cond_full, &sendThread->mutex);
+            sem_wait(&sendThread->bufferFull);
             printf("%d\n", sendThread->isDone);
             printf("After %d\n", count);
             // Check for signal from thread A that the file has ended
         }
+        pthread_mutex_lock(&sendThread->mutex);
+        // Wait for the buffer to fill
 
         // Count the bytes in the buffer
         for (int i = 0; i < sendThread->bytes_in_buffer; i++) {
@@ -90,8 +90,10 @@ void *thread_B(void *sendThreadArg) {
 
         // Signal the other thread that the buffer is empty
         sendThread->bytes_in_buffer = 0;
-        pthread_cond_signal(&sendThread->cond_empty);
+
         pthread_mutex_unlock(&sendThread->mutex);
+
+        sem_post(&sendThread->bufferCleared);
 
         if (sendThread->isDone) {
             break;
