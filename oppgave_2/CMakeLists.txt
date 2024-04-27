@@ -6,7 +6,6 @@ set(CMAKE_C_STANDARD 11)
 include_directories(include)
 
 add_executable(task
-        src/main.c
         src/eksamen_v24_oppgave2_all_lower.c
         src/eksamen_v24_oppgave2_all_upper.c
         src/eksamen_v24_oppgave2_anagram.c
@@ -19,4 +18,5 @@ add_executable(task
         include/eksamen_v24_oppgave2_disjoint.h
         include/eksamen_v24_oppgave2_heterogram.h
         include/eksamen_v24_oppgave2_palindrom.h
-        include/main.h)
+        include/main.h
+        src/main.c)

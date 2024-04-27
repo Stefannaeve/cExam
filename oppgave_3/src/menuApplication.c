@@ -55,7 +55,8 @@ int menuApplication() {
                     break;
                 case '2':
                     printf("2\n");
-                    //getReservation();
+                    memset(inputArray, 0, 2);
+                    //getReservation(&list, inputArray, sizeOfArray);
                     break;
                 case '3':
                     printf("3\n");
@@ -86,6 +87,69 @@ int menuApplication() {
 
     }
     return TRUE;
+}
+
+int getReservation(LIST *list, char *inputArray, int sizeOfArray) {
+    int status = TRUE;
+
+    char *array[] = {
+            "See all reservations",
+            "See reservation by name",
+            "See reservation by table number",
+            "See reservation by reservation number"
+    };
+
+    while (TRUE) {
+
+        char result = menuHandling(array, inputArray, sizeOfArray);
+
+        if (result != TRUE) {
+
+        } else {
+            switch (*inputArray) {
+                case '1':
+                    printAllNodes(list);
+                    break;
+                case '2':
+                    printf("What is the name you are after?\n");
+                    status = askUserQuestion("Name: ", name, USER_INPUT_SIZE);
+                    if (status != TRUE) {
+                        if (status == QUIT) {
+                            printf("Quitting\n");
+                        } else {
+                            printf("Error message: %s\n", strerror(errno));
+                        }
+                    } else {
+                    printReservationByName(list, inputArray);
+                    break;
+                case '3':
+                    printf("3\n");
+                    //getReservationByName();
+                    break;
+                case '4':
+                    //deleteReservation();
+                    break;
+                case '5':
+                    //addFoodToReservation();
+                    break;
+                case '6':
+                    //printSpecificReservationWithSum();
+                    break;
+                case '7':
+                    //printTableSumFromOneName();
+                    break;
+                case '8':
+                    printAllNodes(&list);
+                    free(inputArray);
+                    freeLinkedList(&list);
+                    return TRUE;
+                default:
+                    printf("Please insert a valid integer from \"1\" - \"8\"\n");
+                    break;
+            }
+        }
+
+    }
 }
 
 int addReservation(LIST *list) {
