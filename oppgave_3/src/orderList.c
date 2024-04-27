@@ -6,7 +6,7 @@
 #define START 0
 #define END 1
 
-int orderAdd(ORDER_LIST *list, const SENT_ORDER *sentOrder) {
+int orderAdd(ORDER_LIST *list, SENT_ORDER *sentOrder) {
     if (sentOrder == NULL) {
         errno = EINVAL;
         printf("Struct cannot be NULL- Error message: %s\n", strerror(errno));
@@ -49,6 +49,8 @@ int orderAdd(ORDER_LIST *list, const SENT_ORDER *sentOrder) {
         list->pTail = temp;
         return 0;
     }
+
+    free(sentOrder);
 
     orderAddToEnd(list, temp);
 

@@ -11,6 +11,8 @@ int main(int argc, char *argv[]){
 
     menuApplication();
 
+    /*
+
     LIST list = {NULL, NULL, 0};
     SENT_TABLE_RESERVATION sentTableReservation = { 1, 4, 12, "Fredrik"};
     SENT_TABLE_RESERVATION sentTableReservation2 = { 2, 7, 13, "Bengt"};
@@ -74,6 +76,8 @@ int main(int argc, char *argv[]){
     printReservationOrdersAndSum(&list, 3);
 
     freeLinkedList(&list);
+
+     */
 
     return 0;
 }

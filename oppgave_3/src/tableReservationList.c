@@ -342,7 +342,7 @@ int deleteSpecificReservation(LIST *list, int reservationNumber) {
     return 0;
 }
 
-int addFoodToSpecificReservation(LIST *list, int reservationNumber, const SENT_ORDER *sentOrder) {
+int addFoodToSpecificReservation(LIST *list, int reservationNumber, SENT_ORDER *sentOrder) {
     if (sentOrder == NULL) {
         errno = EINVAL;
         printf("Struct cannot be NULL - Error message: %s\n", strerror(errno));

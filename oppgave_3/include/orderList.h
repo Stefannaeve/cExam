@@ -24,7 +24,7 @@ typedef struct _ORDER_LIST {
     int size;
 } ORDER_LIST;
 
-int orderAdd(ORDER_LIST *list, const SENT_ORDER *sentOrder);
+int orderAdd(ORDER_LIST *list, SENT_ORDER *sentOrder);
 void orderAddToEnd(ORDER_LIST *list, ORDER *temp);
 void orderFreeLinkedList(ORDER_LIST *list);
 void orderPrintAllOrders(ORDER_LIST *list);
