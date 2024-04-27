@@ -58,7 +58,7 @@ int menuApplication() {
     char *inputArray = (char *) malloc(sizeof(char) * 2);
     LIST list = {NULL, NULL, 0};
 
-    while (status) {
+    while (status == TRUE) {
 
         status = menuHandling(array, inputArray, sizeOfArray);
 
@@ -77,28 +77,31 @@ int menuApplication() {
                     status = deleteReservation(&list);
                     break;
                 case '4':
-                    addFoodToReservation(&list);
+                    status = addFoodToReservation(&list);
                     break;
                 case '5':
-                    printSpecificReservationWithSum(&list);
+                    status = printSpecificReservationWithSum(&list);
                     break;
                 case '6':
-                    printSumForSpesificNameAtSpesificTable(&list);
+                    status = printSumForSpesificNameAtSpesificTable(&list);
                     break;
                 case '7':
                     status = FALSE;
                     break;
                 default:
                     printf("Please insert a valid integer from \"1\" - \"%d\"\n", sizeOfArray);
+                    status = TRUE;
                     break;
             }
         }
 
     }
-    printAllNodes(&list);
     free(inputArray);
     freeLinkedList(&list);
-    return TRUE;
+    if (status == ERROR) {
+        return ERROR;
+    }
+    return 0;
 }
 
 int printSumForSpesificNameAtSpesificTable(LIST *list){
@@ -140,6 +143,10 @@ int printSumForSpesificNameAtSpesificTable(LIST *list){
         } // NAME
         free(reservationNumber);
     } // RESERVATION NUMBER
+    if (status == ERROR) {
+        return ERROR;
+    }
+    return TRUE;
 }
 
 int printSpecificReservationWithSum(LIST *list) {
@@ -148,7 +155,7 @@ int printSpecificReservationWithSum(LIST *list) {
     if (reservationNumber == NULL) {
         errno = ENOMEM;
         printf("Memory allocation issue - Error message: %s\n", strerror(errno));
-        return ERROR;
+        status = ERROR;
     } else {
         printf("What is the reservation number you are after?\n");
         status = askUserQuestion("Reservation number: ", reservationNumber, RESERVATION_NUMBER);
@@ -163,6 +170,10 @@ int printSpecificReservationWithSum(LIST *list) {
         }
         free(reservationNumber);
     }
+    if (status == ERROR) {
+        return ERROR;
+    }
+    return TRUE;
 }
 
 int addFoodToReservation(LIST *list) {
@@ -521,7 +532,7 @@ int menuHandling(char *array[], char *inputArray, int sizeOfArray) {
     int result = inputWithCharLimit(inputArray, 2);
     if (result != TRUE) {
         printf("Issue with getting stream from user - Error message: %s", strerror(errno));
-        return FALSE;
+        return ERROR;
     }
 
     return TRUE;
@@ -537,13 +548,13 @@ int inputWithCharLimit(char *charArray, int lengthOfArray) {
     if (charArray == NULL) {
         errno = ENOMEM;
         printf("Memory allocation issue, given array is NULL - Error message: \n", strerror(errno));
-        return FALSE;
+        return ERROR;
     }
 
     if (lengthOfArray > USER_INPUT_SIZE) {
         errno = EINVAL;
         printf("Length of array is not to exceed %d - Error message: \n", USER_INPUT_SIZE, strerror(errno));
-        return FALSE;
+        return ERROR;
     }
 
     char szUserInput[USER_INPUT_SIZE] = {0};
