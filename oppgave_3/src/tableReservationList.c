@@ -186,6 +186,41 @@ int printSpecificNodeAndFood(LIST *list, int reservationNumber) {
     return 0;
 }
 
+int printSpecificReservationByReservationNumber(LIST *list, int reservationNumber) {
+    if (reservationNumber < 1) {
+        errno = EINVAL;
+        printf("reservation number cannot be negative - Error message: %s\n", strerror(errno));
+        return -1;
+    }
+
+    if (reservationNumber - 1 > list->size) {
+        errno = ERANGE;
+        printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
+        return -1;
+    }
+
+    TABLERESERVATION *current = list->pHead;
+    int counter = 0;
+    while (current != NULL) {
+        if(current->iReservationNumber == reservationNumber){
+            break;
+        }
+        current = current->pNextReservation;
+        counter++;
+    }
+    if (current == NULL) {
+        errno = ERANGE;
+        printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
+        return -1;
+    }
+    printf("Name: %s\n", current->name);
+    printf("Reservation Number: %d\n", current->iReservationNumber);
+    printf("  Table Number: %d\n", current->iTableNumber);
+    printf("  Seats: %d\n", current->seats);
+    printf("  Time: %d\n", current->time);
+    return 0;
+}
+
 int printReservationByName(LIST *list, const char *name) {
     int foundReservation = 0;
 
@@ -268,7 +303,7 @@ int deleteSpecificReservation(LIST *list, int reservationNumber) {
     int counter = 0;
 
     while (current != NULL) {
-        if(current->iTableNumber == reservationNumber){
+        if(current->iReservationNumber == reservationNumber){
             break;
         }
         current = current->pNextReservation;

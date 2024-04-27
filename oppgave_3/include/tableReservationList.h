@@ -38,6 +38,7 @@ void freeLinkedList(LIST *list);
 int printAllNodes(LIST *list);
 int printSpecificNodeAndFood(LIST *list, int reservationNumber);
 int printReservationByName(LIST *list, const char *name);
+int printSpecificReservationByReservationNumber(LIST *list, int reservationNumber);
 int printReservationOrdersAndSum(LIST *list, const int reservationNumber);
 int deleteSpecificReservation(LIST *list, int reservationNumber);
 int addFoodToSpecificReservation(LIST *list, int reservationNumber, const SENT_ORDER *sentOrder);
