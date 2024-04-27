@@ -286,6 +286,37 @@ int printReservationOrdersAndSum(LIST *list, const int reservationNumber) {
     return 0;
 }
 
+int printReservationOrdersForSpecificName(LIST *list, int reservationNumber, char *name){
+    if (reservationNumber < 1) {
+        errno = EINVAL;
+        printf("reservation number cannot be negative - Error message: %s\n", strerror(errno));
+        return -1;
+    }
+
+    if (reservationNumber - 1 > list->size) {
+        errno = ERANGE;
+        printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
+        return -1;
+    }
+
+    TABLERESERVATION *current = list->pHead;
+    int counter = 0;
+    while (current != NULL) {
+        if(current->iReservationNumber == reservationNumber){
+            break;
+        }
+        current = current->pNextReservation;
+        counter++;
+    }
+    if (current == NULL) {
+        errno = ERANGE;
+        printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
+        return -1;
+    }
+    printSumForSpecificName(current->foodOrders, name);
+    return 0;
+}
+
 int deleteSpecificReservation(LIST *list, int reservationNumber) {
     int index = reservationNumber - 1;
     if (reservationNumber < 1) {

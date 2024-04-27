@@ -36,6 +36,7 @@ int addAt(LIST *list, const SENT_TABLE_RESERVATION *sentTableReservation, int in
 void fixReservationNumbersFromIndex(LIST *list, int index);
 void freeLinkedList(LIST *list);
 int printAllNodes(LIST *list);
+int printReservationOrdersForSpecificName(LIST *list, int reservationNumber, char *name);
 int printSpecificNodeAndFood(LIST *list, int reservationNumber);
 int printReservationByName(LIST *list, const char *name);
 int printSpecificReservationByReservationNumber(LIST *list, int reservationNumber);

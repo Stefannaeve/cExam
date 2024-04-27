@@ -30,6 +30,8 @@ int getReservation(LIST *list, char *inputArray);
 
 int printSpecificReservationWithSum(LIST *list);
 
+int printSumForSpesificNameAtSpesificTable(LIST *list);
+
 int makeOrder(SENT_ORDER *sentOrder);
 
 void printListOptions(char *array[], int sizeOfArray);
@@ -81,7 +83,7 @@ int menuApplication() {
                     printSpecificReservationWithSum(&list);
                     break;
                 case '6':
-                    //printTableSumFromOneName();
+                    printSumForSpesificNameAtSpesificTable(&list);
                     break;
                 case '7':
                     status = FALSE;
@@ -97,6 +99,47 @@ int menuApplication() {
     free(inputArray);
     freeLinkedList(&list);
     return TRUE;
+}
+
+int printSumForSpesificNameAtSpesificTable(LIST *list){
+    int status = TRUE;
+    char *reservationNumber = (char *) malloc(sizeof(char) * USER_INPUT_SIZE);
+    if (reservationNumber == NULL) {
+        status = ERROR;
+        errno = ENOMEM;
+        printf("Memory allocation issue - Error message: %s\n", strerror(errno));
+    } else {
+        char *name = (char *) malloc(sizeof(char) * USER_INPUT_SIZE);
+        if (name == NULL) {
+            status = ERROR;
+            errno = ENOMEM;
+            printf("Memory allocation issue - Error message: %s\n", strerror(errno));
+        } else {
+            printf("What is the reservation number you are after?\n");
+            status = askUserQuestion("Reservation number: ", reservationNumber, RESERVATION_NUMBER);
+            if (status != TRUE) {
+                if (status == QUIT) {
+                    printf("Returning\n");
+                } else {
+                    printf("Error message: %s\n", strerror(errno));
+                }
+            } else {
+                printf("What is the name you are after?\n");
+                status = askUserQuestion("Name: ", name, USER_INPUT_SIZE);
+                if (status != TRUE) {
+                    if (status == QUIT) {
+                        printf("Quitting\n");
+                    } else {
+                        printf("Error message: %s\n", strerror(errno));
+                    }
+                } else {
+                    printReservationOrdersForSpecificName(list, atoi(reservationNumber), name);
+                }
+            }
+            free(name);
+        } // NAME
+        free(reservationNumber);
+    } // RESERVATION NUMBER
 }
 
 int printSpecificReservationWithSum(LIST *list) {
