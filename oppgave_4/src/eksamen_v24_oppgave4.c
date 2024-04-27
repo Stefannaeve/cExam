@@ -30,24 +30,27 @@ void *thread_A(void *sendThreadArg) {
         // Lock the mutex
         // Wait for the buffer to empty
         pthread_mutex_lock(&sendThread->mutex);
-        while (sendThread->bytes_in_buffer == BUFFER_SIZE) {
+        while (sendThread->bytes_in_buffer > 0) {
             pthread_cond_wait(&sendThread->cond_empty, &sendThread->mutex);
         }
 
         // Read the file into the buffer
-        int read_bytes = fread(sendThread->buffer + sendThread->bytes_in_buffer, 1, BUFFER_SIZE - sendThread->bytes_in_buffer, fp);
+        int read_bytes = fread(sendThread->buffer + sendThread->bytes_in_buffer, 1,
+                               BUFFER_SIZE - sendThread->bytes_in_buffer, fp);
         sendThread->bytes_in_buffer += read_bytes;
 
-        // Signal the other thread that the buffer is full
-        if (read_bytes < BUFFER_SIZE - sendThread->bytes_in_buffer) {
-            pthread_mutex_unlock(&sendThread->mutex);
-            break;
+        for (int i = 0; i < sendThread->bytes_in_buffer; ++i) {
+            printf("%c", sendThread->buffer[i]);
         }
 
-        // Signal the other thread that the buffer is full
-        // Unlock the mutex
         pthread_cond_signal(&sendThread->cond_full);
         pthread_mutex_unlock(&sendThread->mutex);
+
+        // Signal the other thread that the file has ended
+        if (read_bytes == 0 && feof(fp)) {
+            sendThread->bytes_in_buffer = -1;
+            break;
+        }
     }
 
     // Close the file
@@ -59,14 +62,18 @@ void *thread_A(void *sendThreadArg) {
 void *thread_B(void *sendThreadArg) {
     SEND_THREAD *sendThread = (SEND_THREAD *) sendThreadArg;
 
-    memset(sendThread->count, 0, BYTE_RANGE - 1);
+    memset(sendThread->count, 0, (BYTE_RANGE - 1) * sizeof(int));
 
     while (1) {
         // Lock the mutex
         // Wait for the buffer to fill
         pthread_mutex_lock(&sendThread->mutex);
-        while (sendThread->bytes_in_buffer == 0) {
+        if (sendThread->bytes_in_buffer == 0) {
             pthread_cond_wait(&sendThread->cond_full, &sendThread->mutex);
+            // Check for signal from thread A that the file has ended
+            if (sendThread->bytes_in_buffer == -1) {
+                break;
+            }
         }
 
         // Count the bytes in the buffer
@@ -74,17 +81,16 @@ void *thread_B(void *sendThreadArg) {
             sendThread->count[sendThread->buffer[i]]++;
         }
 
-        
+        // Signal the other thread that the buffer is empty
         sendThread->bytes_in_buffer = 0;
         pthread_cond_signal(&sendThread->cond_empty);
         pthread_mutex_unlock(&sendThread->mutex);
 
-        if (sendThread->bytes_in_buffer == 0) {
-            break;
-        }
+
     }
-    for (int i = 0; i < BYTE_RANGE; i++)
+    for (int i = 0; i < BYTE_RANGE; i++) {
         printf("%d: %d\n", i, sendThread->count[i]);
+    }
     pthread_exit(NULL);
 }
 
@@ -95,9 +101,18 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    pthread_mutex_init(&sendThread->mutex, NULL);
-    pthread_cond_init(&sendThread->cond_full, NULL);
-    pthread_cond_init(&sendThread->cond_empty, NULL);
+    if (pthread_mutex_init(&sendThread->mutex, NULL) != 0) {
+        perror("Could not initialize mutex");
+        return -1;
+    }
+    if (pthread_cond_init(&sendThread->cond_full, NULL) != 0) {
+        perror("Could not initialize cond_full");
+        return -1;
+    }
+    if (pthread_cond_init(&sendThread->cond_empty, NULL) != 0) {
+        perror("Could not initialize cond_empty");
+        return -1;
+    }
     sendThread->bytes_in_buffer = 0;
 
 
@@ -105,23 +120,26 @@ int main(int argc, char *argv[]) {
 
     if (pthread_create(&threadA, NULL, thread_A, (void *) sendThread) != 0) {
         perror("Could not create thread A");
-        exit(1);
+        return -1;
     }
 
     if (pthread_create(&threadB, NULL, thread_B, (void *) sendThread) != 0) {
         perror("Could not create thread B");
-        exit(1);
+        return -1;
     }
 
     if (pthread_join(threadA, NULL) != 0) {
         perror("Could not join thread A");
-        exit(1);
+        return -1;
     }
     if (pthread_join(threadB, NULL) != 0) {
         perror("Could not join thread B");
-        exit(1);
+        return -1;
     }
 
+    pthread_mutex_destroy(&sendThread->mutex);
+    pthread_cond_destroy(&sendThread->cond_full);
+    pthread_cond_destroy(&sendThread->cond_empty);
     free(sendThread);
 
     return 0;
