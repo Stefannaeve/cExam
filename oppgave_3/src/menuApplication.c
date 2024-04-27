@@ -26,6 +26,8 @@ int deleteReservation(LIST *list);
 
 int getReservation(LIST *list, char *inputArray);
 
+int makeOrder(SENT_ORDER *sentOrder);
+
 void printListOptions(char *array[], int sizeOfArray);
 
 int inputWithCharLimit(char *charArray, int lengthOfArray);
@@ -91,6 +93,109 @@ int menuApplication() {
     free(inputArray);
     freeLinkedList(&list);
     return TRUE;
+}
+
+int addFoodToReservation(LIST *list) {
+    int status = TRUE;
+
+    char *reservationNumber = (char *) malloc(sizeof(char) * RESERVATION_NUMBER);
+    if (reservationNumber == NULL) {
+        status = ERROR;
+        errno = ENOMEM;
+        printf("Memory allocation issue - Error message: %s\n", strerror(errno));
+    } else {
+
+        printf("What is the reservation number you are after?\n");
+        status = askUserQuestion("Reservation number: ", reservationNumber, RESERVATION_NUMBER);
+        if (status != TRUE) {
+            if (status == QUIT) {
+                printf("Returning\n");
+            } else {
+                printf("Error message: %s\n", strerror(errno));
+            }
+        } else {
+            status = printSpecificReservationByReservationNumber(list, atoi(reservationNumber));
+            if (status == ERROR) {
+                
+            } else {
+
+                printf("Are you sure you want to add food to this reservation? y/n\n");
+                status = yesOrNo();
+                if (status == TRUE) {
+                    printf("Adding food to reservation\n");
+                    SENT_ORDER *sentOrder = malloc(sizeof(struct _SENT_ORDER));
+                    if (sentOrder == NULL) {
+                        status = ERROR;
+                        errno = ENOMEM;
+                        printf("Memory allocation issue - Error message: %s\n", strerror(errno));
+                    } else {
+                        status = makeOrder(sentOrder);
+                        if (status == ERROR) {
+                            free(sentOrder);
+                        } else {
+                            addFoodToSpecificReservation(list, atoi(reservationNumber), sentOrder);
+                        }
+                    }
+                    //addFoodToSpecificReservation(list, atoi(reservationNumber));
+                } else {
+                    printf("Adding food cancelled...\n");
+                    printf("Returning\n");
+                }
+            }
+        }
+        free(reservationNumber);
+    }
+    if (status == ERROR) {
+        return ERROR;
+    }
+    return TRUE;
+}
+
+int makeOrder(SENT_ORDER *sentOrder) {
+    int status = TRUE;
+    char *name = (char *) malloc(sizeof(char) * USER_INPUT_SIZE);
+
+    printf("Please insert the name of the person ordering\n");
+    status = askUserQuestion("Name: ", name, USER_INPUT_SIZE);
+    if (status != TRUE) {
+        if (status == QUIT) {
+            printf("Returning\n");
+        } else {
+            printf("Error message: %s\n", strerror(errno));
+        }
+    } else {
+        sentOrder->name = name;
+        memset(name, 0, USER_INPUT_SIZE);
+
+        printf("Please insert the food description\n");
+        status = askUserQuestion("Food description: ", name, USER_INPUT_SIZE);
+        if (status != TRUE) {
+            if (status == QUIT) {
+                printf("Returning\n");
+            } else {
+                printf("Error message: %s\n", strerror(errno));
+            }
+        } else {
+            sentOrder->foodDescription = name;
+            memset(name, 0, USER_INPUT_SIZE);
+
+            printf("Please insert the price of the food\n");
+            status = askUserQuestion("Price: ", name, USER_INPUT_SIZE);
+            if (status != TRUE) {
+                if (status == QUIT) {
+                    printf("Returning\n");
+                } else {
+                    printf("Error message: %s\n", strerror(errno));
+                }
+            } else {
+                sentOrder->price = atoi(name);
+            }
+        }
+        if (status == ERROR) {
+            return ERROR;
+        }
+        return TRUE;
+    }
 }
 
 int deleteReservation(LIST *list) {
