@@ -2,7 +2,7 @@
 // Created by stefannaeve on 4/28/24.
 //
 
-#ifndef SERVER_SERVER_H
-#define SERVER_SERVER_H
+#ifndef __SERVER_SERVER_H__
+#define __SERVER_SERVER_H__
 
-#endif //SERVER_SERVER_H
+#endif //__SERVER_SERVER_H__
