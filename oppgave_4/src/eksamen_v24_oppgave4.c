@@ -60,6 +60,8 @@ void *thread_A(void *sendThreadArg) {
     // Close the file
     // Exit the thread
     fclose(fp);
+    printf("File closed\n");
+    fp = NULL;
     pthread_exit(NULL);
 }
 
@@ -67,7 +69,7 @@ void *thread_B(void *sendThreadArg) {
     SEND_THREAD *sendThread = (SEND_THREAD *) sendThreadArg;
 
     int count = 0;
-    int i = 0;
+    int i;
 
     memset(sendThread->count, 0, BYTE_RANGE * sizeof(int));
 
@@ -84,7 +86,7 @@ void *thread_B(void *sendThreadArg) {
         // Wait for the buffer to fill
 
         // Count the bytes in the buffer
-        for (int i = 0; i < sendThread->bytes_in_buffer; i++) {
+        for (i = 0; i < sendThread->bytes_in_buffer; i++) {
             sendThread->count[sendThread->buffer[i]]++;
         }
 
@@ -99,8 +101,6 @@ void *thread_B(void *sendThreadArg) {
             break;
         }
         count++;
-
-
     }
     for (i = 0; i < BYTE_RANGE; i++) {
         printf("%d: %d\n", i, sendThread->count[i]);
@@ -118,11 +118,9 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-
     SEND_THREAD *sendThread = (SEND_THREAD *) malloc(sizeof(SEND_THREAD));
     if (sendThread == NULL) {
         printf("Failed to allocate memory for send_thread\n");
-
     } else {
 
         if (pthread_mutex_init(&sendThread->mutex, NULL) != 0) {
@@ -140,33 +138,41 @@ int main(int argc, char *argv[]) {
                     sendThread->isDone = 0;
                     sendThread->filename = argv[1];
 
-
                     pthread_t threadA, threadB;
 
                     if (pthread_create(&threadA, NULL, thread_A, (void *) sendThread) != 0) {
                         perror("Could not create thread A");
                     } else {
-
+                        printf("Created thread A\n");
                         if (pthread_create(&threadB, NULL, thread_B, (void *) sendThread) != 0) {
                             perror("Could not create thread B");
                         } else {
-
+                            printf("Created thread B\n");
+                            printf("Thread IDs: A: %lu, B: %lu\n", threadA, threadB);
                             if (pthread_join(threadB, NULL) != 0) {
                                 perror("Could not join thread B");
                             }
+                            printf("Joined thread B\n");
                         }
                         if (pthread_join(threadA, NULL) != 0) {
                             perror("Could not join thread A");
                         }
+                        printf("Joined thread A\n");
+                        printf("Thread IDs: A: %lu, B: %lu\n", threadA, threadB);
                     } // Created thread A
                     sem_destroy(&sendThread->bufferCleared);
+                    printf("Destroyed bufferCleared\n");
                 } // Made semaphore bufferCleared
                 sem_destroy(&sendThread->bufferFull);
+                printf("Destroyed bufferFull\n");
             } // Made semaphore bufferFull
             pthread_mutex_destroy(&sendThread->mutex);
+            printf("Destroyed mutex\n");
         } // Made mutex
         free(sendThread);
+        sendThread = NULL;
+        printf("Freed sendThread\n");
     } // Made sendThread
-
+    printf("Done\n");
     return 0;
 }
