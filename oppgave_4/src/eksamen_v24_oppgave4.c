@@ -42,10 +42,14 @@ void *thread_A(void *sendThreadArg) {
                                BUFFER_SIZE - sendThread->bytes_in_buffer, fp);
         sendThread->bytes_in_buffer += read_bytes;
 
+        /*
         for (int i = 0; i < sendThread->bytes_in_buffer; ++i) {
             printf("%c", sendThread->buffer[i]);
         }
+         */
 
+        // Unlock the mutex
+        // Signal the other thread that the buffer is full
         pthread_mutex_unlock(&sendThread->mutex);
         sem_post(&sendThread->bufferFull);
 
@@ -62,7 +66,9 @@ void *thread_A(void *sendThreadArg) {
     fclose(fp);
     printf("File closed\n");
     fp = NULL;
-    pthread_exit(NULL);
+    return 0;
+    // Pthread_exit made leaks in program
+    // pthread_exit(NULL);
 }
 
 void *thread_B(void *sendThreadArg) {
@@ -74,16 +80,16 @@ void *thread_B(void *sendThreadArg) {
     memset(sendThread->count, 0, BYTE_RANGE * sizeof(int));
 
     while (1) {
-        // Lock the mutex
+        // If buffer is read, wait for it to be full again
         if (sendThread->bytes_in_buffer == 0) {
             printf("Before %d\n", count);
+            // Check for signal from thread A that the file has ended
             sem_wait(&sendThread->bufferFull);
             printf("%d\n", sendThread->isDone);
             printf("After %d\n", count);
-            // Check for signal from thread A that the file has ended
         }
+        // Locks the mutex
         pthread_mutex_lock(&sendThread->mutex);
-        // Wait for the buffer to fill
 
         // Count the bytes in the buffer
         for (i = 0; i < sendThread->bytes_in_buffer; i++) {
@@ -93,10 +99,12 @@ void *thread_B(void *sendThreadArg) {
         // Signal the other thread that the buffer is empty
         sendThread->bytes_in_buffer = 0;
 
+        // Unlock the mutex
+        // Signal the other thread that the buffer has been counted
         pthread_mutex_unlock(&sendThread->mutex);
-
         sem_post(&sendThread->bufferCleared);
 
+        // If the file has ended, break the loop
         if (sendThread->isDone) {
             break;
         }
@@ -105,7 +113,10 @@ void *thread_B(void *sendThreadArg) {
     for (i = 0; i < BYTE_RANGE; i++) {
         printf("%d: %d\n", i, sendThread->count[i]);
     }
-    pthread_exit(NULL);
+    printf("Thread B is done\n");
+    return 0;
+    // Pthread_exit made leaks in program
+    // pthread_exit(NULL);
 }
 
 int main(int argc, char *argv[]) {
@@ -143,6 +154,7 @@ int main(int argc, char *argv[]) {
                     if (pthread_create(&threadA, NULL, thread_A, (void *) sendThread) != 0) {
                         perror("Could not create thread A");
                     } else {
+
                         printf("Created thread A\n");
                         if (pthread_create(&threadB, NULL, thread_B, (void *) sendThread) != 0) {
                             perror("Could not create thread B");
@@ -154,14 +166,18 @@ int main(int argc, char *argv[]) {
                             }
                             printf("Joined thread B\n");
                         }
+
                         if (pthread_join(threadA, NULL) != 0) {
                             perror("Could not join thread A");
                         }
                         printf("Joined thread A\n");
                         printf("Thread IDs: A: %lu, B: %lu\n", threadA, threadB);
+
                     } // Created thread A
+
                     sem_destroy(&sendThread->bufferCleared);
                     printf("Destroyed bufferCleared\n");
+
                 } // Made semaphore bufferCleared
                 sem_destroy(&sendThread->bufferFull);
                 printf("Destroyed bufferFull\n");
