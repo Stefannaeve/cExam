@@ -14,7 +14,6 @@ typedef struct _SEND_THREAD {
     unsigned char buffer[BUFFER_SIZE];
     char *filename;
     pthread_mutex_t mutex;
-    pthread_cond_t cond_full, cond_empty;
     sem_t bufferFull, bufferCleared;
     int bytes_in_buffer;
     int isDone;
@@ -26,7 +25,7 @@ void *thread_A(void *sendThreadArg) {
     FILE *fp = fopen(sendThread->filename, "r");
     if (!fp) {
         perror("Failed to open file");
-        exit(EXIT_FAILURE);
+        pthread_exit(NULL);
     }
 
     while (1) {
@@ -68,8 +67,9 @@ void *thread_B(void *sendThreadArg) {
     SEND_THREAD *sendThread = (SEND_THREAD *) sendThreadArg;
 
     int count = 0;
+    int i = 0;
 
-    memset(sendThread->count, 0, (BYTE_RANGE - 1) * sizeof(int));
+    memset(sendThread->count, 0, BYTE_RANGE * sizeof(int));
 
     while (1) {
         // Lock the mutex
@@ -102,7 +102,7 @@ void *thread_B(void *sendThreadArg) {
 
 
     }
-    for (int i = 0; i < BYTE_RANGE; i++) {
+    for (i = 0; i < BYTE_RANGE; i++) {
         printf("%d: %d\n", i, sendThread->count[i]);
     }
     pthread_exit(NULL);
@@ -122,73 +122,51 @@ int main(int argc, char *argv[]) {
     SEND_THREAD *sendThread = (SEND_THREAD *) malloc(sizeof(SEND_THREAD));
     if (sendThread == NULL) {
         printf("Failed to allocate memory for send_thread\n");
-        return -1;
-    }
 
-    if (pthread_mutex_init(&sendThread->mutex, NULL) != 0) {
-        perror("Could not initialize mutex");
-        return -1;
-    }
-    if (pthread_cond_init(&sendThread->cond_full, NULL) != 0) {
-        perror("Could not initialize cond_full");
-        return -1;
-    }
-    if (pthread_cond_init(&sendThread->cond_empty, NULL) != 0) {
-        perror("Could not initialize cond_empty");
-        return -1;
-    }
+    } else {
 
-    if(sem_init(&sendThread->bufferFull, 0, 0) != 0) {
-        perror("Could not initialize bufferFull");
-        return -1;
-    }
-    if(sem_init(&sendThread->bufferCleared, 0, 0) != 0) {
-        perror("Could not initialize bufferCleared");
-        return -1;
-    }
+        if (pthread_mutex_init(&sendThread->mutex, NULL) != 0) {
+            perror("Could not initialize mutex");
+        } else {
 
-    sendThread->bytes_in_buffer = 0;
-    sendThread->isDone = 0;
-    sendThread->filename = argv[1];
+            if (sem_init(&sendThread->bufferFull, 0, 0) != 0) {
+                perror("Could not initialize bufferFull");
+            } else {
+                if (sem_init(&sendThread->bufferCleared, 0, 0) != 0) {
+                    perror("Could not initialize bufferCleared");
+                } else {
+
+                    sendThread->bytes_in_buffer = 0;
+                    sendThread->isDone = 0;
+                    sendThread->filename = argv[1];
 
 
-    pthread_t threadA, threadB;
+                    pthread_t threadA, threadB;
 
-    if (pthread_create(&threadA, NULL, thread_A, (void *) sendThread) != 0) {
-        perror("Could not create thread A");
-        return -1;
-    }
+                    if (pthread_create(&threadA, NULL, thread_A, (void *) sendThread) != 0) {
+                        perror("Could not create thread A");
+                    } else {
 
-    if (pthread_create(&threadB, NULL, thread_B, (void *) sendThread) != 0) {
-        perror("Could not create thread B");
-        return -1;
-    }
+                        if (pthread_create(&threadB, NULL, thread_B, (void *) sendThread) != 0) {
+                            perror("Could not create thread B");
+                        } else {
 
-    if (pthread_join(threadA, NULL) != 0) {
-        perror("Could not join thread A");
-        return -1;
-    }
-    if (pthread_join(threadB, NULL) != 0) {
-        perror("Could not join thread B");
-        return -1;
-    }
-
-    sem_destroy(&sendThread->bufferFull);
-    sem_destroy(&sendThread->bufferCleared);
-    pthread_mutex_destroy(&sendThread->mutex);
-    pthread_cond_destroy(&sendThread->cond_full);
-    pthread_cond_destroy(&sendThread->cond_empty);
-    free(sendThread);
+                            if (pthread_join(threadB, NULL) != 0) {
+                                perror("Could not join thread B");
+                            }
+                        }
+                        if (pthread_join(threadA, NULL) != 0) {
+                            perror("Could not join thread A");
+                        }
+                    } // Created thread A
+                    sem_destroy(&sendThread->bufferCleared);
+                } // Made semaphore bufferCleared
+                sem_destroy(&sendThread->bufferFull);
+            } // Made semaphore bufferFull
+            pthread_mutex_destroy(&sendThread->mutex);
+        } // Made mutex
+        free(sendThread);
+    } // Made sendThread
 
     return 0;
 }
-
-
-
-
-
-
-
-
-
-
