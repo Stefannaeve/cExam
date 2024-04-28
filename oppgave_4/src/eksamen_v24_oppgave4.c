@@ -4,6 +4,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <semaphore.h>
+#include "../include/eksamen_v24_oppgave4.h"
+#include "../include/sha1.h"
 
 #define BUFFER_SIZE 4096
 #define NUM_THREADS 2
@@ -22,7 +24,7 @@ typedef struct _SEND_THREAD {
 void *thread_A(void *sendThreadArg) {
     SEND_THREAD *sendThread = (SEND_THREAD *) sendThreadArg;
 
-    FILE *fp = fopen(sendThread->filename, "r");
+    FILE *fp = fopen("eksamen_v24_oppgave4_pg2265.txt", "r");
     if (!fp) {
         perror("Failed to open file");
         pthread_exit(NULL);
@@ -76,17 +78,18 @@ void *thread_B(void *sendThreadArg) {
 
     int count = 0;
     int i;
+    int j;
+    unsigned char digest[20];
+    unsigned char array[64];
 
     memset(sendThread->count, 0, BYTE_RANGE * sizeof(int));
 
     while (1) {
         // If buffer is read, wait for it to be full again
         if (sendThread->bytes_in_buffer == 0) {
-            printf("Before %d\n", count);
             // Check for signal from thread A that the file has ended
             sem_wait(&sendThread->bufferFull);
-            printf("%d\n", sendThread->isDone);
-            printf("After %d\n", count);
+
         }
         // Locks the mutex
         pthread_mutex_lock(&sendThread->mutex);
@@ -94,6 +97,36 @@ void *thread_B(void *sendThreadArg) {
         // Count the bytes in the buffer
         for (i = 0; i < sendThread->bytes_in_buffer; i++) {
             sendThread->count[sendThread->buffer[i]]++;
+        }
+
+        SHA1_CTX ctx;
+        SHA1Init(&ctx);
+        i = 0;
+
+        while (i < sendThread->bytes_in_buffer) {
+            memset(array, 0, 64 * sizeof(unsigned char));
+            memset(digest, 0, 20 * sizeof(unsigned char));
+            memset(&ctx, 0, sizeof(SHA1_CTX));
+            j = 0;
+
+            for (j = 0; j < 64 && i < sendThread->bytes_in_buffer; ++j) {
+                array[j] = sendThread->buffer[i];
+                i++;
+            }
+
+            SHA1Update(&ctx, array, j* sizeof(unsigned char));
+
+            SHA1Final(digest, &ctx);
+
+            for (j = 0; j < sizeof(digest); ++j) {
+                printf("%02X", digest[j]);
+                /*
+                if ((j + 1) % 8 == 0 && j < sizeof(digest) - 1) {
+                    printf(" ");
+                }
+                 */
+            }
+            printf("\n\n");
         }
 
         // Signal the other thread that the buffer is empty
@@ -111,7 +144,9 @@ void *thread_B(void *sendThreadArg) {
         count++;
     }
     for (i = 0; i < BYTE_RANGE; i++) {
-        printf("%d: %d\n", i, sendThread->count[i]);
+        if (sendThread->count[i] > 0) {
+            printf("%d: %d\n", i, sendThread->count[i]);
+        }
     }
     printf("Thread B is done\n");
     return 0;
@@ -121,13 +156,14 @@ void *thread_B(void *sendThreadArg) {
 
 int main(int argc, char *argv[]) {
 
+    /*
     if (argc > 2) {
         printf("%s only has one argument\n", argv[0]);
         return -1;
     } else if (argc == 1) {
         printf("%s has an argument for the file to use\n", argv[0]);
         return -1;
-    }
+    }*/
 
     SEND_THREAD *sendThread = (SEND_THREAD *) malloc(sizeof(SEND_THREAD));
     if (sendThread == NULL) {

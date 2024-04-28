@@ -11,7 +11,8 @@ RM = rm -f
 OBJDIR = obj
 
 # PATHS
-_DEPS = eksamen_v24_oppgave4.h sha1.c
+_DEPS = eksamen_v24_oppgave4.h sha1.h
+
 DEPS = $(patsubst %, $(INCLDIR)/%, $(_DEPS))
 
 _OBJS = eksamen_v24_oppgave4.o sha1.o
