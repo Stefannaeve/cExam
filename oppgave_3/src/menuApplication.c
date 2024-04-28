@@ -514,13 +514,13 @@ void printListOptions(char *aszArray[], int iSizeOfArray) {
 int inputWithCharLimit(char *pszCharArray, int iLengthOfArray) {
     if (pszCharArray == NULL) {
         errno = ENOMEM;
-        printf("Memory allocation issue, given array is NULL - Error message: \n", strerror(errno));
+        printf("Memory allocation issue, given array is NULL - Error message: %s\n", strerror(errno));
         return ERROR;
     }
 
     if (iLengthOfArray > USER_INPUT_SIZE) {
         errno = EINVAL;
-        printf("Length of array is not to exceed %d - Error message: \n", USER_INPUT_SIZE, strerror(errno));
+        printf("Length of array is not to exceed %d - Error message: %s\n", USER_INPUT_SIZE, strerror(errno));
         return ERROR;
     }
 
