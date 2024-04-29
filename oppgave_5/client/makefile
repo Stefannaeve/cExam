@@ -24,9 +24,13 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c $(DEPS)
 $(TARGET): $(OBJS)
 	$(CC) -o $@ $^ $(CFLAGS)
 	
-valgrind:
+valgrind1:
 	make
-	valgrind --leak-check=yes --show-leak-kinds=all --track-origins=yes ./$(TARGET) eksamen_v24_oppgave4_pg2265.txt
+	valgrind --leak-check=yes --show-leak-kinds=all --track-origins=yes ./$(TARGET) -server 127.0.0.1 -port 8080 -phone 1234
+
+valgrind2:
+	make
+	valgrind --leak-check=yes --show-leak-kinds=all --track-origins=yes ./$(TARGET) -server 127.0.0.1 -port 8081 -phone 4321
 	
 client1:
 	make

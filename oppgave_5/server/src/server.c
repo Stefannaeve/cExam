@@ -9,7 +9,7 @@
 
 
 #define BUFFERSIZE 1024
-#define THREADS 1
+#define THREADS 2
 
 typedef struct _SNP_HEADER {
     int32_t iMagicNumber;
@@ -102,27 +102,30 @@ void *threadServer(void *arg) {
                            strerror(errno));
                 } else {
 
-                    read(sockNewFd, &snp.ssSnpHeader, sizeof(snp.ssSnpHeader));
-                    SNP *pSnp = (SNP *) malloc(sizeof(SNP) + snp.ssSnpHeader.iSizeOfBody + 1);
-                    memset(pSnp, 0, sizeof(SNP) + snp.ssSnpHeader.iSizeOfBody + 1);
+                    while (1) {
+                        read(sockNewFd, &snp.ssSnpHeader, sizeof(snp.ssSnpHeader));
+                        SNP *pSnp = (SNP *) malloc(sizeof(SNP) + snp.ssSnpHeader.iSizeOfBody + 1);
+                        memset(pSnp, 0, sizeof(SNP) + snp.ssSnpHeader.iSizeOfBody + 1);
 
-                    if (pSnp == NULL) {
-                        printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
-                        return NULL;
+                        if (pSnp == NULL) {
+                            printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
+                            return NULL;
+                        }
+
+                        memcpy(pSnp, &snp, sizeof(snp.ssSnpHeader));
+
+                        read(sockNewFd, pSnp->body, pSnp->ssSnpHeader.iSizeOfBody);
+                        pSnp->body[snp.ssSnpHeader.iSizeOfBody] = '\0';
+
+                        if (strncmp(pSnp->body, "exit", 4) == 0) {
+                            printf("Exiting\n");
+                            free(pSnp);
+                            break;
+                        }
+
+                        printf("Number %d: %s\n", pSnp->ssSnpHeader.iPhoneNumber, pSnp->body);
+                        free(pSnp);
                     }
-
-                    memcpy(pSnp, &snp, sizeof(snp.ssSnpHeader));
-
-                    printf("Magic Number: %d\n", pSnp->ssSnpHeader.iMagicNumber);
-                    printf("IP Address: %02X\n", ntohl(pSnp->ssSnpHeader.iIpAddress));
-                    printf("Phone Number: %d\n", pSnp->ssSnpHeader.iPhoneNumber);
-                    printf("Size of Body: %d\n", pSnp->ssSnpHeader.iSizeOfBody);
-
-
-                    read(sockNewFd, snp.body, snp.ssSnpHeader.iSizeOfBody);
-                    snp.body[snp.ssSnpHeader.iSizeOfBody] = '\0';
-
-                    printf("Number %d: %s\n", pSnp->ssSnpHeader.iPhoneNumber, snp.body);
 
                     printf("Closing socket\n");
 
@@ -131,7 +134,6 @@ void *threadServer(void *arg) {
                     sockFd = -1;
                     sockNewFd = -1;
 
-                    free(pSnp);
                 }
             }
         }

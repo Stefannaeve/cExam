@@ -42,14 +42,14 @@ void *threadClient(void *arg);
 int userInput(char *buffer, int size);
 
 int client(int argc, char *argv[]) {
-    int iPort = atoi(argv[1]);
-    int status = 0;
-    int i;
     int sockFd;
     char buffer[BUFFERSIZE];
     int sizeOfBuffer;
     srand((unsigned int) time(NULL));
     int randomNumber = rand() % 100000000;
+    int iIpv4;
+    int port;
+    int phone;
 
     if (argc != 7) {
         printf("Usage: %s -server <ip> -port <port> -phone <phoneNumber>[0123]\n", argv[0]);
@@ -87,25 +87,18 @@ int client(int argc, char *argv[]) {
         return -1;
     }
 
-    // oppgave_5 -server 127.0.0.1 -port 42 -telefon 1234
-
     SNP snp = {0};
 
-    printf("\n");
-    printf("%02X\n", atoi(argv[2]));
-    printf("%d\n", atoi("7F000001"));
-    printf("%02X\n", inet_addr(argv[2]));
-    printf("\n");
-    printf("%02X\n", htonl(0x7F000001));
-    printf("%02X\n", inet_addr(argv[2]));
-    printf("%d\n", atoi(argv[4]));
+    iIpv4 = inet_addr(argv[2]);
+    port = atoi(argv[4]);
+    phone = atoi(argv[6]);
 
     struct sockaddr_in saAddr = {0};
     saAddr.sin_family = AF_INET;
-    saAddr.sin_port = htons(atoi(argv[4]));
-    saAddr.sin_addr.s_addr = inet_addr(argv[2]); //Home
+    saAddr.sin_port = htons(port);
+    saAddr.sin_addr.s_addr = iIpv4; //Home
 
-    snp.ssSnpHeader.iPhoneNumber = atoi(argv[6]);
+    snp.ssSnpHeader.iPhoneNumber = phone;
     snp.ssSnpHeader.iIpAddress = saAddr.sin_addr.s_addr;
     snp.ssSnpHeader.iMagicNumber = randomNumber;
 
@@ -125,35 +118,43 @@ int client(int argc, char *argv[]) {
 
             memset(buffer, 0, BUFFERSIZE);
 
-            printf("Write your message\n");
+            printf("Write your message, write \"exit\" to exit program\n");
 
-            userInput(buffer, BUFFERSIZE);
+            while (1) {
 
-            sizeOfBuffer = strlen(buffer) + 1;
+                userInput(buffer, BUFFERSIZE);
 
-            SNP *pssSnp = (SNP *) malloc(sizeof(SNP) + sizeOfBuffer * sizeof(char));
+                sizeOfBuffer = strlen(buffer) + 1;
 
-            memset(pssSnp, 0, sizeof(SNP) + sizeOfBuffer * sizeof(char));
+                if (strcmp(buffer, "exit") == 0) {
+                    break;
+                }
 
-            pssSnp->ssSnpHeader.iMagicNumber = snp.ssSnpHeader.iMagicNumber;
-            pssSnp->ssSnpHeader.iIpAddress = snp.ssSnpHeader.iIpAddress;
-            pssSnp->ssSnpHeader.iPhoneNumber = snp.ssSnpHeader.iPhoneNumber;
+                SNP *pssSnp = (SNP *) malloc(sizeof(SNP) + sizeOfBuffer * sizeof(char));
 
-            pssSnp->ssSnpHeader.iSizeOfBody = sizeOfBuffer - 1;
+                memset(pssSnp, 0, sizeof(SNP) + sizeOfBuffer * sizeof(char));
 
-            strncpy(pssSnp->body, buffer, sizeOfBuffer);
+                pssSnp->ssSnpHeader.iMagicNumber = snp.ssSnpHeader.iMagicNumber;
+                pssSnp->ssSnpHeader.iIpAddress = snp.ssSnpHeader.iIpAddress;
+                pssSnp->ssSnpHeader.iPhoneNumber = snp.ssSnpHeader.iPhoneNumber;
 
-            pssSnp->body[sizeOfBuffer - 1] = '\0';
+                pssSnp->ssSnpHeader.iSizeOfBody = sizeOfBuffer - 1;
 
-            printf("Magic number: %d\n", pssSnp->ssSnpHeader.iMagicNumber);
-            printf("Ip address: %d\n", pssSnp->ssSnpHeader.iIpAddress);
-            printf("Phone number: %d\n", pssSnp->ssSnpHeader.iPhoneNumber);
+                strncpy(pssSnp->body, buffer, sizeOfBuffer);
 
-            send(sockFd, pssSnp, sizeof(SNP) + pssSnp->ssSnpHeader.iSizeOfBody, 0);
+                pssSnp->body[sizeOfBuffer - 1] = '\0';
 
-            printf("Closing socket\n");
+                printf("Magic number: %d\n", pssSnp->ssSnpHeader.iMagicNumber);
+                printf("Ip address: %d\n", pssSnp->ssSnpHeader.iIpAddress);
+                printf("Phone number: %d\n", pssSnp->ssSnpHeader.iPhoneNumber);
 
-            free(pssSnp);
+                send(sockFd, pssSnp, sizeof(SNP) + pssSnp->ssSnpHeader.iSizeOfBody, 0);
+
+                printf("Closing socket\n");
+
+                free(pssSnp);
+
+            }
 
             close(sockFd);
             sockFd = -1;
