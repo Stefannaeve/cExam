@@ -37,55 +37,67 @@ typedef struct _THREAD_STRUCT {
 } THREAD_STRUCT;
 
 void *threadClient(void *arg);
+
 int userInput(char *buffer, int size);
 
 int client(int argc, char *argv[]) {
-    int iPort = 8080;
+    int iPort = atoi(argv[1]);
     int status = 0;
     int i;
-
-    THREAD_STRUCT threadStructs[THREADS];
-    pthread_t threads[THREADS];
-
-    for (i = 0; i < THREADS; ++i) {
-        memset(&threadStructs[i], 0, sizeof(THREAD_STRUCT));
-        threadStructs[i].snp.ssSnpHeader.iMagicNumber = 0x01DF5E76;
-        threadStructs[i].saAddr.sin_family = AF_INET;
-        threadStructs[i].saAddr.sin_port = htons(iPort + i);
-        threadStructs[i].saAddr.sin_addr.s_addr = htonl(0x7F000001);
-        threadStructs[i].snp.ssSnpHeader.iPhoneNumber = 12345678;
-        threadStructs[i].snp.ssSnpHeader.iIpAddress = threadStructs[i].saAddr.sin_addr.s_addr;
-    }
-
-    for (i = 0; i < THREADS; ++i) {
-        if (pthread_create(&threads[i], NULL, threadClient, (void *) &threadStructs[i]) != 0) {
-            status = -1;
-            printf("Failed to create thread: %d - Error message: %s\n", i, strerror(errno));
-            break;
-        }
-    }
-    if (status == -1) {
-        for (int j = 0; j <= i; ++j) {
-            pthread_cancel(threads[j]);
-        }
-    } else {
-        for (int j = 0; j < THREADS; ++j) {
-            if (pthread_join(threads[j], NULL) != 0) {
-                printf("Failed to join thread: %d - Error message: %s\n", j, strerror(errno));
-            }
-        }
-    }
-    return 0;
-}
-
-void *threadClient(void *arg) {
-    THREAD_STRUCT *threadStruct = (THREAD_STRUCT *) arg;
     int sockFd;
     char buffer[BUFFERSIZE];
     int sizeOfBuffer;
-    srand((unsigned int)time(NULL));
+    srand((unsigned int) time(NULL));
     int randomNumber = rand() % 100000000;
-    threadStruct->snpConnect.iMagicNumber = randomNumber;
+
+    if (argc != 7) {
+        printf("Usage: %s -server <ip> -port <port> -phone <phoneNumber>[0123]\n", argv[0]);
+        return -1;
+    }
+    if (strcmp(argv[1], "-server") != 0) {
+        printf("Usage: %s -server <ip> -port <port> -phone <phoneNumber>[0123]\n", argv[0]);
+        printf("Second argument is not \"-server\"\n");
+        return -1;
+    }
+    if (strcmp(argv[2], "127.0.0.1") != 0) {
+        printf("Usage: %s -server <ip> -port <port> -phone <phoneNumber>[0123]\n", argv[0]);
+        printf("IP address is not the loopback address\n");
+    }
+
+    if (strcmp(argv[3], "-port") != 0) {
+        printf("Usage: %s -server <ip> -port <port> -phone <phoneNumber>[0123]\n", argv[0]);
+        printf("Third argument is not \"-port\"\n");
+        return -1;
+    }
+    if (atoi(argv[4]) < 0 || atoi(argv[5]) > 65535) {
+        printf("Usage: %s -server <ip> -port <port> -phone <phoneNumber>[0123]\n", argv[0]);
+        printf("Port number is not in the range of 0-65535\n");
+        return -1;
+    }
+
+    if (strcmp(argv[5], "-phone") != 0) {
+        printf("Usage: %s -server <ip> -port <port> -phone <phoneNumber>[0123]\n", argv[0]);
+        printf("Fifth argument is not \"-phone\"\n");
+        return -1;
+    }
+    if (atoi(argv[6]) < 1000 || atoi(argv[6]) > 9999) {
+        printf("Usage: %s -server <ip> -port <port> -phone <phoneNumber>[0123]\n", argv[0]);
+        printf("Phone number is not in the range of 1000-9999\n");
+        return -1;
+    }
+
+    // oppgave_5 -server 127.0.0.1 -port 42 -telefon 1234
+
+    SNP snp = {0};
+
+    struct sockaddr_in saAddr = {0};
+    saAddr.sin_family = AF_INET;
+    saAddr.sin_port = htons(atoi(argv[5]));
+    saAddr.sin_addr.s_addr = htonl(atoi(argv[4])); //Home
+
+    snp.ssSnpHeader.iPhoneNumber = 12345678;
+    snp.ssSnpHeader.iIpAddress = saAddr.sin_addr.s_addr;
+    snp.ssSnpHeader.iMagicNumber = randomNumber;
 
     sockFd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockFd < 0) {
@@ -94,9 +106,7 @@ void *threadClient(void *arg) {
     } else {
         printf("Successfully created endpoint with socket\n");
 
-
-
-        if (connect(sockFd, (struct sockaddr *) &threadStruct->saAddr, sizeof(threadStruct->saAddr)) < 0) {
+        if (connect(sockFd, (struct sockaddr *) &saAddr, sizeof(saAddr)) < 0) {
             printf("Connection failed: Error message: %s\n", strerror(errno));
 
         } else {
@@ -109,27 +119,42 @@ void *threadClient(void *arg) {
 
             userInput(buffer, BUFFERSIZE);
 
-            sizeOfBuffer = strlen(buffer);
+            sizeOfBuffer = strlen(buffer) + 1;
 
-            SNP *snp = (SNP *) malloc(sizeof(SNP) + sizeOfBuffer * sizeof(char));
+            SNP *pssSnp = (SNP *) malloc(sizeof(SNP) + sizeOfBuffer * sizeof(char));
 
-            memset(snp, 0, sizeof(SNP) + sizeOfBuffer * sizeof(char));
+            memset(pssSnp, 0, sizeof(SNP) + sizeOfBuffer * sizeof(char));
 
-            snp->ssSnpHeader.iSizeOfBody = sizeOfBuffer;
+            pssSnp->ssSnpHeader.iMagicNumber = snp.ssSnpHeader.iMagicNumber;
+            pssSnp->ssSnpHeader.iIpAddress = snp.ssSnpHeader.iIpAddress;
+            pssSnp->ssSnpHeader.iPhoneNumber = snp.ssSnpHeader.iPhoneNumber;
 
-            strncpy(snp->body, buffer, sizeOfBuffer);
+            pssSnp->ssSnpHeader.iSizeOfBody = sizeOfBuffer - 1;
 
-            snp->body[sizeOfBuffer - 1] = '\0';
+            strncpy(pssSnp->body, buffer, sizeOfBuffer);
 
-            send(sockFd, snp, sizeof(SNP) + snp->ssSnpHeader.iSizeOfBody, 0);
+            pssSnp->body[sizeOfBuffer - 1] = '\0';
+
+            printf("Magic number: %d\n", pssSnp->ssSnpHeader.iMagicNumber);
+            printf("Ip address: %d\n", pssSnp->ssSnpHeader.iIpAddress);
+            printf("Phone number: %d\n", pssSnp->ssSnpHeader.iPhoneNumber);
+
+            send(sockFd, pssSnp, sizeof(SNP) + pssSnp->ssSnpHeader.iSizeOfBody, 0);
 
             printf("Closing socket\n");
 
+            free(pssSnp);
+
             close(sockFd);
             sockFd = -1;
-            return 0;
         }
     }
+
+    return 0;
+}
+
+void *threadClient(void *arg) {
+
     return NULL;
 }
 

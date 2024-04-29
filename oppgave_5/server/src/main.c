@@ -2,5 +2,6 @@
 #include "../include/server.h"
 
 int main(int argc, char *argv[]){
-    printf("Hello World\n");
+    server(argc, argv);
+    return 0;
 }

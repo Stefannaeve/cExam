@@ -2,5 +2,6 @@
 #include "../include/client.h"
 
 int main(int argc, char *argv[]){
-    printf("Hello World\n");
+    client(argc, argv);
+    return 0;
 }

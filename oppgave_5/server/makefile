@@ -24,6 +24,14 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c $(DEPS)
 $(TARGET): $(OBJS)
 	$(CC) -o $@ $^ $(CFLAGS)
 	
+valgrind:
+	make
+	valgrind --leak-check=yes --show-leak-kinds=all --track-origins=yes ./$(TARGET) eksamen_v24_oppgave4_pg2265.txt
+	
+run:
+	make
+	./$(TARGET)
+	
 .PHONY: clean
 clean:
 	$(RM) $(OBJDIR)/*.o *~core $(INCLDIR)/*~
