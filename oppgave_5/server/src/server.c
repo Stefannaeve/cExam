@@ -9,7 +9,7 @@
 
 
 #define BUFFERSIZE 1024
-#define THREADS 2
+#define THREADS 1
 
 typedef struct _SNP_HEADER {
     int32_t iMagicNumber;

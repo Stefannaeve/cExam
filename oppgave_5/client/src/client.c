@@ -6,6 +6,7 @@
 #include <time.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 
 #define BUFFERSIZE 1024
 
@@ -90,12 +91,21 @@ int client(int argc, char *argv[]) {
 
     SNP snp = {0};
 
+    printf("\n");
+    printf("%02X\n", atoi(argv[2]));
+    printf("%d\n", atoi("7F000001"));
+    printf("%02X\n", inet_addr(argv[2]));
+    printf("\n");
+    printf("%02X\n", htonl(0x7F000001));
+    printf("%02X\n", inet_addr(argv[2]));
+    printf("%d\n", atoi(argv[4]));
+
     struct sockaddr_in saAddr = {0};
     saAddr.sin_family = AF_INET;
-    saAddr.sin_port = htons(atoi(argv[5]));
-    saAddr.sin_addr.s_addr = htonl(atoi(argv[4])); //Home
+    saAddr.sin_port = htons(atoi(argv[4]));
+    saAddr.sin_addr.s_addr = inet_addr(argv[2]); //Home
 
-    snp.ssSnpHeader.iPhoneNumber = 12345678;
+    snp.ssSnpHeader.iPhoneNumber = atoi(argv[6]);
     snp.ssSnpHeader.iIpAddress = saAddr.sin_addr.s_addr;
     snp.ssSnpHeader.iMagicNumber = randomNumber;
 
