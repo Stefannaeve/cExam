@@ -103,7 +103,11 @@ void *threadServer(void *arg) {
                 } else {
 
                     while (1) {
-                        read(sockNewFd, &snp.ssSnpHeader, sizeof(snp.ssSnpHeader));
+                        ssize_t header_size = read(sockNewFd, &snp.ssSnpHeader, sizeof(snp.ssSnpHeader));
+                        if (header_size <= 0) {
+                            printf("Client disconnected or read error occurred.\n");
+                            break;
+                        }
                         SNP *pSnp = (SNP *) malloc(sizeof(SNP) + snp.ssSnpHeader.iSizeOfBody + 1);
                         memset(pSnp, 0, sizeof(SNP) + snp.ssSnpHeader.iSizeOfBody + 1);
 
@@ -129,14 +133,15 @@ void *threadServer(void *arg) {
 
                     printf("Closing socket\n");
 
-                    close(sockFd);
                     close(sockNewFd);
-                    sockFd = -1;
+                    shutdown(sockNewFd, SHUT_RDWR);
                     sockNewFd = -1;
 
                 }
             }
         }
+        close(sockFd);
+        sockFd = -1;
     }
     return 0;
 

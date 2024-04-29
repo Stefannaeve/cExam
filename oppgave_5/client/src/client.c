@@ -157,6 +157,7 @@ int client(int argc, char *argv[]) {
             }
 
             close(sockFd);
+            shutdown(sockFd, SHUT_RDWR);
             sockFd = -1;
         }
     }
