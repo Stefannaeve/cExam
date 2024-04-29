@@ -1,14 +1,15 @@
-#include <stdint.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include <pthread.h>
-
+#include <time.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #define BUFFERSIZE 1024
 
-#define THREADS 2
+#define THREADS 1
 
 typedef struct _SNP_CONNECT {
     int32_t iMagicNumber;
@@ -18,6 +19,8 @@ typedef struct _SNP_CONNECT {
 
 typedef struct _SNP_HEADER {
     int32_t iMagicNumber;
+    int32_t iIpAddress;
+    int32_t iPhoneNumber;
     int32_t iSizeOfBody;
 } SNP_HEADER;
 
@@ -29,11 +32,12 @@ typedef struct _SNP {
 
 typedef struct _THREAD_STRUCT {
     struct sockaddr_in saAddr;
-    SNP_HEADER clientHeader;
+    SNP snp;
     struct _SNP_CONNECT snpConnect;
 } THREAD_STRUCT;
 
 void *threadClient(void *arg);
+int userInput(char *buffer, int size);
 
 int client(int argc, char *argv[]) {
     int iPort = 8080;
@@ -43,15 +47,17 @@ int client(int argc, char *argv[]) {
     THREAD_STRUCT threadStructs[THREADS];
     pthread_t threads[THREADS];
 
-    for (i = 0; i < THREADS - 1; ++i) {
+    for (i = 0; i < THREADS; ++i) {
         memset(&threadStructs[i], 0, sizeof(THREAD_STRUCT));
-        threadStructs[i].clientHeader.iMagicNumber = 0x01DF5E76;
+        threadStructs[i].snp.ssSnpHeader.iMagicNumber = 0x01DF5E76;
         threadStructs[i].saAddr.sin_family = AF_INET;
         threadStructs[i].saAddr.sin_port = htons(iPort + i);
         threadStructs[i].saAddr.sin_addr.s_addr = htonl(0x7F000001);
+        threadStructs[i].snp.ssSnpHeader.iPhoneNumber = 12345678;
+        threadStructs[i].snp.ssSnpHeader.iIpAddress = threadStructs[i].saAddr.sin_addr.s_addr;
     }
 
-    for (i = 0; i < THREADS - 1; ++i) {
+    for (i = 0; i < THREADS; ++i) {
         if (pthread_create(&threads[i], NULL, threadClient, (void *) &threadStructs[i]) != 0) {
             status = -1;
             printf("Failed to create thread: %d - Error message: %s\n", i, strerror(errno));
@@ -63,7 +69,7 @@ int client(int argc, char *argv[]) {
             pthread_cancel(threads[j]);
         }
     } else {
-        for (int j = 0; j < THREADS - 1; ++j) {
+        for (int j = 0; j < THREADS; ++j) {
             if (pthread_join(threads[j], NULL) != 0) {
                 printf("Failed to join thread: %d - Error message: %s\n", j, strerror(errno));
             }
@@ -73,9 +79,13 @@ int client(int argc, char *argv[]) {
 }
 
 void *threadClient(void *arg) {
+    THREAD_STRUCT *threadStruct = (THREAD_STRUCT *) arg;
     int sockFd;
     char buffer[BUFFERSIZE];
     int sizeOfBuffer;
+    srand((unsigned int)time(NULL));
+    int randomNumber = rand() % 100000000;
+    threadStruct->snpConnect.iMagicNumber = randomNumber;
 
     sockFd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockFd < 0) {
@@ -84,15 +94,15 @@ void *threadClient(void *arg) {
     } else {
         printf("Successfully created endpoint with socket\n");
 
-        if (connect(sockFd, (struct sockaddr *) &saAddr, sizeof(saAddr)) < 0) {
+
+
+        if (connect(sockFd, (struct sockaddr *) &threadStruct->saAddr, sizeof(threadStruct->saAddr)) < 0) {
             printf("Connection failed: Error message: %s\n", strerror(errno));
 
         } else {
+
             printf("Connect successfully handled\n");
 
-            printf("Write the type of your message\n1. String\n2. Char\n3. Int\n4. Long\n");
-
-            int contentType = chooseContentType(buffer, BUFFERSIZE);
             memset(buffer, 0, BUFFERSIZE);
 
             printf("Write your message\n");
@@ -105,14 +115,13 @@ void *threadClient(void *arg) {
 
             memset(snp, 0, sizeof(SNP) + sizeOfBuffer * sizeof(char));
 
-            snp->snpHeader.sizeOfBody = sizeOfBuffer;
-            strncpy(snp->body, buffer, sizeOfBuffer);
+            snp->ssSnpHeader.iSizeOfBody = sizeOfBuffer;
 
-            snp->snpHeader.contentType = contentType;
+            strncpy(snp->body, buffer, sizeOfBuffer);
 
             snp->body[sizeOfBuffer - 1] = '\0';
 
-            send(sockFd, snp, sizeof(SNP) + snp->snpHeader.sizeOfBody, 0);
+            send(sockFd, snp, sizeof(SNP) + snp->ssSnpHeader.iSizeOfBody, 0);
 
             printf("Closing socket\n");
 
@@ -120,31 +129,8 @@ void *threadClient(void *arg) {
             sockFd = -1;
             return 0;
         }
-        close(sockFd);
-        sockFd = -1;
     }
-
-    return 1;
-}
-
-int chooseContentType(char *buffer, int size) {
-    while (1) {
-        userInput(buffer, size);
-        if (buffer[0] == '1') {
-            return STRING;
-        }
-        if (buffer[0] == '2') {
-            return CHAR;
-        }
-        if (buffer[0] == '3') {
-            return INT;
-        }
-        if (buffer[0] == '4') {
-            return DOUBLE;
-        }
-        printf("Wrong contentType, choose 1, 2, 3 or 4");
-        memset(buffer, 0, size);
-    }
+    return NULL;
 }
 
 int userInput(char *buffer, int size) {
