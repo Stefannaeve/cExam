@@ -7,8 +7,8 @@ include_directories(include)
 
 add_executable(task
         src/main.c
-        src/server.c
+        src/client.c
         include/main.h
-        include/server.h
-        src/server.c
+        include/client.h
+        src/client.c
 )
