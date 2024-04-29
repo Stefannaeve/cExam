@@ -24,7 +24,7 @@ typedef struct _SEND_THREAD {
 void *thread_A(void *sendThreadArg) {
     SEND_THREAD *sendThread = (SEND_THREAD *) sendThreadArg;
 
-    FILE *fp = fopen("eksamen_v24_oppgave4_pg2265.txt", "r");
+    FILE *fp = fopen(sendThread->filename, "r");
     if (!fp) {
         perror("Failed to open file");
         pthread_exit(NULL);
@@ -142,14 +142,13 @@ void *thread_B(void *sendThreadArg) {
 
 int main(int argc, char *argv[]) {
 
-    /*
     if (argc > 2) {
         printf("%s only has one argument\n", argv[0]);
         return -1;
     } else if (argc == 1) {
         printf("%s has an argument for the file to use\n", argv[0]);
         return -1;
-    }*/
+    }
 
     SEND_THREAD *sendThread = (SEND_THREAD *) malloc(sizeof(SEND_THREAD));
     if (sendThread == NULL) {
