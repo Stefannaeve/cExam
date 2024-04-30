@@ -2,15 +2,22 @@
 #include "../include/beautifier.h"
 #include <string.h>
 
+#define MAX_WORD_LENGTH 1024
+#define TYPE_ARRAY_LENGTH 2
+#define TRUE 1
+#define FALSE 0
+
 int handleCurrentWord(char *currentChar, char *currentWord, int *currentWordPosition);
+void checkIfWordIsType(char *currentWord, char *type[], int *lastWordIsType);
 
 void beautify(char *path) {
-    char currentWord[1024];
-    char lastWord[1024];
-    char completeFile[1024];
-    char updatedFile[1024];
+    char currentWord[MAX_WORD_LENGTH];
+    char lastWord[MAX_WORD_LENGTH];
+    char completeFile[MAX_WORD_LENGTH];
+    char updatedFile[MAX_WORD_LENGTH];
+    int lastWordIsType = FALSE;
 
-    char *type[2] = {"int", "char"};
+    char *type[TYPE_ARRAY_LENGTH] = {"int", "char"};
 
     FILE *file = fopen(path, "r");
     if (file == NULL) {
@@ -29,12 +36,13 @@ void beautify(char *path) {
     while (completeFile[i] != '\0') {
         handleCurrentWord(&completeFile[i], currentWord, &currentWordPosition);
         if (currentWordPosition == 0 && strlen(currentWord) > 0) {
-            printf("%s\n", currentWord);
-            for (int j = 0; j < 2; ++j) {
-                if (strcmp(currentWord, type[j]) == 0) {
-                    printf("Found type: %s\n", currentWord);
-                }
+            if (lastWordIsType == TRUE) {
+                printf("Found variable: %s\n", currentWord);
+                lastWordIsType = FALSE;
             }
+            printf("%s\n", currentWord);
+            checkIfWordIsType(currentWord, type, &lastWordIsType);
+            strncpy(lastWord, currentWord, 1024);
             memset(currentWord, 0, 1024);
             if (i > 200) {
                 break;
@@ -44,12 +52,27 @@ void beautify(char *path) {
     }
 }
 
+void checkIfWordIsType(char *currentWord, char *type[], int *lastWordIsType) {
+    for (int i = 0; i < TYPE_ARRAY_LENGTH; ++i) {
+        if (strcmp(currentWord, type[i]) == 0) {
+            *lastWordIsType = TRUE;
+            printf("Found type: %s\n", currentWord);
+        }
+    }
+}
+
 int handleCurrentWord(char *currentChar, char *currentWord, int *currentWordPosition) {
     int asciiValue = (int) *currentChar;
     if ((33 <= asciiValue && asciiValue <= 122)) {
         currentWord[*currentWordPosition] = *currentChar;
         *currentWordPosition = *currentWordPosition + 1;
     } else {
+        currentWord[*currentWordPosition] = '\0';
+        *currentWordPosition = 0;
+        return 0;
+    }
+
+    if (*currentWordPosition == 1024) {
         currentWord[*currentWordPosition] = '\0';
         *currentWordPosition = 0;
         return 0;
