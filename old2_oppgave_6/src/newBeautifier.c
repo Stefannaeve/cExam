@@ -28,8 +28,7 @@ typedef struct _WORD {
 
 void changeToNewWord(WORD *currentWord, char *currentChar);
 
-void handleVariableDismissFunction(WORD *currentWord, char *lastWord, char oldVariables[10][MAX_STRING_LENGTH],
-                                   char newVariables[10][MAX_STRING_LENGTH], int *variablesFound);
+void handleVariableDismissFunction(WORD *currentWord, char *lastWord, char oldVariables[10][MAX_STRING_LENGTH], char newVariables[10][MAX_STRING_LENGTH], int *variablesFound);
 
 int handleCurrentWord(WORD *currentWord, char *currentChar);
 
@@ -128,7 +127,6 @@ void beautify(char *path) {
                 currentWord->currentCharIsLetter = FALSE;
                 currentWord->wordSize = 0;
                 currentWord->currentWord[MAX_STRING_LENGTH - 1] = '\0';
-                currentWord->currentWord[0] = currentChar;
             }
         } else {
 
@@ -152,6 +150,7 @@ void beautify(char *path) {
         }
 
 
+
     }
 }
 
@@ -162,6 +161,7 @@ void changeToNewWord(WORD *currentWord, char *currentChar) {
     int asciiBigLettersBeginning = 'A';
     int asciiBigLettersEnd = 'Z';
 
+    char lastChar = currentWord->currentWord[currentWord->wordSize - 1];
     int lastCharIsLetter = FALSE;
     int currentCharIsLetter = FALSE;
 
@@ -171,9 +171,7 @@ void changeToNewWord(WORD *currentWord, char *currentChar) {
     int lastCharIsSpecial = FALSE;
     int currentCharIsSpecial = FALSE;
 
-    char lastChar;
     if (currentWord->wordSize > 0) {
-        lastChar = currentWord->currentWord[currentWord->wordSize];
         if (lastChar == ' ') {
             lastCharIsSpace = TRUE;
         } else if (asciiSmallLettersBeginning < lastChar && lastChar < asciiSmallLettersEnd ||
@@ -196,16 +194,11 @@ void changeToNewWord(WORD *currentWord, char *currentChar) {
         currentWord->wordsIsDone = FALSE;
         return;
     }
-    if (lastCharIsSpecial && currentCharIsSpecial || lastCharIsLetter && currentCharIsLetter ||
-        lastCharIsSpecial && currentCharIsLetter || lastCharIsLetter && currentCharIsSpecial) {
+    if (lastCharIsSpecial && currentCharIsSpecial || lastCharIsLetter && currentCharIsLetter || lastCharIsSpace && currentCharIsLetter || lastCharIsLetter && currentCharIsSpace) {
         currentWord->wordsIsDone = FALSE;
         return;
     }
-    if (lastCharIsSpace && currentCharIsLetter || lastCharIsSpace && currentCharIsSpecial) {
-        currentWord->wordsIsDone = TRUE;
-        return;
-    }
-    if ((lastCharIsLetter && currentCharIsSpace) || (lastCharIsSpecial && currentCharIsSpace)) {
+    if (lastCharIsSpace && currentCharIsLetter || lastCharIsSpecial && currentCharIsSpace) {
         currentWord->wordsIsDone = TRUE;
         return;
     }
@@ -222,26 +215,30 @@ int handleCurrentWord(WORD *currentWord, char *currentChar) {
 
     char lastChar = currentWord->currentWord[currentWord->wordSize - 1];
 
+
+    if (asciiSmallLettersBeginning < asciiValue && asciiValue < asciiSmallLettersEnd ||
+        asciiBigLettersBeginning < asciiValue && asciiValue < asciiBigLettersEnd) {
+        currentWord->currentCharIsLetter = TRUE;
+        currentWord->letterCharacters = currentWord->letterCharacters + 1;
+    }
+
     if (asciiValue == 32) {
         currentWord->spaceCharacters = currentWord->spaceCharacters + 1;
     }
     if (33 <= asciiValue && asciiValue <= 64) {
         currentWord->specialCharacters = currentWord->specialCharacters + 1;
     }
-    if (asciiValue == 32) {
-        currentWord->spaceCharacters = currentWord->spaceCharacters + 1;
+
+
+    if ((33 <= asciiValue && asciiValue <= 122)) {
+        currentWord->currentWord[currentWord->wordSize] = *currentChar;
+        currentWord->wordSize = currentWord->wordSize + 1;
     }
-
-
-    currentWord->currentWord[currentWord->wordSize] = *currentChar;
-    currentWord->wordSize = currentWord->wordSize + 1;
-
 
     return 1;
 }
 
-void handleVariableDismissFunction(WORD *currentWord, char *lastWord, char oldVariables[10][MAX_STRING_LENGTH],
-                                   char newVariables[10][MAX_STRING_LENGTH], int *variablesFound) {
+void handleVariableDismissFunction(WORD *currentWord, char *lastWord, char oldVariables[10][MAX_STRING_LENGTH], char newVariables[10][MAX_STRING_LENGTH], int *variablesFound) {
     char newVariable[MAX_STRING_LENGTH];
     char oldVariable[MAX_STRING_LENGTH];
     strncpy(oldVariable, currentWord->currentWord, MAX_STRING_LENGTH);
@@ -249,19 +246,19 @@ void handleVariableDismissFunction(WORD *currentWord, char *lastWord, char oldVa
     char *integer = "i";
     char *character = "*sz";
     if (strcmp(lastWord, "int") == 0) {
-        if (currentWord->currentWord[0] != 'i') {
-            if (97 <= (int) currentWord->currentWord[0] && (int) currentWord->currentWord[0] <= 122) {
-                currentWord->currentWord[0] = (char) ((int) currentWord->currentWord[0] - 32);
+        if (currentWord->currentWord[0] != 'i'){
+            if (97 <= (int)currentWord->currentWord[0] && (int)currentWord->currentWord[0] <= 122){
+                currentWord->currentWord[0] = (char)((int)currentWord->currentWord[0] - 32);
             }
             strcat(newVariable, integer);
         }
     }
     if (strcmp(lastWord, "char") == 0) {
-        if (currentWord->currentWord[0] != 's') {
+        if (currentWord->currentWord[0] != 's'){
             if (currentWord->currentWord[0] == '*') {
                 // Remove * from current word
-                for (int i = 0; i < currentWord->wordSize; ++i) {
-                    currentWord->currentWord[i] = currentWord->currentWord[i + 1];
+                for (int i = 0; i < strlen(currentWord->currentWord); ++i) {
+                    currentWord[i] = currentWord[i + 1];
                 }
                 if (97 <= (int) currentWord->currentWord[0] && (int) currentWord->currentWord[0] <= 122) {
                     currentWord->currentWord[0] = (char) ((int) currentWord->currentWord[0] - 32);
