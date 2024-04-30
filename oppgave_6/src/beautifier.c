@@ -16,7 +16,10 @@ void beautify(char *path) {
     char lastWord[MAX_WORD_LENGTH];
     char completeFile[MAX_WORD_LENGTH];
     char updatedFile[MAX_WORD_LENGTH];
+
     int lastWordIsType = FALSE;
+    int insideParentheses = FALSE;
+    int insideCurlyBrackets = FALSE;
     int variablesFound = 0;
 
     char oldVariables[10][MAX_WORD_LENGTH];
