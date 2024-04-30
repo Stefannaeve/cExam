@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "../include/newBeautifier.h"
+#include "../include/newNewBeautifier.h"
 
 int main() {
     beautify("../src/oppgave_6.c");

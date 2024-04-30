@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../include/newBeautifier.h"
 
 #define TRUE 1
 #define FALSE 0
@@ -35,7 +34,7 @@ int handleCurrentWord(WORD *currentWord, char *currentChar);
 
 void checkIfWordIsType(char *currentWord, char *type[], int *lastWordIsType);
 
-void beautify(char *path) {
+void beautify1(char *path) {
     char lastWord[MAX_STRING_LENGTH];
     char completeFile[MAX_STRING_LENGTH];
     char updatedFile[MAX_STRING_LENGTH];
