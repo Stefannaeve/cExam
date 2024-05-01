@@ -9,5 +9,6 @@ int oppgave_6() {
         printf("%d\n", a+1);
         a++;
     }
+    char *nokka = "nokka";
    return 0;
 }

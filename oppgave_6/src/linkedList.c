@@ -45,12 +45,67 @@ int add(NODE_LIST *psnList, SENT_NODE *pssSentNode) {
     return 0;
 }
 
-void nodeAddToEnd(NODE_LIST *psoList, NODE *psnTemp) {
-    psoList->pTail->pNextNode = psnTemp;
-    psoList->pTail = psnTemp;
+void nodeAddToEnd(NODE_LIST *psnList, NODE *psnTemp) {
+    psnList->pTail->pNextNode = psnTemp;
+    psnList->pTail = psnTemp;
 
-    psoList->size++;
+    psnList->size++;
 }
+
+void addAtIndex(NODE_LIST *psnList, SENT_NODE *pssSentNode, int iIndex) {
+    if (pssSentNode == NULL) {
+        errno = EINVAL;
+        printf("Struct cannot be NULL- Error message: %s\n", strerror(errno));
+        return;
+    }
+
+    NODE *psoTemp;
+    psoTemp = (NODE *) malloc(sizeof(NODE));
+
+    if (psoTemp == NULL) {
+        errno = ENOMEM;
+        printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
+        return;
+    }
+
+    psoTemp->line = (char *) malloc(strlen(pssSentNode->line) + 1);
+    if (psoTemp->line == NULL) {
+        errno = ENOMEM;
+        printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
+        return;
+    }
+
+    strcpy(psoTemp->line, pssSentNode->line);
+    psoTemp->size = pssSentNode->size;
+
+    psoTemp->pNextNode = NULL;
+
+    if (psnList->pHead == NULL) {
+        psnList->pHead = psoTemp;
+        psnList->pTail = psoTemp;
+        return;
+    }
+
+    NODE *psoCurrent = psnList->pHead;
+    NODE *psoPrevious = NULL;
+    int iCounter = 0;
+
+    while (psoCurrent != NULL && iCounter < iIndex) {
+        psoPrevious = psoCurrent;
+        psoCurrent = psoCurrent->pNextNode;
+        iCounter++;
+    }
+
+    if (psoPrevious == NULL) {
+        psoTemp->pNextNode = psnList->pHead;
+        psnList->pHead = psoTemp;
+    } else {
+        psoPrevious->pNextNode = psoTemp;
+        psoTemp->pNextNode = psoCurrent;
+    }
+
+    psnList->size++;
+};
 
 void freeLinkedList(NODE_LIST *psnList) {
     NODE *psnCurrent = psnList->pHead;
@@ -68,7 +123,7 @@ void printAllNodes(NODE_LIST *psnList) {
     int iCount = 0;
     NODE *psnCurrent = psnList->pHead;
     while (psnCurrent != NULL) {
-        printf("%02d  %s", psnCurrent->size, psnCurrent->line);
+        printf("%02d--%s", psnCurrent->size, psnCurrent->line);
         psnCurrent = psnCurrent->pNextNode;
         iCount++;
     }
