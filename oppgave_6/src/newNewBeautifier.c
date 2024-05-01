@@ -19,6 +19,8 @@ void changeWhileLoopsToForLoops(NODE_LIST *list);
 
 int checkIfLineHasComment(char *currentLine, int size);
 
+void changeWhileToFor(NODE *psnCurrent, int j, int nodePosition, NODE_LIST *list);
+
 void beautify(char *filename) {
     char strBuffer[MAX_STRING_LENGTH];
     char *pszTempChar;
@@ -60,7 +62,9 @@ void beautify(char *filename) {
     }
     fclose(fdCFile);
 
+
     removeEveryConcurrentlyTreeLinesOfSpace(&psnList);
+
 
     printAllNodes(&psnList);
 
@@ -70,6 +74,8 @@ void beautify(char *filename) {
 
     changeWhileLoopsToForLoops(&psnList);
 
+    printAllNodes(&psnList);
+
     freeLinkedList(&psnList);
 
 }
@@ -77,19 +83,172 @@ void beautify(char *filename) {
 void changeWhileLoopsToForLoops(NODE_LIST *list) {
     char *pszWhile = "while";
     int iSizeOfWhile = 5;
+    int iCommentPosition = 0;
+    int nodeWithWhilePosition = 0;
+    int nodePosition = 0;
+    int foundWhile = 0;
+    int foundEndOfWhile = 0;
+    int positionOfWhileEnd = 0;
+
+    char strFor[MAX_STRING_LENGTH] = {0};
+    char strForInitialization[MAX_STRING_LENGTH] = {0};
+    char strForCondition[MAX_STRING_LENGTH] = {0};
+    char strForIncrement[MAX_STRING_LENGTH] = {0};
+    char strForBody[MAX_STRING_LENGTH] = {0};
 
     NODE *psnCurrent = list->pHead;
 
     while (psnCurrent != NULL) {
+        iCommentPosition = 0;
         char *currentLine = psnCurrent->line;
-        // Loop though string in node
-        for (int j = 0; j < psnCurrent->size; j++) {
-            // Check if the line contains "char ", if it does, change position to possible start of variable
-            if (strncmp(&currentLine[j], pszWhile, iSizeOfWhile) == 0) {
 
+        // Check if line contains comment
+        iCommentPosition = checkIfLineHasComment(currentLine, psnCurrent->size);
+
+        // Loop though string in node until comment or end of line
+        for (int j = 0; j < (iCommentPosition == 0 ? psnCurrent->size : iCommentPosition); j++) {
+            // Check if the line contains "while", if it does, change position to possible start of variable
+            if (strncmp(&currentLine[j], pszWhile, iSizeOfWhile) == 0) {
+                changeWhileToFor(psnCurrent, j, nodePosition, list);
+                nodeWithWhilePosition = nodePosition;
+                foundWhile = 1;
+                j += iSizeOfWhile;
+                // Exclude spaces
+                while (currentLine[j] == ' ') {
+                    j++;
+                }
+                // Check if the line contains "(", if it does, change position to possible start of variable
+                strForCondition[0] = ' ';
+                if (currentLine[j] == '(') {
+                    j++;
+                    int k = 0;
+                    while (currentLine[j] != ')') {
+                        strForCondition[k + 1] = currentLine[j];
+                        k++;
+                        j++;
+                    }
+                    strForCondition[k] = ';';
+                }
+                printf("For condition 2: %s\n", strForCondition);
+                break;
             }
         }
+        if (foundWhile) {
+            break;
+        }
+        nodePosition++;
+        psnCurrent = psnCurrent->pNextNode;
     }
+    if (foundWhile) {
+        NODE *psnCurrent = list->pHead;
+        for (int i = 0; i < nodePosition - 1; ++i) {
+            psnCurrent = psnCurrent->pNextNode;
+        }
+        int i = 0;
+        for (i = 0; i < psnCurrent->size; ++i) {
+            if (('a' <= psnCurrent->line[i] && psnCurrent->line[i] <= 'z') ||
+                ('A' <= psnCurrent->line[i] && psnCurrent->line[i] <= 'Z')) {
+                break;
+            }
+        }
+        int currentLength = i;
+        for (int j = 0; j < psnCurrent->size - currentLength; j++) {
+            strForInitialization[j] = psnCurrent->line[i];
+            if (psnCurrent->line[i] == ';') {
+                break;
+            }
+            i++;
+        }
+        deleteSpecificNode(list, nodeWithWhilePosition - 1);
+        printf("For initialization: %s\n", strForInitialization);
+    }
+    if (foundWhile) {
+        NODE *psnCurrent = list->pHead;
+        NODE *psnPrev = NULL;
+        iCommentPosition = 0;
+        for (int i = 0; i < nodePosition + 1; ++i) {
+            psnPrev = psnCurrent;
+            psnCurrent = psnCurrent->pNextNode;
+        }
+        printf("For body: %s\n", psnCurrent->line);
+        while (psnCurrent != NULL) {
+            iCommentPosition = checkIfLineHasComment(psnCurrent->line, psnCurrent->size);
+
+            for (int j = 0; j < (iCommentPosition == 0 ? psnCurrent->size : iCommentPosition); j++) {
+                if (psnCurrent->line[j] == '}') {
+                    positionOfWhileEnd = nodePosition;
+                    foundEndOfWhile = 1;
+                    break;
+                }
+            }
+            if (foundEndOfWhile) {
+                break;
+            }
+            psnPrev = psnCurrent;
+            nodePosition++;
+            psnCurrent = psnCurrent->pNextNode;
+        }
+        if (foundEndOfWhile) {
+            int i = 0;
+            for (i = 0; i < psnPrev->size; ++i) {
+                if (('a' <= psnPrev->line[i] && psnPrev->line[i] <= 'z') ||
+                    ('A' <= psnPrev->line[i] && psnPrev->line[i] <= 'Z')) {
+                    break;
+                }
+            }
+            int currentLength = i;
+            strForIncrement[0] = ' ';
+            for (int j = 0; j < psnPrev->size - currentLength; j++) {
+                if (psnPrev->line[i] == ';') {
+                    break;
+                }
+                strForIncrement[j + 1] = psnPrev->line[i];
+                i++;
+            }
+            deleteSpecificNode(list, positionOfWhileEnd);
+            printf("For increment: %s\n", strForIncrement);
+        }
+    }
+    printf("%s%s%s\n", strForInitialization, strForCondition, strForIncrement);
+
+    if (foundWhile){
+        NODE *psnCurrent = list->pHead;
+        for (int i = 0; i < nodeWithWhilePosition - 1; ++i) {
+            psnCurrent = psnCurrent->pNextNode;
+        }
+    }
+
+}
+
+void changeWhileToFor(NODE *psnCurrent, int j, int nodePosition, NODE_LIST *list) {
+    char *strFor = "for";
+    int iSizeOfFor = 3;
+    int iSizeOfWhile = 5;
+    char *temp = (char *) malloc(psnCurrent->size + iSizeOfFor - iSizeOfWhile);
+    if (temp == NULL) {
+        printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
+        return;
+    }
+    for (int k = 0; k < j; ++k) {
+        temp[k] = psnCurrent->line[k];
+    }
+    for (int k = 0; k < iSizeOfFor; ++k) {
+        temp[j + k] = strFor[k];
+    }
+    for (int k = j + iSizeOfFor; k < psnCurrent->size; k++) {
+        temp[k] = psnCurrent->line[k + iSizeOfWhile - iSizeOfFor];
+    }
+    psnCurrent->size = psnCurrent->size - iSizeOfWhile + iSizeOfFor;
+
+    SENT_NODE psnTemp;
+    memset(&psnTemp, 0, sizeof(SENT_NODE));
+    psnTemp.line = temp;
+    psnTemp.size = psnCurrent->size;
+
+    deleteSpecificNode(list, nodePosition);
+    addAtIndex(list, &psnTemp, nodePosition);
+
+    free(temp);
 }
 
 int checkIfLineHasComment(char *currentLine, int size) {
@@ -119,10 +278,10 @@ void changeAllCharVariableNamesToHungerianNotation(NODE_LIST *list) {
     int iLengthOfOldVariable = 0;
     int iLengthOfNewVariable = 0;
     int iLengthOfNewLine = 0;
+    int iCurrentLengthOfNewVariable = 0;
+    int iRemainingSize = 0;
 
     int iCommentPosition = 0;
-
-    int iComment = 0;
 
     memset(strOldVariable, 0, MAX_STRING_LENGTH);
     memset(strUpgradeOldVariable, 0, MAX_STRING_LENGTH);
@@ -130,16 +289,13 @@ void changeAllCharVariableNamesToHungerianNotation(NODE_LIST *list) {
     memset(strNewVariable, 0, MAX_STRING_LENGTH);
     // Loop through all lines in the list to find char, and check if they are using hungerian notation
     while (psnCurrent != NULL) {
-        iComment = 0;
         char *currentLine = psnCurrent->line;
+        iCommentPosition = 0;
         // Loop though string in node
         iCommentPosition = checkIfLineHasComment(currentLine, psnCurrent->size);
 
-        if (iCommentPosition != 0) {
-            iComment = 1;
-        }
-
-        for (int j = 0; j < (iComment == 0 ? psnCurrent->size : iCommentPosition); j++) {
+        // Loop though string in node until comment or end of line
+        for (int j = 0; j < (iCommentPosition == 0 ? psnCurrent->size : iCommentPosition); j++) {
             // Check if the line contains "char ", if it does, change position to possible start of variable
             if (strncmp(&currentLine[j], "char ", iSizeOfCharOffset) == 0) {
                 j += iSizeOfCharOffset;
@@ -173,7 +329,11 @@ void changeAllCharVariableNamesToHungerianNotation(NODE_LIST *list) {
 
                 // Add *psz to start of variable, and add old variable with changed first letter to uppercase if needed
                 strncpy(strNewVariable, pszVariableStart, strlen(pszVariableStart));
-                strncat(strNewVariable, strOldVariable, MAX_STRING_LENGTH);
+                strNewVariable[strlen(pszVariableStart)] = '\0';
+                iCurrentLengthOfNewVariable = strlen(strNewVariable);
+                iRemainingSize = MAX_STRING_LENGTH - iCurrentLengthOfNewVariable;
+                strncat(strNewVariable, strOldVariable, iRemainingSize);
+                strNewVariable[strlen(strNewVariable)] = '\0';
 
                 iLengthOfNewVariable = strlen(strNewVariable);
 

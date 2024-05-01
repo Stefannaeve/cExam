@@ -117,6 +117,10 @@ void freeLinkedList(NODE_LIST *psnList) {
         free(psnCurrent);
         psnCurrent = psnNext;
     }
+
+    psnList->pHead = NULL;
+    psnList->pTail = NULL;
+    psnList->size = 0;
 }
 
 void printAllNodes(NODE_LIST *psnList) {
@@ -166,6 +170,7 @@ int deleteSpecificNode(NODE_LIST *psnList, int iIndex) {
         psoPrevious->pNextNode = psoCurrent->pNextNode;
     }
 
+    free(psoCurrent->line);
     free(psoCurrent);
     psnList->size--;
 
