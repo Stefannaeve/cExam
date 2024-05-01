@@ -11,10 +11,10 @@ RM = rm -f
 OBJDIR = obj
 
 # PATHS
-_DEPS = main.h newBeautifier.h
+_DEPS = main.h newNewBeautifier.h linkedList.h
 DEPS = $(patsubst %, $(INCLDIR)/%, $(_DEPS))
 
-_OBJS = main.o newBeautifier.o
+_OBJS = main.o newNewBeautifier.o linkedList.o
 OBJS = $(patsubst %, $(OBJDIR)/%, $(_OBJS))
 
 # RULES
@@ -24,14 +24,10 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c $(DEPS)
 $(TARGET): $(OBJS)
 	$(CC) -o $@ $^ $(CFLAGS)
 	
-valgrind1:
+valgrind:
 	make
 	valgrind --leak-check=yes --show-leak-kinds=all --track-origins=yes ./$(TARGET)
 
-valgrind2:
-	make
-	valgrind --leak-check=yes --show-leak-kinds=all --track-origins=yes ./$(TARGET)
-	
 run:
 	make
 	./$(TARGET)

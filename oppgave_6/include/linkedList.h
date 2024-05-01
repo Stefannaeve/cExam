@@ -9,12 +9,13 @@
 
 typedef struct _SENT_NODE {
     char *line;
+    int size;
 } SENT_NODE;
 
 typedef struct _NODE {
     struct _NODE *pNextNode;
-    char line[MAX_LINE_LENGTH];
-    int price;
+    char *line;
+    int size;
 } NODE;
 
 typedef struct _NODE_LIST {
@@ -25,6 +26,7 @@ typedef struct _NODE_LIST {
 
 void nodeAddToEnd(NODE_LIST *psoList, NODE *psnTemp);
 int add(NODE_LIST *psnList, SENT_NODE *pssSentNode);
-void orderPrintAllNodes(NODE_LIST *psnList);
+void printAllNodes(NODE_LIST *psnList);
+void freeLinkedList(NODE_LIST *psnList);
 
 #endif //OPPGAVE_6_LINKEDLIST_H

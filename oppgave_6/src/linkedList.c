@@ -22,7 +22,15 @@ int add(NODE_LIST *psnList, SENT_NODE *pssSentNode) {
         return -1;
     }
 
+    psoTemp->line = (char *) malloc(strlen(pssSentNode->line) + 1);
+    if (psoTemp->line == NULL) {
+        errno = ENOMEM;
+        printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
+        return -1;
+    }
+
     strcpy(psoTemp->line, pssSentNode->line);
+    psoTemp->size = pssSentNode->size;
 
     psoTemp->pNextNode = NULL;
 
@@ -44,21 +52,23 @@ void nodeAddToEnd(NODE_LIST *psoList, NODE *psnTemp) {
     psoList->size++;
 }
 
-void orderFreeLinkedList(NODE_LIST *psnList) {
-    NODE *psoCurrent = psnList->pHead;
-    NODE *psoNext;
-    while (psoCurrent != NULL) {
-        psoNext = psoCurrent->pNextNode;
-        psoCurrent->pNextNode = NULL;
-        psoCurrent = psoNext;
+void freeLinkedList(NODE_LIST *psnList) {
+    NODE *psnCurrent = psnList->pHead;
+    NODE *psnNext;
+    while (psnCurrent != NULL) {
+        psnNext = psnCurrent->pNextNode;
+        psnCurrent->pNextNode = NULL;
+        free(psnCurrent->line);
+        free(psnCurrent);
+        psnCurrent = psnNext;
     }
 }
 
-void orderPrintAllNodes(NODE_LIST *psnList) {
+void printAllNodes(NODE_LIST *psnList) {
     int iCount = 0;
     NODE *psnCurrent = psnList->pHead;
     while (psnCurrent != NULL) {
-        printf("%s", psnCurrent->line);
+        printf("%02d  %s", psnCurrent->size, psnCurrent->line);
         psnCurrent = psnCurrent->pNextNode;
         iCount++;
     }
