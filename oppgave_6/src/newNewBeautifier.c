@@ -17,6 +17,8 @@ void changeAllCharVariableNamesToHungerianNotation(NODE_LIST *list);
 
 void changeWhileLoopsToForLoops(NODE_LIST *list);
 
+int checkIfLineHasComment(char *currentLine, int size);
+
 void beautify(char *filename) {
     char strBuffer[MAX_STRING_LENGTH];
     char *pszTempChar;
@@ -90,6 +92,16 @@ void changeWhileLoopsToForLoops(NODE_LIST *list) {
     }
 }
 
+int checkIfLineHasComment(char *currentLine, int size) {
+    for (int j = 0; j < size; j++) {
+        if (currentLine[j] == '/' && currentLine[j + 1] == '/') {
+            return j;
+        }
+    }
+    return 0;
+}
+
+
 void changeAllCharVariableNamesToHungerianNotation(NODE_LIST *list) {
     NODE *psnCurrent = list->pHead;
     char *pszVariableStart = "*psz";
@@ -108,15 +120,26 @@ void changeAllCharVariableNamesToHungerianNotation(NODE_LIST *list) {
     int iLengthOfNewVariable = 0;
     int iLengthOfNewLine = 0;
 
+    int iCommentPosition = 0;
+
+    int iComment = 0;
+
     memset(strOldVariable, 0, MAX_STRING_LENGTH);
     memset(strUpgradeOldVariable, 0, MAX_STRING_LENGTH);
     memset(strNewLine, 0, MAX_STRING_LENGTH);
     memset(strNewVariable, 0, MAX_STRING_LENGTH);
     // Loop through all lines in the list to find char, and check if they are using hungerian notation
     while (psnCurrent != NULL) {
+        iComment = 0;
         char *currentLine = psnCurrent->line;
         // Loop though string in node
-        for (int j = 0; j < psnCurrent->size; j++) {
+        iCommentPosition = checkIfLineHasComment(currentLine, psnCurrent->size);
+
+        if (iCommentPosition != 0) {
+            iComment = 1;
+        }
+
+        for (int j = 0; j < (iComment == 0 ? psnCurrent->size : iCommentPosition); j++) {
             // Check if the line contains "char ", if it does, change position to possible start of variable
             if (strncmp(&currentLine[j], "char ", iSizeOfCharOffset) == 0) {
                 j += iSizeOfCharOffset;
