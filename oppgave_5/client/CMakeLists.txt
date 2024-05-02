@@ -1,14 +1,10 @@
 cmake_minimum_required(VERSION 3.27)
-project(task C)
+project(client C)
 
-set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD 99)
 
-include_directories(include)
-
-add_executable(task
-        src/main.c
+add_executable(client src/main.c
         src/client.c
-        include/main.h
-        include/client.h
-        src/client.c
+        src/client.h
+        src/main.h
 )

@@ -1,12 +1,17 @@
 
 
 Oppgave 6
-[]Make sure functions which returns gets handled
-[]Hungerian notation
-[]Remove uneccessary variables
-[]Change all instances of strcpy, strcmp and etc to strncmp, strncmp and etc
-[x]Cleanup main.c
-[]Check if headerfiles names is right
-[]Check if headerfiles have all the intializations of functions, defines and structs
-[]Delete Clion association
-[]Make sure lines is configured for Gedit
+[x] Make sure functions which returns gets handled
+[x] Hungerian notation
+[x] Position every variable in the beginning of function
+[x] Remove uneccessary variables
+[x] Change all instances of strcpy, strcmp and etc to strncmp, strncmp and etc
+[x] Cleanup main.c
+[x] Check if headerfiles names is right
+[x] Check if headerfiles have all the intializations of functions, defines and structs
+[x] Add comments
+[] Delete Clion association
+[] Make sure lines is configured for Gedit
+[] Make every String zero terminated ?????????????????????????????
+[x] Memset every malloc
+[x] Zero terminate every malloc

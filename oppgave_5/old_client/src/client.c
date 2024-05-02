@@ -164,6 +164,11 @@ int client(int argc, char *argv[]) {
     return 0;
 }
 
+void *threadClient(void *arg) {
+
+    return NULL;
+}
+
 int userInput(char *buffer, int size) {
     int bufferLength;
     fgets(buffer, size - 1, stdin);
