@@ -29,6 +29,6 @@ int add(NODE_LIST *psnList, SENT_NODE *pssSentNode);
 void printAllNodes(NODE_LIST *psnList);
 void freeLinkedList(NODE_LIST *psnList);
 int deleteSpecificNode(NODE_LIST *psnList, int iIndex);
-void addAtIndex(NODE_LIST *psnList, SENT_NODE *pssSentNode, int iIndex);
+int addAtIndex(NODE_LIST *psnList, SENT_NODE *pssSentNode, int iIndex);
 
 #endif //OPPGAVE_6_LINKEDLIST_H

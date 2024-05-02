@@ -11,10 +11,10 @@ RM = rm -f
 OBJDIR = obj
 
 # PATHS
-_DEPS = main.h newNewBeautifier.h linkedList.h
+_DEPS = main.h beautifier.h linkedList.h
 DEPS = $(patsubst %, $(INCLDIR)/%, $(_DEPS))
 
-_OBJS = main.o newNewBeautifier.o linkedList.o
+_OBJS = main.o beautifier.o linkedList.o
 OBJS = $(patsubst %, $(OBJDIR)/%, $(_OBJS))
 
 # RULES

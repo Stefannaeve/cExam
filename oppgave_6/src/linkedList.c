@@ -52,11 +52,11 @@ void nodeAddToEnd(NODE_LIST *psnList, NODE *psnTemp) {
     psnList->size++;
 }
 
-void addAtIndex(NODE_LIST *psnList, SENT_NODE *pssSentNode, int iIndex) {
+int addAtIndex(NODE_LIST *psnList, SENT_NODE *pssSentNode, int iIndex) {
     if (pssSentNode == NULL) {
         errno = EINVAL;
         printf("Struct cannot be NULL- Error message: %s\n", strerror(errno));
-        return;
+        return - 1;
     }
 
     NODE *psoTemp;
@@ -65,14 +65,14 @@ void addAtIndex(NODE_LIST *psnList, SENT_NODE *pssSentNode, int iIndex) {
     if (psoTemp == NULL) {
         errno = ENOMEM;
         printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
-        return;
+        return - 1;
     }
 
     psoTemp->line = (char *) malloc(strlen(pssSentNode->line) + 1);
     if (psoTemp->line == NULL) {
         errno = ENOMEM;
         printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
-        return;
+        return - 1;
     }
 
     strcpy(psoTemp->line, pssSentNode->line);
@@ -83,7 +83,7 @@ void addAtIndex(NODE_LIST *psnList, SENT_NODE *pssSentNode, int iIndex) {
     if (psnList->pHead == NULL) {
         psnList->pHead = psoTemp;
         psnList->pTail = psoTemp;
-        return;
+        return 0;
     }
 
     NODE *psoCurrent = psnList->pHead;
@@ -105,6 +105,7 @@ void addAtIndex(NODE_LIST *psnList, SENT_NODE *pssSentNode, int iIndex) {
     }
 
     psnList->size++;
+    return 0;
 };
 
 void freeLinkedList(NODE_LIST *psnList) {

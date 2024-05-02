@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "../include/oppgave_6.h"
+#include "../include/oppgave6_test.h"
 
 int oppgave_6() {
     // char this is a comment
