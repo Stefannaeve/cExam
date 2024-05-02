@@ -32,7 +32,6 @@ run:
 	make
 	./$(TARGET)
 
-	
 .PHONY: clean
 clean:
 	$(RM) $(OBJDIR)/*.o *~core $(INCLDIR)/*~

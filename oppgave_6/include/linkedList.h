@@ -1,11 +1,5 @@
-//
-// Created by stefannaeve on 4/30/24.
-//
-
-#ifndef OPPGAVE_6_LINKEDLIST_H
-#define OPPGAVE_6_LINKEDLIST_H
-
-#define MAX_LINE_LENGTH 206
+#ifndef __OPPGAVE_6_LINKEDLIST_H__
+#define __OPPGAVE_6_LINKEDLIST_H__
 
 typedef struct _SENT_NODE {
     char *line;
@@ -31,4 +25,4 @@ void freeLinkedList(NODE_LIST *psnList);
 int deleteSpecificNode(NODE_LIST *psnList, int iIndex);
 int addAtIndex(NODE_LIST *psnList, SENT_NODE *pssSentNode, int iIndex);
 
-#endif //OPPGAVE_6_LINKEDLIST_H
+#endif //__OPPGAVE_6_LINKEDLIST_H__

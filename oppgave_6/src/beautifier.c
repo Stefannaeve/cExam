@@ -1,31 +1,8 @@
-//
-// Created by stefannaeve on 4/30/24.
-//
-
-#include <stdio.h>
-#include <malloc.h>
 #include "../include/beautifier.h"
-#include "../include/linkedList.h"
 #include <string.h>
 #include <errno.h>
-
-#define MAX_STRING_LENGTH 206
-
-int removeEveryConcurrentlyTreeLinesOfSpace(NODE_LIST *psnList);
-
-int changeAllCharVariableNamesToHungerianNotation(NODE_LIST *list);
-
-int changeWhileLoopsToForLoops(NODE_LIST *list);
-
-int checkIfLineHasComment(char *currentLine, int size);
-
-int changeWhileToFor(NODE *psnCurrent, int positionOfWhile, int nodePosition, NODE_LIST *list);
-
-int findCondition(int *placementOfFor, int *nodeWithWhilePosition, int *nodePosition, NODE_LIST *list, char *strForCondition, int *foundWhile);
-
-int findInitialization(NODE_LIST *list, int nodeWithWhilePosition, int nodePosition, char *strForInitialization);
-
-int findIncrement(NODE_LIST *list, int *nodePosition, char *strForIncrement);
+#include <stdio.h>
+#include <malloc.h>
 
 int beautify(char *filename) {
     char strBuffer[MAX_STRING_LENGTH];
@@ -33,19 +10,21 @@ int beautify(char *filename) {
 
     int iLength = 0;
     int i = 0;
-    int status = 0;
+    int iStatus = 0;
 
-    NODE_LIST psnList = {NULL, NULL, 0};
+    NODE_LIST snList = {NULL, NULL, 0};
+    SENT_NODE snTemp = {NULL, 0};
+    NODE *psnCurrent = NULL;
 
-    FILE *fdCFile = fopen(filename, "r");
-    if (fdCFile == NULL) {
-        printf("Could not open fdCFile %s - Error message: %s\n", filename, strerror(errno));
+    FILE *pfdBeautifiedFile;
+    FILE *pfdCFile = fopen(filename, "r");
+    if (pfdCFile == NULL) {
+        printf("Could not open pfdCFile %s - Error message: %s\n", filename, strerror(errno));
         return -1;
     }
 
 
-    while (fgets(strBuffer, MAX_STRING_LENGTH, fdCFile) != NULL) {
-        SENT_NODE psnTemp;
+    while (fgets(strBuffer, MAX_STRING_LENGTH, pfdCFile) != NULL) {
         iLength = strlen(strBuffer);
 
         pszTempChar = (char *) malloc(iLength + 1);
@@ -53,188 +32,194 @@ int beautify(char *filename) {
             printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
             return - 1;
         }
-
-        strcpy(pszTempChar, strBuffer);
+        memset(pszTempChar, 0, iLength + 1);
 
         pszTempChar[iLength] = '\0';
+        strncpy(pszTempChar, strBuffer, iLength);
+        pszTempChar[iLength] = '\0';
 
-        memset(&psnTemp, 0, sizeof(SENT_NODE));
-        psnTemp.line = pszTempChar;
-        psnTemp.size = iLength;
+        memset(&snTemp, 0, sizeof(SENT_NODE));
+        snTemp.line = pszTempChar;
+        snTemp.size = iLength;
 
-        add(&psnList, &psnTemp);
+        add(&snList, &snTemp);
 
         free(pszTempChar);
         memset(strBuffer, 0, MAX_STRING_LENGTH);
 
         i++;
     }
-    fclose(fdCFile);
+    fclose(pfdCFile);
 
 
-    status = removeEveryConcurrentlyTreeLinesOfSpace(&psnList);
+    iStatus = removeEveryConcurrentlyTreeLinesOfSpace(&snList);
 
-    if (status != 0) {
+    if (iStatus != 0) {
         printf("Error in beautifier...\n");
         return -1;
     }
 
-    printAllNodes(&psnList);
+    printAllNodes(&snList);
 
-    status = changeAllCharVariableNamesToHungerianNotation(&psnList);
+    iStatus = changeAllCharVariableNamesToHungerianNotation(&snList);
 
-    if (status != 0) {
+    if (iStatus != 0) {
         printf("Error in beautifier...\n");
         return -1;
     }
 
-    printAllNodes(&psnList);
+    printAllNodes(&snList);
 
-    status = changeWhileLoopsToForLoops(&psnList);
+    iStatus = changeWhileLoopsToForLoops(&snList);
 
-    if (status != 0) {
+    if (iStatus != 0) {
         printf("Error in beautifier...\n");
         return -1;
     }
 
-    printAllNodes(&psnList);
+    printAllNodes(&snList);
 
 
-    FILE *beautifiedFile = fopen("src/beautified_oppgave6_test.c", "w");
+    pfdBeautifiedFile = fopen("src/beautified_oppgave6_test.c", "w");
 
 
-    if (beautifiedFile == NULL) {
-        printf("Could not open beautifiedFile - Error message: %s\n", strerror(errno));
+    if (pfdBeautifiedFile == NULL) {
+        printf("Could not open pfdBeautifiedFile - Error message: %s\n", strerror(errno));
         return -1;
     }
 
-    NODE *psnCurrent = psnList.pHead;
+    psnCurrent = snList.pHead;
     while (psnCurrent != NULL) {
-        fprintf(beautifiedFile, "%s", psnCurrent->line);
+        fprintf(pfdBeautifiedFile, "%s", psnCurrent->line);
         psnCurrent = psnCurrent->pNextNode;
     }
 
-    fclose(beautifiedFile);
+    fclose(pfdBeautifiedFile);
 
-    freeLinkedList(&psnList);
+    freeLinkedList(&snList);
 
     return 0;
 
 }
 
 int changeWhileLoopsToForLoops(NODE_LIST *list) {
-    int nodeWithWhilePosition = 0;
-    int nodePosition = 0;
-    int foundWhile = 0;
-    int placementOfFor = 0;
-    int status = 0;
+    int iNodeWithWhilePosition = 0;
+    int iNodePosition = 0;
+    int iFoundWhile = 0;
+    int iPlacementOfFor = 0;
+    int iStatus = 0;
 
-    int lengthInitialization = 0;
-    int lengthCondition = 0;
-    int lengthIncrement = 0;
+    int iLengthInitialization = 0;
+    int iLengthCondition = 0;
+    int iLengthIncrement = 0;
 
-    int positionOfFirstParenthesis = 0;
-    int positionOfSecondParenthesis = 0;
+    int iPositionOfFirstParenthesis = 0;
+    int iPositionOfSecondParenthesis = 0;
 
     char strForInitialization[MAX_STRING_LENGTH] = {0};
     char strForCondition[MAX_STRING_LENGTH] = {0};
     char strForIncrement[MAX_STRING_LENGTH] = {0};
 
+    char *pszTemp = NULL;
 
-    status = findCondition(&placementOfFor, &nodeWithWhilePosition, &nodePosition, list, strForCondition, &foundWhile);
-    if (status != 0) {
+    NODE *psnCurrent = NULL;
+    SENT_NODE psnTemp = {NULL, 0};
+
+    iStatus = findCondition(&iPlacementOfFor, &iNodeWithWhilePosition, &iNodePosition, list, strForCondition, &iFoundWhile);
+    if (iStatus != 0) {
         printf("Error in findCondition...\n");
         return -1;
     }
 
-    if (foundWhile) {
-        status = findInitialization(list, nodeWithWhilePosition, nodePosition, strForInitialization);
+    if (iFoundWhile) {
+        iStatus = findInitialization(list, iNodeWithWhilePosition, iNodePosition, strForInitialization);
     }
-    if (status != 0) {
+    if (iStatus != 0) {
         printf("Error in findInitialization...\n");
         return -1;
     }
 
     // INCREMENT
-    if (foundWhile) {
-        status = findIncrement(list, &nodePosition, strForIncrement);
+    if (iFoundWhile) {
+        iStatus = findIncrement(list, &iNodePosition, strForIncrement);
     }
-    if (status != 0) {
+    if (iStatus != 0) {
         printf("Error in findIncrement...\n");
         return -1;
     }
 
-    lengthInitialization = strlen(strForInitialization);
-    lengthCondition = strlen(strForCondition);
-    lengthIncrement = strlen(strForIncrement);
+    iLengthInitialization = strlen(strForInitialization);
+    iLengthCondition = strlen(strForCondition);
+    iLengthIncrement = strlen(strForIncrement);
 
     // REPLACEMENT
-    if (foundWhile){
-        NODE *psnCurrent = list->pHead;
-        for (int i = 0; i < nodeWithWhilePosition - 1; ++i) {
+    if (iFoundWhile){
+        psnCurrent = list->pHead;
+        for (int i = 0; i < iNodeWithWhilePosition - 1; ++i) {
             psnCurrent = psnCurrent->pNextNode;
         }
-        for (int i = placementOfFor; i < psnCurrent->size; ++i) {
+        for (int i = iPlacementOfFor; i < psnCurrent->size; ++i) {
             if (psnCurrent->line[i] == '('){
-                positionOfFirstParenthesis = i;
+                iPositionOfFirstParenthesis = i;
             }
-            if (psnCurrent->line[i] == ')' && positionOfFirstParenthesis != 0){
-                positionOfSecondParenthesis = i;
+            if (psnCurrent->line[i] == ')' && iPositionOfFirstParenthesis != 0){
+                iPositionOfSecondParenthesis = i;
                 break;
             }
         }
-            char *temp = (char *) malloc(positionOfFirstParenthesis + lengthInitialization + lengthCondition + lengthIncrement + psnCurrent->size - positionOfSecondParenthesis + 1);
-        if (temp == NULL) {
+            pszTemp = (char *) malloc(iPositionOfFirstParenthesis + iLengthInitialization + iLengthCondition + iLengthIncrement + psnCurrent->size - iPositionOfSecondParenthesis + 1);
+        if (pszTemp == NULL) {
             printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
             return - 1;
         }
-        memset(temp, 0, positionOfFirstParenthesis + lengthInitialization + lengthCondition + lengthIncrement + psnCurrent->size - positionOfSecondParenthesis + 1);
-        for (int i = 0; i < positionOfFirstParenthesis + 1; ++i) {
-            temp[i] = psnCurrent->line[i];
+        memset(pszTemp, 0, iPositionOfFirstParenthesis + iLengthInitialization + iLengthCondition + iLengthIncrement + psnCurrent->size - iPositionOfSecondParenthesis + 1);
+        pszTemp[iPositionOfFirstParenthesis + iLengthInitialization + iLengthCondition + iLengthIncrement + psnCurrent->size - iPositionOfSecondParenthesis] = '\0';
+        for (int i = 0; i < iPositionOfFirstParenthesis + 1; ++i) {
+            pszTemp[i] = psnCurrent->line[i];
         }
-        for (int i = 0; i < lengthInitialization; ++i) {
-            temp[positionOfFirstParenthesis + 1 + i] = strForInitialization[i];
+        for (int i = 0; i < iLengthInitialization; ++i) {
+            pszTemp[iPositionOfFirstParenthesis + 1 + i] = strForInitialization[i];
         }
-        for (int i = 0; i < lengthCondition; ++i) {
-            temp[positionOfFirstParenthesis + lengthInitialization + 1 + i] = strForCondition[i];
+        for (int i = 0; i < iLengthCondition; ++i) {
+            pszTemp[iPositionOfFirstParenthesis + iLengthInitialization + 1 + i] = strForCondition[i];
         }
-        for (int i = 0; i < lengthIncrement; ++i) {
-            temp[positionOfFirstParenthesis + lengthInitialization + lengthCondition + 1 + i] = strForIncrement[i];
+        for (int i = 0; i < iLengthIncrement; ++i) {
+            pszTemp[iPositionOfFirstParenthesis + iLengthInitialization + iLengthCondition + 1 + i] = strForIncrement[i];
         }
-        for (int i = 0; i < psnCurrent->size - positionOfSecondParenthesis; ++i) {
-            temp[positionOfFirstParenthesis + lengthInitialization + lengthCondition + lengthIncrement + 1 + i] = psnCurrent->line[positionOfSecondParenthesis + i];
+        for (int i = 0; i < psnCurrent->size - iPositionOfSecondParenthesis; ++i) {
+            pszTemp[iPositionOfFirstParenthesis + iLengthInitialization + iLengthCondition + iLengthIncrement + 1 + i] = psnCurrent->line[iPositionOfSecondParenthesis + i];
         }
-        temp[positionOfFirstParenthesis + lengthInitialization + lengthCondition + lengthIncrement + psnCurrent->size - positionOfSecondParenthesis + 1] = '\0';
-        psnCurrent->size = psnCurrent->size + lengthInitialization + lengthCondition + lengthIncrement;
+        pszTemp[iPositionOfFirstParenthesis + iLengthInitialization + iLengthCondition + iLengthIncrement + psnCurrent->size - iPositionOfSecondParenthesis + 1] = '\0';
+        psnCurrent->size = psnCurrent->size + iLengthInitialization + iLengthCondition + iLengthIncrement;
 
-        SENT_NODE psnTemp;
         memset(&psnTemp, 0, sizeof(SENT_NODE));
-        psnTemp.line = temp;
+        psnTemp.line = pszTemp;
         psnTemp.size = psnCurrent->size;
 
-        status = deleteSpecificNode(list, nodeWithWhilePosition - 1);
-        if (status != 0) {
+        iStatus = deleteSpecificNode(list, iNodeWithWhilePosition - 1);
+        if (iStatus != 0) {
             printf("Error in changeWhileLoopsToForLoops...\n");
         } else {
-            status = addAtIndex(list, &psnTemp, nodeWithWhilePosition - 1);
+            iStatus = addAtIndex(list, &psnTemp, iNodeWithWhilePosition - 1);
         }
 
-        free(temp);
+        free(pszTemp);
     }
 
     return 0;
 }
 
-int findIncrement(NODE_LIST *list, int *nodePosition, char *strForIncrement){
-    NODE *psnCurrent = list->pHead;
+int findIncrement(NODE_LIST *psnList, int *iNodePosition, char *strForIncrement){
+    NODE *psnCurrent = psnList->pHead;
     NODE *psnPrev = NULL;
 
-    int foundEndOfWhile = 0;
-    int positionOfWhileEnd = 0;
+    int iFoundEndOfWhile = 0;
+    int iPositionOfWhileEnd = 0;
     int iStatus = 0;
+    int iCurrentLength = 0;
 
     int iCommentPosition = 0;
-    for (int i = 0; i < *nodePosition + 1; ++i) {
+    for (int i = 0; i < *iNodePosition + 1; ++i) {
         psnPrev = psnCurrent;
         psnCurrent = psnCurrent->pNextNode;
     }
@@ -244,19 +229,19 @@ int findIncrement(NODE_LIST *list, int *nodePosition, char *strForIncrement){
 
         for (int j = 0; j < (iCommentPosition == 0 ? psnCurrent->size : iCommentPosition); j++) {
             if (psnCurrent->line[j] == '}') {
-                positionOfWhileEnd = *nodePosition;
-                foundEndOfWhile = 1;
+                iPositionOfWhileEnd = *iNodePosition;
+                iFoundEndOfWhile = 1;
                 break;
             }
         }
-        if (foundEndOfWhile) {
+        if (iFoundEndOfWhile) {
             break;
         }
         psnPrev = psnCurrent;
-        *nodePosition = *nodePosition + 1;
+        *iNodePosition = *iNodePosition + 1;
         psnCurrent = psnCurrent->pNextNode;
     }
-    if (foundEndOfWhile) {
+    if (iFoundEndOfWhile) {
         int i = 0;
         for (i = 0; i < psnPrev->size; ++i) {
             if (('a' <= psnPrev->line[i] && psnPrev->line[i] <= 'z') ||
@@ -264,16 +249,16 @@ int findIncrement(NODE_LIST *list, int *nodePosition, char *strForIncrement){
                 break;
             }
         }
-        int currentLength = i;
+        iCurrentLength = i;
         strForIncrement[0] = ' ';
-        for (int j = 0; j < psnPrev->size - currentLength; j++) {
+        for (int j = 0; j < psnPrev->size - iCurrentLength; j++) {
             if (psnPrev->line[i] == ';') {
                 break;
             }
             strForIncrement[j + 1] = psnPrev->line[i];
             i++;
         }
-        iStatus = deleteSpecificNode(list, positionOfWhileEnd);
+        iStatus = deleteSpecificNode(psnList, iPositionOfWhileEnd);
         if (iStatus != 0) {
             printf("Error in findIncrement...\n");
             return -1;
@@ -283,12 +268,13 @@ int findIncrement(NODE_LIST *list, int *nodePosition, char *strForIncrement){
     return 0;
 }
 
-int findInitialization(NODE_LIST *list, int nodeWithWhilePosition, int nodePosition, char *strForInitialization){
+int findInitialization(NODE_LIST *psnList, int iNodeWithWhilePosition, int iNodePosition, char *strForInitialization){
     int iStatus = 0;
     int i = 0;
+    int iCurrentLength = 0;
 
-    NODE *psnCurrent = list->pHead;
-    for (i = 0; i < nodePosition - 1; ++i) {
+    NODE *psnCurrent = psnList->pHead;
+    for (i = 0; i < iNodePosition - 1; ++i) {
         psnCurrent = psnCurrent->pNextNode;
     }
     for (i = 0; i < psnCurrent->size; ++i) {
@@ -297,15 +283,15 @@ int findInitialization(NODE_LIST *list, int nodeWithWhilePosition, int nodePosit
             break;
         }
     }
-    int currentLength = i;
-    for (int j = 0; j < psnCurrent->size - currentLength; j++) {
+    iCurrentLength = i;
+    for (int j = 0; j < psnCurrent->size - iCurrentLength; j++) {
         strForInitialization[j] = psnCurrent->line[i];
         if (psnCurrent->line[i] == ';') {
             break;
         }
         i++;
     }
-    iStatus = deleteSpecificNode(list, nodeWithWhilePosition - 1);
+    iStatus = deleteSpecificNode(psnList, iNodeWithWhilePosition - 1);
 
     if (iStatus != 0) {
         printf("Error in findInitialization...\n");
@@ -316,101 +302,107 @@ int findInitialization(NODE_LIST *list, int nodeWithWhilePosition, int nodePosit
     return 0;
 }
 
-int findCondition(int *placementOfFor, int *nodeWithWhilePosition, int *nodePosition, NODE_LIST *list, char *strForCondition, int *foundWhile) {
-    NODE *psnCurrent = list->pHead;
+int findCondition(int *piPlacementOfFor, int *piNodeWithWhilePosition, int *piNodePosition, NODE_LIST *psnList, char *pstrForCondition, int *piFoundWhile) {
+    NODE *psnCurrent = psnList->pHead;
     char *pszWhile = "while";
+    char *pszCurrentLine;
     int iSizeOfWhile = 5;
     int iSizeOfFor = 3;
     int iCommentPosition = 0;
-    int status = 0;
+    int iStatus = 0;
 
     while (psnCurrent != NULL) {
         iCommentPosition = 0;
-        char *currentLine = psnCurrent->line;
+        pszCurrentLine = psnCurrent->line;
 
         // Check if line contains comment
-        iCommentPosition = checkIfLineHasComment(currentLine, psnCurrent->size);
+        iCommentPosition = checkIfLineHasComment(pszCurrentLine, psnCurrent->size);
 
         // Loop though string in node until comment or end of line
         for (int j = 0; j < (iCommentPosition == 0 ? psnCurrent->size : iCommentPosition); j++) {
             // Check if the line contains "while", if it does, change position to possible start of variable
-            if (strncmp(&currentLine[j], pszWhile, iSizeOfWhile) == 0) {
-                status = changeWhileToFor(psnCurrent, j, *nodePosition, list);
-                if (status != 0) {
+            if (strncmp(&pszCurrentLine[j], pszWhile, iSizeOfWhile) == 0) {
+                iStatus = changeWhileToFor(psnCurrent, j, *piNodePosition, psnList);
+                if (iStatus != 0) {
                     printf("Error in changeWhileToFor...\n");
                     return -1;
                 }
-                *placementOfFor = j;
-                *nodeWithWhilePosition = *nodePosition;
-                *foundWhile = 1;
+                *piPlacementOfFor = j;
+                *piNodeWithWhilePosition = *piNodePosition;
+                *piFoundWhile = 1;
                 j += iSizeOfFor;
                 // Exclude spaces
-                while (currentLine[j] == ' ') {
-                    if (currentLine[j] == '(') {
+                while (pszCurrentLine[j] == ' ') {
+                    if (pszCurrentLine[j] == '(') {
                         break;
                     }
                     j++;
                 }
                 // Check if the line contains "(", if it does, change position to possible start of variable
-                strForCondition[0] = ' ';
-                if (currentLine[j] == '(') {
+                pstrForCondition[0] = ' ';
+                if (pszCurrentLine[j] == '(') {
                     j++;
                     int k = 0;
-                    while (currentLine[j] != ')') {
-                        strForCondition[k + 1] = currentLine[j];
+                    while (pszCurrentLine[j] != ')') {
+                        pstrForCondition[k + 1] = pszCurrentLine[j];
                         k++;
                         j++;
                     }
-                    strForCondition[k] = ';';
+                    pstrForCondition[k] = ';';
                 }
-                printf("For condition 2: %s\n", strForCondition);
+                printf("For condition 2: %s\n", pstrForCondition);
                 break;
             }
         }
-        if (*foundWhile) {
+        if (*piFoundWhile) {
             break;
         }
-        *nodePosition = *nodePosition + 1;
+        *piNodePosition = *piNodePosition + 1;
         psnCurrent = psnCurrent->pNextNode;
     }
     return 0;
 }
 
-int changeWhileToFor(NODE *psnCurrent, int positionOfWhile, int nodePosition, NODE_LIST *list) {
+int changeWhileToFor(NODE *psnCurrent, int iPositionOfWhile, int iNodePosition, NODE_LIST *psnList) {
     char *strFor = "for";
     int iSizeOfFor = 3;
     int iSizeOfWhile = 5;
     int iStatus = 0;
 
-    char *temp = (char *) malloc(psnCurrent->size + iSizeOfFor - iSizeOfWhile);
-    if (temp == NULL) {
+    SENT_NODE psnTemp = {NULL, 0};
+
+    char *pszTemp = (char *) malloc(psnCurrent->size + iSizeOfFor - iSizeOfWhile);
+    if (pszTemp == NULL) {
         printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
         return - 1;
     }
-    for (int k = 0; k < positionOfWhile; ++k) {
-        temp[k] = psnCurrent->line[k];
+    memset(pszTemp, 0, psnCurrent->size + iSizeOfFor - iSizeOfWhile);
+    pszTemp[psnCurrent->size + iSizeOfFor - iSizeOfWhile + 1] = '\0';
+
+    for (int k = 0; k < iPositionOfWhile; ++k) {
+        pszTemp[k] = psnCurrent->line[k];
     }
     for (int k = 0; k < iSizeOfFor; ++k) {
-        temp[positionOfWhile + k] = strFor[k];
+        pszTemp[iPositionOfWhile + k] = strFor[k];
     }
-    for (int k = positionOfWhile + iSizeOfFor; k < psnCurrent->size; k++) {
-        temp[k] = psnCurrent->line[k + iSizeOfWhile - iSizeOfFor];
+    for (int k = iPositionOfWhile + iSizeOfFor; k < psnCurrent->size; k++) {
+        pszTemp[k] = psnCurrent->line[k + iSizeOfWhile - iSizeOfFor];
     }
+    pszTemp[psnCurrent->size + iSizeOfFor - iSizeOfWhile] = '\0';
     psnCurrent->size = psnCurrent->size - iSizeOfWhile + iSizeOfFor;
 
-    SENT_NODE psnTemp;
     memset(&psnTemp, 0, sizeof(SENT_NODE));
-    psnTemp.line = temp;
+    psnTemp.line = pszTemp;
     psnTemp.size = psnCurrent->size;
 
-    iStatus = deleteSpecificNode(list, nodePosition);
+    iStatus = deleteSpecificNode(psnList, iNodePosition);
 
     if (iStatus != 0) {
 
     } else {
-        iStatus = addAtIndex(list, &psnTemp, nodePosition);
+        iStatus = addAtIndex(psnList, &psnTemp, iNodePosition);
     }
-    free(temp);
+    free(pszTemp);
 
     if (iStatus != 0) {
         printf("Error in changeWhileToFor...\n");
@@ -419,9 +411,9 @@ int changeWhileToFor(NODE *psnCurrent, int positionOfWhile, int nodePosition, NO
     return 0;
 }
 
-int checkIfLineHasComment(char *currentLine, int size) {
-    for (int j = 0; j < size; j++) {
-        if (currentLine[j] == '/' && currentLine[j + 1] == '/') {
+int checkIfLineHasComment(char *pszCurrentLine, int iSize) {
+    for (int j = 0; j < iSize; j++) {
+        if (pszCurrentLine[j] == '/' && pszCurrentLine[j + 1] == '/') {
             return j;
         }
     }
@@ -429,14 +421,16 @@ int checkIfLineHasComment(char *currentLine, int size) {
 }
 
 
-int changeAllCharVariableNamesToHungerianNotation(NODE_LIST *list) {
-    NODE *psnCurrent = list->pHead;
+int changeAllCharVariableNamesToHungerianNotation(NODE_LIST *psnList) {
+    NODE *psnCurrent = psnList->pHead;
+    SENT_NODE psnTemp = {NULL, 0};
     char *pszVariableStart = "*psz";
     char strOldVariable[MAX_STRING_LENGTH];
     char strUpgradeOldVariable[MAX_STRING_LENGTH];
     char strNewLine[MAX_STRING_LENGTH];
     char strNewVariable[MAX_STRING_LENGTH];
     char *pszTempString;
+    char *pszCurrentLine;
 
     int i = 0;
     int iListPosition = 0;
@@ -456,27 +450,27 @@ int changeAllCharVariableNamesToHungerianNotation(NODE_LIST *list) {
     memset(strUpgradeOldVariable, 0, MAX_STRING_LENGTH);
     memset(strNewLine, 0, MAX_STRING_LENGTH);
     memset(strNewVariable, 0, MAX_STRING_LENGTH);
-    // Loop through all lines in the list to find char, and check if they are using hungerian notation
+    // Loop through all lines in the psnList to find char, and check if they are using hungerian notation
     while (psnCurrent != NULL) {
-        char *currentLine = psnCurrent->line;
+        pszCurrentLine = psnCurrent->line;
         iCommentPosition = 0;
         // Loop though string in node
-        iCommentPosition = checkIfLineHasComment(currentLine, psnCurrent->size);
+        iCommentPosition = checkIfLineHasComment(pszCurrentLine, psnCurrent->size);
 
         // Loop though string in node until comment or end of line
         for (int j = 0; j < (iCommentPosition == 0 ? psnCurrent->size : iCommentPosition); j++) {
             // Check if the line contains "char ", if it does, change position to possible start of variable
-            if (strncmp(&currentLine[j], "char ", iSizeOfCharOffset) == 0) {
+            if (strncmp(&pszCurrentLine[j], "char ", iSizeOfCharOffset) == 0) {
                 j += iSizeOfCharOffset;
                 iLinePositionForVariable = j;
                 // Exclude spaces
-                while (currentLine[j] == ' ') {
+                while (pszCurrentLine[j] == ' ') {
                     j++;
                 }
                 i = 0;
                 // Find the end of the variable
-                while (currentLine[j] != ' ' && currentLine[j] != ';') {
-                    strOldVariable[i++] = currentLine[j++];
+                while (pszCurrentLine[j] != ' ' && pszCurrentLine[j] != ';') {
+                    strOldVariable[i++] = pszCurrentLine[j++];
                 }
                 strOldVariable[i] = '\0';
 
@@ -508,7 +502,7 @@ int changeAllCharVariableNamesToHungerianNotation(NODE_LIST *list) {
 
                 // Make new line out of old code before new variable, add new variable, fill in old code before variable
                 for (int k = 0; k < iLinePositionForVariable; ++k) {
-                    strNewLine[k] = currentLine[k];
+                    strNewLine[k] = pszCurrentLine[k];
                 }
                 for (int k = 0; k < iLengthOfNewVariable; ++k) {
                     strNewLine[iLinePositionForVariable + k] = strNewVariable[k];
@@ -517,7 +511,7 @@ int changeAllCharVariableNamesToHungerianNotation(NODE_LIST *list) {
                 for (int k = iLinePositionForVariable + iLengthOfNewVariable;
                      k < psnCurrent->size + (iLengthOfNewVariable -
                                              iLengthOfOldVariable); ++k) {
-                    strNewLine[k] = currentLine[oldPositionAfterVariable++];
+                    strNewLine[k] = pszCurrentLine[oldPositionAfterVariable++];
                 }
 
                 iLengthOfNewLine = strlen(strNewLine);
@@ -527,22 +521,23 @@ int changeAllCharVariableNamesToHungerianNotation(NODE_LIST *list) {
                     printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
                     return - 1;
                 }
+                memset(pszTempString, 0, iLengthOfNewLine + 1);
+                pszTempString[iLengthOfNewLine] = '\0';
                 strncpy(pszTempString, strNewLine, iLengthOfNewLine);
                 pszTempString[iLengthOfNewLine] = '\0';
 
-                SENT_NODE psnTemp;
                 memset(&psnTemp, 0, sizeof(SENT_NODE));
                 psnTemp.line = pszTempString;
                 psnTemp.size = iLengthOfNewLine;
 
-                iStatus = deleteSpecificNode(list, iListPosition);
+                iStatus = deleteSpecificNode(psnList, iListPosition);
 
                 if (iStatus != 0) {
                     printf("Error in changeAllCharVariableNamesToHungerianNotation...\n");
                     return -1;
                 }
 
-                iStatus = addAtIndex(list, &psnTemp, iListPosition);
+                iStatus = addAtIndex(psnList, &psnTemp, iListPosition);
 
                 if (iStatus != 0) {
                     printf("Error in changeAllCharVariableNamesToHungerianNotation...\n");
@@ -565,57 +560,62 @@ int changeAllCharVariableNamesToHungerianNotation(NODE_LIST *list) {
 
 int removeEveryConcurrentlyTreeLinesOfSpace(NODE_LIST *psnList) {
     NODE *psnCurrent = psnList->pHead;
-    int currentNode = 0;
-    int status = 0;
+    SENT_NODE psnTemp = {NULL, 0};
+    int iCurrentNode = 0;
+    int iStatus = 0;
+    int iNewSize = 0;
+
+    char *psnCurrentLine = NULL;
+    char *pszTemp = NULL;
 
     while (psnCurrent != NULL) {
-        char *psnCurrentLine = psnCurrent->line;
-        int newSize = 0;
+        psnCurrentLine = psnCurrent->line;
+        iNewSize = 0;
         for (int j = 0; j < psnCurrent->size; j++) {
             // Check if there are three spaces in a row, if so replace with \t
             if (j < psnCurrent->size - 2 && psnCurrentLine[j] == ' ' && psnCurrentLine[j + 1] == ' ' &&
                 psnCurrentLine[j + 2] == ' ') {
-                psnCurrentLine[newSize++] = '\t';
+                psnCurrentLine[iNewSize++] = '\t';
                 // Skip two spaces
                 j += 2;
             } else {
-                psnCurrentLine[newSize++] = psnCurrentLine[j];
+                psnCurrentLine[iNewSize++] = psnCurrentLine[j];
             }
         }
-        char *temp = (char *) malloc(newSize + 1);
-        if (temp == NULL) {
+        pszTemp = (char *) malloc(iNewSize + 1);
+        if (pszTemp == NULL) {
             printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
             return - 1;
         }
-        memset(temp, 0, newSize + 1);
-        for (int j = 0; j < newSize; j++) {
-            temp[j] = psnCurrentLine[j];
+        memset(pszTemp, 0, iNewSize + 1);
+        pszTemp[iNewSize] = '\0';
+        for (int j = 0; j < iNewSize; j++) {
+            pszTemp[j] = psnCurrentLine[j];
         }
-        temp[newSize] = '\0';
+        pszTemp[iNewSize] = '\0';
 
-        SENT_NODE psnTemp;
         memset(&psnTemp, 0, sizeof(SENT_NODE));
-        psnTemp.line = temp;
-        psnTemp.size = newSize;
+        psnTemp.line = pszTemp;
+        psnTemp.size = iNewSize;
 
-        status = deleteSpecificNode(psnList, currentNode);
+        iStatus = deleteSpecificNode(psnList, iCurrentNode);
 
-        if (status != 0) {
+        if (iStatus != 0) {
             printf("Error in removeEveryConcurrentlyTreeLinesOfSpace...\n");
             return -1;
         }
 
-        status = addAtIndex(psnList, &psnTemp, currentNode);
+        iStatus = addAtIndex(psnList, &psnTemp, iCurrentNode);
 
-        if (status != 0) {
+        if (iStatus != 0) {
             printf("Error in removeEveryConcurrentlyTreeLinesOfSpace...\n");
             return -1;
         }
 
-        free(temp);
+        free(pszTemp);
 
         psnCurrent = psnCurrent->pNextNode;
-        currentNode++;
+        iCurrentNode++;
     }
     return 0;
 }

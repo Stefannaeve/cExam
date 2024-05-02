@@ -1,0 +1,12 @@
+
+
+Oppgave 6
+[]Make sure functions which returns gets handled
+[]Hungerian notation
+[]Remove uneccessary variables
+[]Change all instances of strcpy, strcmp and etc to strncmp, strncmp and etc
+[x]Cleanup main.c
+[]Check if headerfiles names is right
+[]Check if headerfiles have all the intializations of functions, defines and structs
+[]Delete Clion association
+[]Make sure lines is configured for Gedit

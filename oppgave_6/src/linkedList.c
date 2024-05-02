@@ -3,9 +3,6 @@
 #include <errno.h>
 #include "../include/linkedList.h"
 
-#define START 0
-#define END 1
-
 int add(NODE_LIST *psnList, SENT_NODE *pssSentNode) {
     if (pssSentNode == NULL) {
         errno = EINVAL;
