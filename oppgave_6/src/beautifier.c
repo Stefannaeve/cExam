@@ -23,7 +23,7 @@ int beautify(char *filename) {
         return -1;
     }
 
-
+    // Read file and add each line to a linked list
     while (fgets(strBuffer, MAX_STRING_LENGTH, pfdCFile) != NULL) {
         iLength = strlen(strBuffer);
 
@@ -55,6 +55,7 @@ int beautify(char *filename) {
         return -1;
     }
 
+    // Remove every three spaces in a row and replace with \t
     iStatus = removeEveryConcurrentlyTreeLinesOfSpace(&snList);
 
     if (iStatus != 0) {
@@ -64,6 +65,7 @@ int beautify(char *filename) {
 
     printAllNodes(&snList);
 
+    // Change all char variable names to hungerian notation
     iStatus = changeAllCharVariableNamesToHungerianNotation(&snList);
 
     if (iStatus != 0) {
@@ -73,6 +75,7 @@ int beautify(char *filename) {
 
     printAllNodes(&snList);
 
+    // Change while loop name and condition into a for loop
     iStatus = changeWhileLoopsToForLoops(&snList);
 
     if (iStatus != 0) {
@@ -83,6 +86,7 @@ int beautify(char *filename) {
     printAllNodes(&snList);
 
 
+    // Open file to write beautified code to
     pfdBeautifiedFile = fopen("src/beautified_oppgave6_test.c", "w");
 
 
@@ -131,12 +135,15 @@ int changeWhileLoopsToForLoops(NODE_LIST *list) {
     NODE *psnCurrent = NULL;
     SENT_NODE psnTemp = {NULL, 0};
 
+    // Find the condition for the for loop
     iStatus = findCondition(&iPlacementOfFor, &iNodeWithWhilePosition, &iNodePosition, list, strForCondition, &iFoundWhile);
     if (iStatus != 0) {
         printf("Error in findCondition...\n");
         return -1;
     }
 
+    // findCondition will return 0 if it finds a while loop
+    // Find the initialization part of the for loop
     if (iFoundWhile) {
         iStatus = findInitialization(list, iNodeWithWhilePosition, iNodePosition, strForInitialization);
     }
@@ -145,7 +152,7 @@ int changeWhileLoopsToForLoops(NODE_LIST *list) {
         return -1;
     }
 
-    // INCREMENT
+    // Find the increment part of the for loop
     if (iFoundWhile) {
         iStatus = findIncrement(list, &iNodePosition, strForIncrement);
     }
@@ -154,16 +161,19 @@ int changeWhileLoopsToForLoops(NODE_LIST *list) {
         return -1;
     }
 
+    // Calculate lengths of the strings
     iLengthInitialization = strlen(strForInitialization);
     iLengthCondition = strlen(strForCondition);
     iLengthIncrement = strlen(strForIncrement);
 
-    // REPLACEMENT
+    // Replace the while loop with a for loop
     if (iFoundWhile){
         psnCurrent = list->pHead;
+        // Find the node with the while loop
         for (int i = 0; i < iNodeWithWhilePosition - 1; ++i) {
             psnCurrent = psnCurrent->pNextNode;
         }
+        // start at the position of the "for", and increment until we find the first and second parenthesis
         for (int i = iPlacementOfFor; i < psnCurrent->size; ++i) {
             if (psnCurrent->line[i] == '('){
                 iPositionOfFirstParenthesis = i;
@@ -180,9 +190,13 @@ int changeWhileLoopsToForLoops(NODE_LIST *list) {
         }
         memset(pszTemp, 0, iPositionOfFirstParenthesis + iLengthInitialization + iLengthCondition + iLengthIncrement + psnCurrent->size - iPositionOfSecondParenthesis + 1);
         pszTemp[iPositionOfFirstParenthesis + iLengthInitialization + iLengthCondition + iLengthIncrement + psnCurrent->size - iPositionOfSecondParenthesis] = '\0';
+
+        // Copy everything before the first parenthesis, which will include the "for"
         for (int i = 0; i < iPositionOfFirstParenthesis + 1; ++i) {
             pszTemp[i] = psnCurrent->line[i];
         }
+
+        // Copy the initialization, condition and increment into the new string
         for (int i = 0; i < iLengthInitialization; ++i) {
             pszTemp[iPositionOfFirstParenthesis + 1 + i] = strForInitialization[i];
         }
@@ -192,6 +206,8 @@ int changeWhileLoopsToForLoops(NODE_LIST *list) {
         for (int i = 0; i < iLengthIncrement; ++i) {
             pszTemp[iPositionOfFirstParenthesis + iLengthInitialization + iLengthCondition + 1 + i] = strForIncrement[i];
         }
+
+        // Copy the rest of the string after the second parenthesis
         for (int i = 0; i < psnCurrent->size - iPositionOfSecondParenthesis; ++i) {
             pszTemp[iPositionOfFirstParenthesis + iLengthInitialization + iLengthCondition + iLengthIncrement + 1 + i] = psnCurrent->line[iPositionOfSecondParenthesis + i];
         }
@@ -202,6 +218,7 @@ int changeWhileLoopsToForLoops(NODE_LIST *list) {
         psnTemp.line = pszTemp;
         psnTemp.size = psnCurrent->size;
 
+        // Delete the old node and add the new node with the for loop
         iStatus = deleteSpecificNode(list, iNodeWithWhilePosition - 1);
         if (iStatus != 0) {
             printf("Error in changeWhileLoopsToForLoops...\n");
@@ -229,10 +246,12 @@ int findIncrement(NODE_LIST *psnList, int *iNodePosition, char *strForIncrement)
         psnPrev = psnCurrent;
         psnCurrent = psnCurrent->pNextNode;
     }
-    printf("For body: %s\n", psnCurrent->line);
+
     while (psnCurrent != NULL) {
+        // Check if line contains comment, and returns the position of the comment
         iCommentPosition = checkIfLineHasComment(psnCurrent->line, psnCurrent->size);
 
+        // Loop though string in node until comment or end of line
         for (int j = 0; j < (iCommentPosition == 0 ? psnCurrent->size : iCommentPosition); j++) {
             if (psnCurrent->line[j] == '}') {
                 iPositionOfWhileEnd = *iNodePosition;
@@ -240,6 +259,7 @@ int findIncrement(NODE_LIST *psnList, int *iNodePosition, char *strForIncrement)
                 break;
             }
         }
+        // If we found the end of the while loop, break the loop
         if (iFoundEndOfWhile) {
             break;
         }
@@ -249,6 +269,7 @@ int findIncrement(NODE_LIST *psnList, int *iNodePosition, char *strForIncrement)
     }
     if (iFoundEndOfWhile) {
         int i = 0;
+        // Find the start of the increment
         for (i = 0; i < psnPrev->size; ++i) {
             if (('a' <= psnPrev->line[i] && psnPrev->line[i] <= 'z') ||
                 ('A' <= psnPrev->line[i] && psnPrev->line[i] <= 'Z')) {
@@ -256,14 +277,17 @@ int findIncrement(NODE_LIST *psnList, int *iNodePosition, char *strForIncrement)
             }
         }
         iCurrentLength = i;
+        // Copy the increment into a new string, add '' to the start of the string to look good inside the for loop
         strForIncrement[0] = ' ';
         for (int j = 0; j < psnPrev->size - iCurrentLength; j++) {
+            // Break if we find a semicolon
             if (psnPrev->line[i] == ';') {
                 break;
             }
             strForIncrement[j + 1] = psnPrev->line[i];
             i++;
         }
+        // We delete this since the for loop will have the increment in the for loop
         iStatus = deleteSpecificNode(psnList, iPositionOfWhileEnd);
         if (iStatus != 0) {
             printf("Error in findIncrement...\n");
@@ -280,9 +304,11 @@ int findInitialization(NODE_LIST *psnList, int iNodeWithWhilePosition, int iNode
     int iCurrentLength = 0;
 
     NODE *psnCurrent = psnList->pHead;
+    // Find the node before the while loop
     for (i = 0; i < iNodePosition - 1; ++i) {
         psnCurrent = psnCurrent->pNextNode;
     }
+    // Find the start of the initialization
     for (i = 0; i < psnCurrent->size; ++i) {
         if (('a' <= psnCurrent->line[i] && psnCurrent->line[i] <= 'z') ||
             ('A' <= psnCurrent->line[i] && psnCurrent->line[i] <= 'Z')) {
@@ -290,6 +316,7 @@ int findInitialization(NODE_LIST *psnList, int iNodeWithWhilePosition, int iNode
         }
     }
     iCurrentLength = i;
+    // Copy the initialization into a new string, break if we find a semicolon
     for (int j = 0; j < psnCurrent->size - iCurrentLength; j++) {
         strForInitialization[j] = psnCurrent->line[i];
         if (psnCurrent->line[i] == ';') {
@@ -297,6 +324,7 @@ int findInitialization(NODE_LIST *psnList, int iNodeWithWhilePosition, int iNode
         }
         i++;
     }
+    // Delete the node with the initialization, since the for loop will have the initialization
     iStatus = deleteSpecificNode(psnList, iNodeWithWhilePosition - 1);
 
     if (iStatus != 0) {
@@ -346,20 +374,24 @@ int findCondition(int *piPlacementOfFor, int *piNodeWithWhilePosition, int *piNo
                 }
                 // Check if the line contains "(", if it does, change position to possible start of variable
                 pstrForCondition[0] = ' ';
+                // It is expected that this position is the start of the "(", read from this position until we find the end of the condition
                 if (pszCurrentLine[j] == '(') {
                     j++;
                     int k = 0;
+                    // Copy the condition into a new string, stop when we find the end of the condition
                     while (pszCurrentLine[j] != ')') {
                         pstrForCondition[k + 1] = pszCurrentLine[j];
                         k++;
                         j++;
                     }
+                    // Add a semicolon to the end of the condition to make it make sense in the for loop
                     pstrForCondition[k] = ';';
                 }
                 printf("For condition 2: %s\n", pstrForCondition);
                 break;
             }
         }
+        // If we found the while loop, break the loop
         if (*piFoundWhile) {
             break;
         }
@@ -385,12 +417,15 @@ int changeWhileToFor(NODE *psnCurrent, int iPositionOfWhile, int iNodePosition, 
     memset(pszTemp, 0, psnCurrent->size + iSizeOfFor - iSizeOfWhile);
     pszTemp[psnCurrent->size + iSizeOfFor - iSizeOfWhile + 1] = '\0';
 
+    // Copy everything before the while loop, add "for" instead of "while"
     for (int k = 0; k < iPositionOfWhile; ++k) {
         pszTemp[k] = psnCurrent->line[k];
     }
+    // Copy "for" into the new string
     for (int k = 0; k < iSizeOfFor; ++k) {
         pszTemp[iPositionOfWhile + k] = strFor[k];
     }
+    // Copy the rest of the string after the while loop
     for (int k = iPositionOfWhile + iSizeOfFor; k < psnCurrent->size; k++) {
         pszTemp[k] = psnCurrent->line[k + iSizeOfWhile - iSizeOfFor];
     }
@@ -401,6 +436,7 @@ int changeWhileToFor(NODE *psnCurrent, int iPositionOfWhile, int iNodePosition, 
     psnTemp.line = pszTemp;
     psnTemp.size = psnCurrent->size;
 
+    // Delete the old node and add the new node with the for loop
     iStatus = deleteSpecificNode(psnList, iNodePosition);
 
     if (iStatus != 0) {
@@ -418,6 +454,7 @@ int changeWhileToFor(NODE *psnCurrent, int iPositionOfWhile, int iNodePosition, 
 }
 
 int checkIfLineHasComment(char *pszCurrentLine, int iSize) {
+    // Loop through until we find two slashes, which indicates a comment
     for (int j = 0; j < iSize; j++) {
         if (pszCurrentLine[j] == '/' && pszCurrentLine[j + 1] == '/') {
             return j;
@@ -510,10 +547,12 @@ int changeAllCharVariableNamesToHungerianNotation(NODE_LIST *psnList) {
                 for (int k = 0; k < iLinePositionForVariable; ++k) {
                     strNewLine[k] = pszCurrentLine[k];
                 }
+                // Add new variable to new line
                 for (int k = 0; k < iLengthOfNewVariable; ++k) {
                     strNewLine[iLinePositionForVariable + k] = strNewVariable[k];
                 }
                 int oldPositionAfterVariable = iLinePositionForVariable + iLengthOfOldVariable + 1;
+                // Add the rest of the old code after the variable to the new line
                 for (int k = iLinePositionForVariable + iLengthOfNewVariable;
                      k < psnCurrent->size + (iLengthOfNewVariable -
                                              iLengthOfOldVariable); ++k) {
@@ -604,6 +643,7 @@ int removeEveryConcurrentlyTreeLinesOfSpace(NODE_LIST *psnList) {
         psnTemp.line = pszTemp;
         psnTemp.size = iNewSize;
 
+        // Remove old node and add new node with replaced spaces
         iStatus = deleteSpecificNode(psnList, iCurrentNode);
 
         if (iStatus != 0) {
