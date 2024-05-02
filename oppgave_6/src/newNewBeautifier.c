@@ -49,6 +49,8 @@ void beautify(char *filename) {
 
         strcpy(pszTempChar, strBuffer);
 
+        pszTempChar[iLength] = '\0';
+
         memset(&psnTemp, 0, sizeof(SENT_NODE));
         psnTemp.line = pszTempChar;
         psnTemp.size = iLength;
@@ -83,18 +85,20 @@ void beautify(char *filename) {
 void changeWhileLoopsToForLoops(NODE_LIST *list) {
     char *pszWhile = "while";
     int iSizeOfWhile = 5;
+    int iSizeOfFor = 3;
     int iCommentPosition = 0;
     int nodeWithWhilePosition = 0;
     int nodePosition = 0;
     int foundWhile = 0;
     int foundEndOfWhile = 0;
     int positionOfWhileEnd = 0;
+    int placementOfFor = 0;
+    int positionOfFirstParenthesis = 0;
+    int positionOfSecondParenthesis = 0;
 
-    char strFor[MAX_STRING_LENGTH] = {0};
     char strForInitialization[MAX_STRING_LENGTH] = {0};
     char strForCondition[MAX_STRING_LENGTH] = {0};
     char strForIncrement[MAX_STRING_LENGTH] = {0};
-    char strForBody[MAX_STRING_LENGTH] = {0};
 
     NODE *psnCurrent = list->pHead;
 
@@ -110,11 +114,15 @@ void changeWhileLoopsToForLoops(NODE_LIST *list) {
             // Check if the line contains "while", if it does, change position to possible start of variable
             if (strncmp(&currentLine[j], pszWhile, iSizeOfWhile) == 0) {
                 changeWhileToFor(psnCurrent, j, nodePosition, list);
+                placementOfFor = j;
                 nodeWithWhilePosition = nodePosition;
                 foundWhile = 1;
-                j += iSizeOfWhile;
+                j += iSizeOfFor;
                 // Exclude spaces
                 while (currentLine[j] == ' ') {
+                    if (currentLine[j] == '(') {
+                        break;
+                    }
                     j++;
                 }
                 // Check if the line contains "(", if it does, change position to possible start of variable
@@ -216,6 +224,48 @@ void changeWhileLoopsToForLoops(NODE_LIST *list) {
         for (int i = 0; i < nodeWithWhilePosition - 1; ++i) {
             psnCurrent = psnCurrent->pNextNode;
         }
+        for (int i = placementOfFor; i < psnCurrent->size; ++i) {
+            if (psnCurrent->line[i] == '('){
+                positionOfFirstParenthesis = i;
+            }
+            if (psnCurrent->line[i] == ')' && positionOfFirstParenthesis != 0){
+                positionOfSecondParenthesis = i;
+                break;
+            }
+        }
+            char *temp = (char *) malloc(positionOfFirstParenthesis + strlen(strForInitialization) + strlen(strForCondition) + strlen(strForIncrement) + psnCurrent->size - positionOfSecondParenthesis + 1);
+        if (temp == NULL) {
+            printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
+            return;
+        }
+        memset(temp, 0, positionOfFirstParenthesis + strlen(strForInitialization) + strlen(strForCondition) + strlen(strForIncrement) + psnCurrent->size - positionOfSecondParenthesis + 1);
+        for (int i = 0; i < positionOfFirstParenthesis + 1; ++i) {
+            temp[i] = psnCurrent->line[i];
+        }
+        for (int i = 0; i < strlen(strForInitialization); ++i) {
+            temp[positionOfFirstParenthesis + 1 + i] = strForInitialization[i];
+        }
+        for (int i = 0; i < strlen(strForCondition); ++i) {
+            temp[positionOfFirstParenthesis + strlen(strForInitialization) + 1 + i] = strForCondition[i];
+        }
+        for (int i = 0; i < strlen(strForIncrement); ++i) {
+            temp[positionOfFirstParenthesis + strlen(strForInitialization) + strlen(strForCondition) + 1 + i] = strForIncrement[i];
+        }
+        for (int i = 0; i < psnCurrent->size - positionOfSecondParenthesis; ++i) {
+            temp[positionOfFirstParenthesis + strlen(strForInitialization) + strlen(strForCondition) + strlen(strForIncrement) + 1 + i] = psnCurrent->line[positionOfSecondParenthesis + i];
+        }
+        temp[positionOfFirstParenthesis + strlen(strForInitialization) + strlen(strForCondition) + strlen(strForIncrement) + psnCurrent->size - positionOfSecondParenthesis + 1] = '\0';
+        psnCurrent->size = psnCurrent->size + strlen(strForInitialization) + strlen(strForCondition) + strlen(strForIncrement);
+
+        SENT_NODE psnTemp;
+        memset(&psnTemp, 0, sizeof(SENT_NODE));
+        psnTemp.line = temp;
+        psnTemp.size = psnCurrent->size;
+
+        deleteSpecificNode(list, nodeWithWhilePosition - 1);
+        addAtIndex(list, &psnTemp, nodeWithWhilePosition - 1);
+
+        free(temp);
     }
 
 }
