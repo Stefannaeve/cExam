@@ -49,8 +49,11 @@ int beautify(char *filename) {
 
         i++;
     }
-    fclose(pfdCFile);
-
+    iStatus = fclose(pfdCFile);
+    if (iStatus != 0) {
+        printf("Could not close pfdCFile - Error message: %s\n", strerror(errno));
+        return -1;
+    }
 
     iStatus = removeEveryConcurrentlyTreeLinesOfSpace(&snList);
 
@@ -94,12 +97,15 @@ int beautify(char *filename) {
         psnCurrent = psnCurrent->pNextNode;
     }
 
-    fclose(pfdBeautifiedFile);
+    iStatus = fclose(pfdBeautifiedFile);
+    if (iStatus != 0) {
+        printf("Could not close pfdBeautifiedFile - Error message: %s\n", strerror(errno));
+        return -1;
+    }
 
     freeLinkedList(&snList);
 
     return 0;
-
 }
 
 int changeWhileLoopsToForLoops(NODE_LIST *list) {
