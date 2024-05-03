@@ -141,6 +141,7 @@ int printSpecificReservationWithSum(LIST *pslList) {
 
 int addFoodToReservation(LIST *pslList) {
     int iStatus = TRUE;
+    SENT_ORDER *pssSentOrder;
 
     char *pszReservationNumber = (char *) malloc(sizeof(char) * RESERVATION_NUMBER);
     if (pszReservationNumber == NULL) {
@@ -167,7 +168,7 @@ int addFoodToReservation(LIST *pslList) {
                 iStatus = yesOrNo();
                 if (iStatus == TRUE) {
                     printf("Adding food to reservation\n");
-                    SENT_ORDER *pssSentOrder = malloc(sizeof(struct _SENT_ORDER));
+                    pssSentOrder = malloc(sizeof(struct _SENT_ORDER));
                     if (pssSentOrder == NULL) {
                         iStatus = ERROR;
                         errno = ENOMEM;
@@ -286,6 +287,7 @@ int deleteReservation(LIST *pslList) {
 
 int getReservation(LIST *pslList, char *pszInputArray) {
     int iStatus = TRUE;
+    int iResult = 0;
 
     char *array[] = {
             "Get all reservations",
@@ -299,9 +301,9 @@ int getReservation(LIST *pslList, char *pszInputArray) {
 
     while (iStatus == TRUE) {
 
-        char result = menuHandling(array, pszInputArray, iSizeOfArray);
+        iResult = menuHandling(array, pszInputArray, iSizeOfArray);
 
-        if (result != TRUE) {
+        if (iResult != TRUE) {
 
         } else {
             switch (*pszInputArray) {
@@ -363,6 +365,8 @@ int addReservation(LIST *pslList) {
     char *pszTempTime = NULL;
     char *pszTableNumber = NULL;
 
+    SENT_TABLE_RESERVATION sentTableReservation;
+
     printf("You will be asked to fill in a various number of values\n");
     printf("Please insert the name of the reservation holder\n");
     pszName = (char *) malloc(sizeof(char) * USER_INPUT_SIZE);
@@ -417,8 +421,11 @@ int addReservation(LIST *pslList) {
                                 iTable = atoi(pszTableNumber);
                                 iSeats = atoi(pszTempSeats);
 
-                                SENT_TABLE_RESERVATION sentTableReservation = {iTable, iSeats, iTime,
-                                                                               pszName};
+
+                                sentTableReservation.iTableNumber = iTable;
+                                sentTableReservation.iSeats = iSeats;
+                                sentTableReservation.iTime = iTime;
+                                sentTableReservation.pszName = pszName;
                                 add(pslList, &sentTableReservation);
                             }
                             free(pszTableNumber);
@@ -439,21 +446,21 @@ int addReservation(LIST *pslList) {
 }
 
 int askUserQuestion(char *pszTitle, char *pszInputArray, int iExpectedSize) {
-    int status = TRUE;
+    int iStatus = TRUE;
 
     while (1) {
         printf("%s", pszTitle);
         fflush(stdout);
         memset(pszInputArray, 0, iExpectedSize);
-        status = inputWithCharLimit(pszInputArray, iExpectedSize);
-        if (status != TRUE) {
+        iStatus = inputWithCharLimit(pszInputArray, iExpectedSize);
+        if (iStatus != TRUE) {
             printf("Error message: %s\nTry again", strerror(errno));
             return ERROR;
         } else {
             printf("\nYou wrote: %s\nIs that right? y/n or q for quit\n", pszInputArray);
-            status = yesOrNo();
-            if (status != TRUE) {
-                if (status == QUIT) {
+            iStatus = yesOrNo();
+            if (iStatus != TRUE) {
+                if (iStatus == QUIT) {
                     return QUIT;
                 }
                 printf("\nTry again\n");
@@ -465,14 +472,14 @@ int askUserQuestion(char *pszTitle, char *pszInputArray, int iExpectedSize) {
 }
 
 int askUserQuestionInt(char *pszTitle, char *pszInputArray, int iExpectedSize) {
-    int status = TRUE;
+    int iStatus = TRUE;
 
     while (1) {
         printf("%s", pszTitle);
         fflush(stdout);
         memset(pszInputArray, 0, iExpectedSize);
-        status = inputWithCharLimit(pszInputArray, iExpectedSize);
-        if (status != TRUE) {
+        iStatus = inputWithCharLimit(pszInputArray, iExpectedSize);
+        if (iStatus != TRUE) {
             printf("Error message: %s\nTry again", strerror(errno));
             return ERROR;
         } else {
@@ -481,18 +488,18 @@ int askUserQuestionInt(char *pszTitle, char *pszInputArray, int iExpectedSize) {
                     break;
                 }
                 if (pszInputArray[i] < '0' || pszInputArray[i] > '9') {
-                    status = FALSE;
+                    iStatus = FALSE;
                     printf("Only numbers are allowed\n");
                     break;
                 }
             }
-            if (status != TRUE) {
+            if (iStatus != TRUE) {
                 printf("Try again\n");
             } else {
                 printf("\nYou wrote: %s\nIs that right? y/n or q for quit\n", pszInputArray);
-                status = yesOrNo();
-                if (status != TRUE) {
-                    if (status == QUIT) {
+                iStatus = yesOrNo();
+                if (iStatus != TRUE) {
+                    if (iStatus == QUIT) {
                         return QUIT;
                     }
                     printf("\nTry again\n");
@@ -537,13 +544,14 @@ int yesOrNo() {
 }
 
 int menuHandling(char *aszArray[], char *szInputArray, int iSizeOfArray) {
+    int iStatus = 0;
 
     printf("Type the command you want [1-%d]:\n", iSizeOfArray);
 
     printListOptions(aszArray, iSizeOfArray);
 
-    int result = inputWithCharLimit(szInputArray, 2);
-    if (result != TRUE) {
+    iStatus = inputWithCharLimit(szInputArray, 2);
+    if (iStatus != TRUE) {
         printf("Issue with getting stream from user - Error message: %s", strerror(errno));
         return ERROR;
     }
@@ -558,6 +566,8 @@ void printListOptions(char *aszArray[], int iSizeOfArray) {
 }
 
 int inputWithCharLimit(char *pszCharArray, int iLengthOfArray) {
+    char strUserInput[USER_INPUT_SIZE] = {0};
+
     if (pszCharArray == NULL) {
         errno = ENOMEM;
         printf("Memory allocation issue, given array is NULL - Error message: %s\n", strerror(errno));
@@ -570,14 +580,13 @@ int inputWithCharLimit(char *pszCharArray, int iLengthOfArray) {
         return ERROR;
     }
 
-    char szUserInput[USER_INPUT_SIZE] = {0};
-    fgets(szUserInput, USER_INPUT_SIZE - 1, stdin);
+    fgets(strUserInput, USER_INPUT_SIZE - 1, stdin);
 
-    while (szUserInput[strlen(szUserInput) - 1] == '\r' || szUserInput[strlen(szUserInput) - 1] == '\n') {
-        szUserInput[strlen(szUserInput) - 1] = 0;
+    while (strUserInput[strlen(strUserInput) - 1] == '\r' || strUserInput[strlen(strUserInput) - 1] == '\n') {
+        strUserInput[strlen(strUserInput) - 1] = 0;
     }
 
-    strncpy(pszCharArray, szUserInput, iLengthOfArray);
+    strncpy(pszCharArray, strUserInput, iLengthOfArray);
 
     pszCharArray[iLengthOfArray - 1] = '\0';
 

@@ -16,7 +16,7 @@ int add(LIST *pslList, const SENT_TABLE_RESERVATION *pssSentTableReservation) {
     }
 
     TABLERESERVATION *pstTemp;
-    int iLengthOfName = strlen(pssSentTableReservation->name);
+    int iLengthOfName = strlen(pssSentTableReservation->pszName);
     pstTemp = (TABLERESERVATION *) malloc(sizeof(TABLERESERVATION) + iLengthOfName + 1);
 
     memset(pstTemp, 0, sizeof(TABLERESERVATION) + iLengthOfName + 1);
@@ -27,28 +27,28 @@ int add(LIST *pslList, const SENT_TABLE_RESERVATION *pssSentTableReservation) {
     }
 
     pstTemp->iTableNumber = pssSentTableReservation->iTableNumber;
-    pstTemp->seats = pssSentTableReservation->seats;
-    pstTemp->time = pssSentTableReservation->time;
-    pstTemp->name = (char *) malloc(iLengthOfName + 1);
+    pstTemp->iSeats = pssSentTableReservation->iSeats;
+    pstTemp->iTime = pssSentTableReservation->iTime;
+    pstTemp->pszName = (char *) malloc(iLengthOfName + 1);
 
-    if (pstTemp->name == NULL) {
+    if (pstTemp->pszName == NULL) {
         errno = ENOMEM;
         printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
         free(pstTemp);
         return -1;
     }
-    strcpy(pstTemp->name, pssSentTableReservation->name);
+    strcpy(pstTemp->pszName, pssSentTableReservation->pszName);
 
-    pstTemp->foodOrders = (ORDER_LIST *) malloc(sizeof(ORDER_LIST));
-    if (pstTemp->foodOrders == NULL) {
+    pstTemp->psoFoodOrders = (ORDER_LIST *) malloc(sizeof(ORDER_LIST));
+    if (pstTemp->psoFoodOrders == NULL) {
         errno = ENOMEM;
         printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
         free(pstTemp);
         return -1;
     }
-    pstTemp->foodOrders->pHead = NULL;
-    pstTemp->foodOrders->pTail = NULL;
-    pstTemp->foodOrders->size = 0;
+    pstTemp->psoFoodOrders->pHead = NULL;
+    pstTemp->psoFoodOrders->pTail = NULL;
+    pstTemp->psoFoodOrders->size = 0;
 
     if (pslList->pHead == NULL) {
         pslList->pHead = pstTemp;
@@ -60,7 +60,7 @@ int add(LIST *pslList, const SENT_TABLE_RESERVATION *pssSentTableReservation) {
     TABLERESERVATION *pstCurrent = pslList->pHead;
     int counter = 0;
     while (pstCurrent != NULL) {
-        if (strcmp(pstCurrent->name, pstTemp->name) > 0) {
+        if (strcmp(pstCurrent->pszName, pstTemp->pszName) > 0) {
             addAtIndex(pslList, pstTemp, counter);
             return 0;
         }
@@ -130,11 +130,11 @@ void freeLinkedList(LIST *pslList) {
     while (pstCurrent != NULL) {
         next = pstCurrent->pNextReservation;
         pstCurrent->pNextReservation = NULL;
-        if (pstCurrent->foodOrders != NULL) {
-            orderFreeLinkedList(pstCurrent->foodOrders);
-            free(pstCurrent->foodOrders);
+        if (pstCurrent->psoFoodOrders != NULL) {
+            orderFreeLinkedList(pstCurrent->psoFoodOrders);
+            free(pstCurrent->psoFoodOrders);
         }
-        free(pstCurrent->name);
+        free(pstCurrent->pszName);
         free(pstCurrent);
         pstCurrent = next;
     }
@@ -148,10 +148,10 @@ int printAllNodes(LIST *pslList) {
     }
     while (pstCurrent != NULL) {
         printf("Reservation Number: %d\n", pstCurrent->iReservationNumber);
-        printf("Name: %s\n", pstCurrent->name);
+        printf("Name: %s\n", pstCurrent->pszName);
         printf("  Table Number: %d\n", pstCurrent->iTableNumber);
-        printf("  Seats: %d\n", pstCurrent->seats);
-        printf("  Time: %d\n\n", pstCurrent->time);
+        printf("  Seats: %d\n", pstCurrent->iSeats);
+        printf("  Time: %d\n\n", pstCurrent->iTime);
         pstCurrent = pstCurrent->pNextReservation;
     }
     printf("\n");
@@ -177,12 +177,12 @@ int printSpecificNodeAndFood(LIST *pslList, int iReservationNumber) {
         printf("Index position cannot be more than size of list - Error message: %s\n", strerror(errno));
         return -1;
     }
-    printf("Name: %s\n", pstCurrent->name);
+    printf("Name: %s\n", pstCurrent->pszName);
     printf("Reservation Number: %d\n", pstCurrent->iReservationNumber);
     printf("  Table Number: %d\n", pstCurrent->iTableNumber);
-    printf("  Seats: %d\n", pstCurrent->seats);
-    printf("  Time: %d\n", pstCurrent->time);
-    orderPrintAllOrders(pstCurrent->foodOrders);
+    printf("  Seats: %d\n", pstCurrent->iSeats);
+    printf("  Time: %d\n", pstCurrent->iTime);
+    orderPrintAllOrders(pstCurrent->psoFoodOrders);
     return 0;
 }
 
@@ -214,12 +214,12 @@ int printSpecificReservationByReservationNumber(LIST *pslList, int iReservationN
         printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
         return -1;
     }
-    printf("Name: %s\n", pstCurrent->name);
+    printf("Name: %s\n", pstCurrent->pszName);
     printf("Reservation Number: %d\n", pstCurrent->iReservationNumber);
     printf("  Table Number: %d\n", pstCurrent->iTableNumber);
-    printf("  Seats: %d\n", pstCurrent->seats);
-    printf("  Time: %d\n", pstCurrent->time);
-    orderPrintAllOrders(pstCurrent->foodOrders);
+    printf("  Seats: %d\n", pstCurrent->iSeats);
+    printf("  Time: %d\n", pstCurrent->iTime);
+    orderPrintAllOrders(pstCurrent->psoFoodOrders);
     return 0;
 }
 
@@ -234,11 +234,11 @@ int printReservationByName(LIST *pslList, const char *pszName) {
     }
 
     while (pstCurrent != NULL) {
-        if (strcmp(pstCurrent->name, pszName) == 0) {
-            printf("Name: %s\n", pstCurrent->name);
+        if (strcmp(pstCurrent->pszName, pszName) == 0) {
+            printf("Name: %s\n", pstCurrent->pszName);
             printf("Reservation Number: %d\n", pstCurrent->iReservationNumber);
             printf("  Table Number: %d\n", pstCurrent->iTableNumber);
-            printf("  Time: %d\n\n", pstCurrent->time);
+            printf("  Time: %d\n\n", pstCurrent->iTime);
             iFoundReservation = 1;
         }
         pstCurrent = pstCurrent->pNextReservation;
@@ -279,12 +279,12 @@ int printReservationOrdersAndSum(LIST *pslList, const int iReservationNumber) {
         printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
         return -1;
     }
-    printf("Name: %s\n", pstCurrent->name);
+    printf("Name: %s\n", pstCurrent->pszName);
     printf("Reservation Number: %d\n", pstCurrent->iReservationNumber);
     printf("  Table Number: %d\n", pstCurrent->iTableNumber);
-    printf("  Seats: %d\n", pstCurrent->seats);
-    printf("  Time: %d\n", pstCurrent->time);
-    orderPrintAllOrdersAndSum(pstCurrent->foodOrders);
+    printf("  Seats: %d\n", pstCurrent->iSeats);
+    printf("  Time: %d\n", pstCurrent->iTime);
+    orderPrintAllOrdersAndSum(pstCurrent->psoFoodOrders);
     return 0;
 }
 
@@ -316,7 +316,7 @@ int printReservationOrdersForSpecificName(LIST *pslList, int reservationNumber, 
         printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
         return -1;
     }
-    printSumForSpecificName(pstCurrent->foodOrders, pszName);
+    printSumForSpecificName(pstCurrent->psoFoodOrders, pszName);
     return 0;
 }
 
@@ -363,11 +363,11 @@ int deleteSpecificReservation(LIST *pslList, int iReservationNumber) {
         pstCurrent->pNextReservation->pPrevReservation = pstCurrent->pPrevReservation;
     }
 
-    if (pstCurrent->foodOrders != NULL) {
-        orderFreeLinkedList(pstCurrent->foodOrders);
-        free(pstCurrent->foodOrders);
+    if (pstCurrent->psoFoodOrders != NULL) {
+        orderFreeLinkedList(pstCurrent->psoFoodOrders);
+        free(pstCurrent->psoFoodOrders);
     }
-    free(pstCurrent->name);
+    free(pstCurrent->pszName);
 
     fixReservationNumbersFromIndex(pslList, pstCurrent->iReservationNumber-1);
 
@@ -412,7 +412,7 @@ int addFoodToSpecificReservation(LIST *pslList, int iReservationNumber, SENT_ORD
         return -1;
     }
 
-    iStatus = orderAdd(pstCurrent->foodOrders, pssSentOrder);
+    iStatus = orderAdd(pstCurrent->psoFoodOrders, pssSentOrder);
     if (iStatus != 0) {
         printf("Failed to add order - Error message: %s\n", strerror(errno));
         return -1;

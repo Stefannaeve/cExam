@@ -3,14 +3,11 @@
 #ifndef __TASK_TABLERESERVATIONLIST_H__
 #define __TASK_TABLERESERVATIONLIST_H__
 
-#define START 0
-#define END 1
-
 typedef struct _SENT_TABLE_RESERVATION {
     int iTableNumber;
-    int seats;
-    int time;
-    char *name;
+    int iSeats;
+    int iTime;
+    char *pszName;
 } SENT_TABLE_RESERVATION;
 
 typedef struct _TABLERESERVATION {
@@ -18,10 +15,10 @@ typedef struct _TABLERESERVATION {
     struct _TABLERESERVATION *pPrevReservation;
     int iReservationNumber;
     int iTableNumber;
-    int seats;
-    int time;
-    char *name;
-    ORDER_LIST *foodOrders;
+    int iSeats;
+    int iTime;
+    char *pszName;
+    ORDER_LIST *psoFoodOrders;
 } TABLERESERVATION;
 
 typedef struct LIST {
