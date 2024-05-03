@@ -26,7 +26,7 @@ $(TARGET): $(OBJS)
 	
 valgrind:
 	make
-	valgrind --leak-check=yes --show-leak-kinds=all --track-origins=yes ./$(TARGET) eksamen_v24_oppgave4_pg2265.txt
+	valgrind --leak-check=yes --show-leak-kinds=all --track-origins=yes ./$(TARGET) -listen 8080
 	
 server:
 	make

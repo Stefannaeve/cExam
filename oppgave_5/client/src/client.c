@@ -88,7 +88,7 @@ int client(int argc, char *argv[]) {
                     pssSnp = (SNP *) malloc(sizeof(SNP) + iSizeOfBuffer * sizeof(char));
                     memset(pssSnp, 0, sizeof(SNP) + iSizeOfBuffer * sizeof(char));
                     pssSnp->ssSnpHeader.iMagicNumber = ssSnp.ssSnpHeader.iMagicNumber;
-                    pssSnp->ssSnpHeader.iSizeOfBody = iSizeOfBuffer - 1;
+                    pssSnp->ssSnpHeader.iSizeOfBody = iSizeOfBuffer;
                     strncpy(pssSnp->body, buffer, iSizeOfBuffer);
                     pssSnp->body[iSizeOfBuffer - 1] = '\0';
 
