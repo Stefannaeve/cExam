@@ -23,6 +23,14 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c $(DEPS)
 	
 $(TARGET): $(OBJS)
 	$(CC) -o $@ $^ $(CFLAGS)
+
+valgrind:
+	make
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./$(TARGET)
+
+run:
+	make
+	./$(TARGET)
 	
 .PHONY: clean
 clean:

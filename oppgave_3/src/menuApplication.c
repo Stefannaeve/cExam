@@ -17,12 +17,13 @@ int menuApplication() {
             "Quit"
     };
     int iStatus = TRUE;
+    int iWhileStatus = TRUE;
     int iSizeOfArray = sizeof(array) / sizeof(char *);
     char *pszInputArray = (char *) malloc(sizeof(char) * 2);
 
     LIST slList = {NULL, NULL, 0};
 
-    while (iStatus == TRUE) {
+    while (iWhileStatus != QUIT) {
 
         iStatus = menuHandling(array, pszInputArray, iSizeOfArray);
 
@@ -50,7 +51,7 @@ int menuApplication() {
                     iStatus = printSumForSpesificNameAtSpesificTable(&slList);
                     break;
                 case '7':
-                    iStatus = FALSE;
+                    iWhileStatus = QUIT;
                     break;
                 default:
                     printf("Please insert a valid integer from \"1\" - \"%d\"\n", iSizeOfArray);
@@ -62,9 +63,7 @@ int menuApplication() {
     }
     free(pszInputArray);
     freeLinkedList(&slList);
-    if (iStatus == ERROR) {
-        return ERROR;
-    }
+
     return 0;
 }
 
@@ -100,7 +99,7 @@ int printSumForSpesificNameAtSpesificTable(LIST *pslList){
                         printf("Error message: %s\n", strerror(errno));
                     }
                 } else {
-                    printReservationOrdersForSpecificName(pslList, atoi(pszReservationNumber), pszName);
+                    iStatus = printReservationOrdersForSpecificName(pslList, atoi(pszReservationNumber), pszName);
                 }
             }
             free(pszName);
@@ -130,7 +129,7 @@ int printSpecificReservationWithSum(LIST *pslList) {
                 printf("Error message: %s\n", strerror(errno));
             }
         } else {
-            printReservationOrdersAndSum(pslList, atoi(pszReservationNumber));
+            iStatus = printReservationOrdersAndSum(pslList, atoi(pszReservationNumber));
         }
         free(pszReservationNumber);
     }
@@ -178,7 +177,7 @@ int addFoodToReservation(LIST *pslList) {
                         if (iStatus == ERROR) {
                             free(pssSentOrder);
                         } else {
-                            addFoodToSpecificReservation(pslList, atoi(pszReservationNumber), pssSentOrder);
+                            iStatus = addFoodToSpecificReservation(pslList, atoi(pszReservationNumber), pssSentOrder);
                         }
                     }
                 } else {
@@ -270,7 +269,7 @@ int deleteReservation(LIST *pslList) {
         iStatus = yesOrNo();
         if (iStatus == TRUE) {
             printf("Deleting reservation\n");
-            deleteSpecificReservation(pslList, atoi(pszReservationNumber));
+            iStatus = deleteSpecificReservation(pslList, atoi(pszReservationNumber));
         } else {
             printf("Deletion cancelled...\n");
             printf("Returning\n");
@@ -307,7 +306,7 @@ int getReservation(LIST *pslList, char *pszInputArray) {
         } else {
             switch (*pszInputArray) {
                 case '1':
-                    printAllNodes(pslList);
+                    iStatus = printAllNodes(pslList);
                     break;
                 case '2':
                     printf("What is the name you are after?\n");
@@ -319,7 +318,7 @@ int getReservation(LIST *pslList, char *pszInputArray) {
                             printf("Error message: %s\n", strerror(errno));
                         }
                     } else {
-                        printReservationByName(pslList, pszName);
+                        iStatus = printReservationByName(pslList, pszName);
                     }
                     break;
                 case '3':
@@ -332,7 +331,7 @@ int getReservation(LIST *pslList, char *pszInputArray) {
                             printf("Error message: %s\n", strerror(errno));
                         }
                     } else {
-                        printSpecificReservationByReservationNumber(pslList, atoi(pszName));
+                        iStatus = printSpecificReservationByReservationNumber(pslList, atoi(pszName));
                     }
                     break;
                 case '4':
@@ -383,7 +382,7 @@ int addReservation(LIST *pslList) {
 
             printf("\nPlease insert the number of people in the reservation\n");
             pszTempSeats = (char *) malloc(sizeof(char) * SEATS);
-            iStatus = askUserQuestion("Seats: ", pszTempSeats, SEATS);
+            iStatus = askUserQuestionInt("Seats: ", pszTempSeats, SEATS);
             if (iStatus == QUIT) {
                 printf("Returning\n");
             } else {
@@ -395,7 +394,7 @@ int addReservation(LIST *pslList) {
                     errno = ENOMEM;
                     printf("Memory allocation issue - Error message: %s\n", strerror(errno));
                 } else {
-                    iStatus = askUserQuestion("Time: ", pszTempTime, TIME);
+                    iStatus = askUserQuestionInt("Time: ", pszTempTime, TIME);
 
                     if (iStatus == QUIT) {
                         printf("Returning\n");
@@ -409,7 +408,7 @@ int addReservation(LIST *pslList) {
                             printf("Memory allocation issue - Error message: %s\n", strerror(errno));
                         } else {
 
-                            iStatus = askUserQuestion("Table number: ", pszTableNumber, TABLE);
+                            iStatus = askUserQuestionInt("Table number: ", pszTableNumber, TABLE);
                             if (iStatus == QUIT) {
                                 printf("Returning\n");
                             } else {
@@ -465,11 +464,55 @@ int askUserQuestion(char *pszTitle, char *pszInputArray, int iExpectedSize) {
     }
 }
 
+int askUserQuestionInt(char *pszTitle, char *pszInputArray, int iExpectedSize) {
+    int status = TRUE;
+
+    while (1) {
+        printf("%s", pszTitle);
+        fflush(stdout);
+        memset(pszInputArray, 0, iExpectedSize);
+        status = inputWithCharLimit(pszInputArray, iExpectedSize);
+        if (status != TRUE) {
+            printf("Error message: %s\nTry again", strerror(errno));
+            return ERROR;
+        } else {
+            for (int i = 0; i < iExpectedSize; ++i) {
+                if (pszInputArray[i] == '\0') {
+                    break;
+                }
+                if (pszInputArray[i] < '0' || pszInputArray[i] > '9') {
+                    status = FALSE;
+                    printf("Only numbers are allowed\n");
+                    break;
+                }
+            }
+            if (status != TRUE) {
+                printf("Try again\n");
+            } else {
+                printf("\nYou wrote: %s\nIs that right? y/n or q for quit\n", pszInputArray);
+                status = yesOrNo();
+                if (status != TRUE) {
+                    if (status == QUIT) {
+                        return QUIT;
+                    }
+                    printf("\nTry again\n");
+                } else {
+                    return TRUE;
+                }
+            }
+        }
+    }
+}
+
 int yesOrNo() {
     char pszCharacter[2];
     pszCharacter[1] = '\0';
+    int iStatus = 0;
     while (1) {
-        inputWithCharLimit(pszCharacter, 2);
+        iStatus = inputWithCharLimit(pszCharacter, 2);
+        if (iStatus != TRUE) {
+            return ERROR;
+        }
         switch (pszCharacter[0]) {
             case 'y':
                 return TRUE;
@@ -477,7 +520,10 @@ int yesOrNo() {
                 return FALSE;
             case 'q':
                 printf("Are you sure you want to quit? y/n\n");
-                inputWithCharLimit(pszCharacter, 2);
+                iStatus = inputWithCharLimit(pszCharacter, 2);
+                if (iStatus != TRUE) {
+                    return ERROR;
+                }
                 if (pszCharacter[0] == 'y') {
                     return QUIT;
                 } else {

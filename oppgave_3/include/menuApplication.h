@@ -39,6 +39,8 @@ int inputWithCharLimit(char *charArray, int iLengthOfArray);
 
 int askUserQuestion(char *pszTitle, char *pszInputArray, int iExpectedSize);
 
+int askUserQuestionInt(char *pszTitle, char *pszInputArray, int iExpectedSize);
+
 int yesOrNo();
 
 #endif //__TASK_MENUAPPLICATION_H__
