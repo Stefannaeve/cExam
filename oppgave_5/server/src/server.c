@@ -9,12 +9,19 @@
 
 
 #define BUFFERSIZE 1024
-#define THREADS 1
+#define THREADS 4
 
-typedef struct _SNP_HEADER {
+#define MAGIC_NUMBER_CONNECT 0xCAFE
+#define MAGIC_NUMBER_SNP 0xBABE
+
+typedef struct _SNP_CONNECT {
     int32_t iMagicNumber;
     int32_t iIpAddress;
     int32_t iPhoneNumber;
+} SNP_CONNECT;
+
+typedef struct _SNP_HEADER {
+    int32_t iMagicNumber;
     int32_t iSizeOfBody;
 } SNP_HEADER;
 
@@ -82,7 +89,7 @@ int server(int argc, char *argv[]) {
 
 void *threadServer(void *arg) {
     SERVER_THREAD_STRUCT serverThreadStructs = *((SERVER_THREAD_STRUCT *) arg);
-    ssize_t header_size = 0;
+    ssize_t iSizeOfBody = 0;
     int addrLen = sizeof(serverThreadStructs.saAddr);
     int sockFd;
     int sockNewFd = 0;
@@ -91,9 +98,11 @@ void *threadServer(void *arg) {
     char buffer[BUFFERSIZE];
     int iPhone = 0;
     int firstConnection = 0;
+    int iIncomingMagicNumber = 0;
 
     SNP ssSnp = {0};
     SNP *pssSnp = NULL;
+    SNP_CONNECT ssSnpConnect = {0};
 
     struct sockaddr_in saConClient = {0};
 
@@ -124,42 +133,90 @@ void *threadServer(void *arg) {
                            strerror(errno));
                 } else {
 
-                    printf("\nSuccessfully accepted connection\n");
-                    printf("========================================\n");
+                    iIncomingMagicNumber = recv(sockNewFd, &ssSnpConnect.iMagicNumber,
+                                                sizeof(ssSnpConnect.iMagicNumber), 0);
 
+                    if (ssSnpConnect.iMagicNumber != MAGIC_NUMBER_CONNECT) {
+                        iStatus = -1;
+                        printf("Invalid protocol: %d\n", ssSnpConnect.iMagicNumber);
+                    } else {
 
-                    while (1) {
-                        // Recv will return 0 or -1 on an orderly shutdown or -1 if an error occurs
-                        header_size = recv(sockNewFd, &ssSnp.ssSnpHeader, sizeof(ssSnp.ssSnpHeader), 0);
-                        if (header_size <= 0) {
-                            printf("Client: %d disconnected, or read error occurred.\n", iPhone);
-                            break;
-                        }
+                        printf("Matching protocol\n");
 
-                        pssSnp = (SNP *) malloc(sizeof(SNP) + ssSnp.ssSnpHeader.iSizeOfBody + 1);
-                        if (pssSnp == NULL) {
-                            iStatus = -1;
-                            printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
-                        } else {
-                            memset(pssSnp, 0, sizeof(SNP) + ssSnp.ssSnpHeader.iSizeOfBody + 1);
+                        recv(sockNewFd, &ssSnpConnect.iIpAddress, sizeof(ssSnpConnect.iIpAddress), 0);
+                        recv(sockNewFd, &ssSnpConnect.iPhoneNumber, sizeof(ssSnpConnect.iPhoneNumber), 0);
 
-                            memcpy(pssSnp, &ssSnp, sizeof(ssSnp.ssSnpHeader));
+                        pthread_mutex_lock(serverThreadStructs.mutex);
 
-                            read(sockNewFd, pssSnp->body, pssSnp->ssSnpHeader.iSizeOfBody);
-                            pssSnp->body[ssSnp.ssSnpHeader.iSizeOfBody] = '\0';
+                        iPhone = ssSnpConnect.iPhoneNumber;
 
-                            if (strncmp(pssSnp->body, "exit", 4) == 0) {
-                                printf("Exiting\n");
-                                free(pssSnp);
+                        for (int i = 0; i < THREADS; ++i) {
+                            if (serverThreadStructs.iPhoneNumbers[i] == iPhone) {
+                                iStatus = -1;
+                                printf("Phone number already in use\n");
                                 break;
                             }
-
-                            iPhone = pssSnp->ssSnpHeader.iPhoneNumber;
-                            printf("Nr %d: %s\n", pssSnp->ssSnpHeader.iPhoneNumber, pssSnp->body);
-                            free(pssSnp);
                         }
-                        if (iStatus == -1) {
-                            break;
+
+                        if (iStatus != 0) {
+                            pthread_mutex_unlock(serverThreadStructs.mutex);
+                        } else {
+
+                            for (int i = 0; i < THREADS; ++i) {
+                                if (serverThreadStructs.iPhoneNumbers[i] == 0) {
+                                    serverThreadStructs.iPhoneNumbers[i] = iPhone;
+                                    break;
+                                }
+                            }
+
+                            pthread_mutex_unlock(serverThreadStructs.mutex);
+
+                            printf("Successfully accepted connection\n");
+                            printf("========================================\n");
+
+
+                            while (1) {
+                                // Recv will return 0 or -1 on an orderly shutdown or -1 if an error occurs
+                                iIncomingMagicNumber = recv(sockNewFd, &ssSnp.ssSnpHeader.iMagicNumber,
+                                                            sizeof(ssSnp.ssSnpHeader.iMagicNumber), 0);
+                                if (ssSnp.ssSnpHeader.iMagicNumber != MAGIC_NUMBER_SNP || iIncomingMagicNumber <= 0) {
+                                    iStatus = -1;
+                                    printf("Invalid magic number\n");
+                                    break;
+                                }
+                                iSizeOfBody = recv(sockNewFd, &ssSnp.ssSnpHeader.iSizeOfBody,
+                                                   sizeof(ssSnp.ssSnpHeader.iSizeOfBody), 0);
+
+                                if (iSizeOfBody <= 0) {
+                                    printf("Client: %d disconnected, or read error occurred.\n", iPhone);
+                                    break;
+                                }
+
+                                pssSnp = (SNP *) malloc(sizeof(SNP) + ssSnp.ssSnpHeader.iSizeOfBody + 1);
+                                if (pssSnp == NULL) {
+                                    iStatus = -1;
+                                    printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
+                                } else {
+                                    memset(pssSnp, 0, sizeof(SNP) + ssSnp.ssSnpHeader.iSizeOfBody + 1);
+
+                                    memcpy(pssSnp, &ssSnp, sizeof(ssSnp.ssSnpHeader));
+
+                                    recv(sockNewFd, pssSnp->body, pssSnp->ssSnpHeader.iSizeOfBody, 0);
+                                    pssSnp->body[ssSnp.ssSnpHeader.iSizeOfBody] = '\0';
+
+                                    if (strncmp(pssSnp->body, "exit", 4) == 0) {
+                                        printf("Exiting\n");
+                                        free(pssSnp);
+                                        break;
+                                    }
+
+                                    printf("Nr %d: %s\n", iPhone, pssSnp->body);
+                                    free(pssSnp);
+                                }
+                                if (iStatus == -1) {
+                                    break;
+                                }
+                            }
                         }
                     }
 

@@ -8,8 +8,8 @@
 #include <arpa/inet.h>
 
 #define BUFFERSIZE 1024
-
-#define THREADS 1
+#define MAGIC_NUMBER_CONNECT 0xCAFE
+#define MAGIC_NUMBER_SNP 0xBABE
 
 typedef struct _SNP_CONNECT {
     int32_t iMagicNumber;
@@ -19,8 +19,6 @@ typedef struct _SNP_CONNECT {
 
 typedef struct _SNP_HEADER {
     int32_t iMagicNumber;
-    int32_t iIpAddress;
-    int32_t iPhoneNumber;
     int32_t iSizeOfBody;
 } SNP_HEADER;
 
@@ -93,13 +91,16 @@ int client(int argc, char *argv[]) {
     phone = atoi(argv[6]);
 
     struct sockaddr_in saAddr = {0};
+    SNP_CONNECT snpConnect = {0};
     saAddr.sin_family = AF_INET;
     saAddr.sin_port = htons(port);
     saAddr.sin_addr.s_addr = iIpv4; //Home
 
-    snp.ssSnpHeader.iPhoneNumber = phone;
-    snp.ssSnpHeader.iIpAddress = saAddr.sin_addr.s_addr;
-    snp.ssSnpHeader.iMagicNumber = randomNumber;
+    snpConnect.iMagicNumber = MAGIC_NUMBER_CONNECT;
+    snpConnect.iIpAddress = saAddr.sin_addr.s_addr;
+    snpConnect.iPhoneNumber = phone;
+
+    snp.ssSnpHeader.iMagicNumber = MAGIC_NUMBER_SNP;
 
     sockFd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockFd < 0) {
@@ -112,6 +113,11 @@ int client(int argc, char *argv[]) {
             printf("Connection failed: Error message: %s\n", strerror(errno));
 
         } else {
+
+            printf("Right magic number: %d\n", MAGIC_NUMBER_CONNECT);
+            printf("magic number: %d\n", snpConnect.iMagicNumber);
+
+            send(sockFd, &snpConnect, sizeof(snpConnect), 0);
 
             printf("Connect successfully handled\n");
 
@@ -134,8 +140,6 @@ int client(int argc, char *argv[]) {
                 memset(pssSnp, 0, sizeof(SNP) + sizeOfBuffer * sizeof(char));
 
                 pssSnp->ssSnpHeader.iMagicNumber = snp.ssSnpHeader.iMagicNumber;
-                pssSnp->ssSnpHeader.iIpAddress = snp.ssSnpHeader.iIpAddress;
-                pssSnp->ssSnpHeader.iPhoneNumber = snp.ssSnpHeader.iPhoneNumber;
 
                 pssSnp->ssSnpHeader.iSizeOfBody = sizeOfBuffer - 1;
 
@@ -144,8 +148,6 @@ int client(int argc, char *argv[]) {
                 pssSnp->body[sizeOfBuffer - 1] = '\0';
 
                 printf("Magic number: %d\n", pssSnp->ssSnpHeader.iMagicNumber);
-                printf("Ip address: %d\n", pssSnp->ssSnpHeader.iIpAddress);
-                printf("Phone number: %d\n", pssSnp->ssSnpHeader.iPhoneNumber);
 
                 send(sockFd, pssSnp, sizeof(SNP) + pssSnp->ssSnpHeader.iSizeOfBody, 0);
 
