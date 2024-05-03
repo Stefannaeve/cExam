@@ -9,7 +9,7 @@
 
 
 #define BUFFERSIZE 1024
-#define THREADS 4
+#define THREADS 2
 
 #define MAGIC_NUMBER_CONNECT 0xCAFE
 #define MAGIC_NUMBER_SNP 0xBABE
@@ -136,7 +136,10 @@ void *threadServer(void *arg) {
                     iIncomingMagicNumber = recv(sockNewFd, &ssSnpConnect.iMagicNumber,
                                                 sizeof(ssSnpConnect.iMagicNumber), 0);
 
-                    if (ssSnpConnect.iMagicNumber != MAGIC_NUMBER_CONNECT) {
+                    if (iIncomingMagicNumber <= 0) {
+                        iStatus = -1;
+                        printf("Client disconnected\n");
+                    } else if (ssSnpConnect.iMagicNumber != MAGIC_NUMBER_CONNECT) {
                         iStatus = -1;
                         printf("Invalid protocol: %d\n", ssSnpConnect.iMagicNumber);
                     } else {

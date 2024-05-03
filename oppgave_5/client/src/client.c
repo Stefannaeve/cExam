@@ -6,10 +6,13 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <signal.h>
 
 #define BUFFERSIZE 1024
 #define MAGIC_NUMBER_CONNECT 0xCAFE
 #define MAGIC_NUMBER_SNP 0xBABE
+
+
 
 typedef struct _SNP_CONNECT {
     int32_t iMagicNumber;
@@ -47,6 +50,7 @@ int client(int argc, char *argv[]) {
     int iIpv4;
     int port;
     int phone;
+    ssize_t iBytesSent = 0;
 
     if (argc != 7) {
         printf("Usage: %s -server <ip> -port <port> -phone <phoneNumber>[0123]\n", argv[0]);
@@ -136,26 +140,25 @@ int client(int argc, char *argv[]) {
                 }
 
                 SNP *pssSnp = (SNP *) malloc(sizeof(SNP) + sizeOfBuffer * sizeof(char));
-
                 memset(pssSnp, 0, sizeof(SNP) + sizeOfBuffer * sizeof(char));
-
                 pssSnp->ssSnpHeader.iMagicNumber = snp.ssSnpHeader.iMagicNumber;
-
                 pssSnp->ssSnpHeader.iSizeOfBody = sizeOfBuffer - 1;
-
                 strncpy(pssSnp->body, buffer, sizeOfBuffer);
-
                 pssSnp->body[sizeOfBuffer - 1] = '\0';
 
-                printf("Magic number: %d\n", pssSnp->ssSnpHeader.iMagicNumber);
+                signal(SIGPIPE, SIG_IGN);
+                iBytesSent = send(sockFd, pssSnp, sizeof(SNP) + pssSnp->ssSnpHeader.iSizeOfBody, 0);
+                if (iBytesSent <= 0) {
+                    printf("Failed to send message - Error message: %s\n", strerror(errno));
+                    free(pssSnp);
+                    break;
+                }
 
-                send(sockFd, pssSnp, sizeof(SNP) + pssSnp->ssSnpHeader.iSizeOfBody, 0);
-
-                printf("Closing socket\n");
 
                 free(pssSnp);
 
             }
+            printf("Closing socket\n");
 
             close(sockFd);
             shutdown(sockFd, SHUT_RDWR);
