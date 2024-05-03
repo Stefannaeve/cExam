@@ -1,4 +1,3 @@
-#include <stdint.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <string.h>
@@ -6,78 +5,58 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <malloc.h>
+#include "../include/server.h"
 
-
-#define BUFFERSIZE 1024
-#define THREADS 2
-
-#define MAGIC_NUMBER_CONNECT 0xCAFE
-#define MAGIC_NUMBER_SNP 0xBABE
-
-typedef struct _SNP_CONNECT {
-    int32_t iMagicNumber;
-    int32_t iIpAddress;
-    int32_t iPhoneNumber;
-} SNP_CONNECT;
-
-typedef struct _SNP_HEADER {
-    int32_t iMagicNumber;
-    int32_t iSizeOfBody;
-} SNP_HEADER;
-
-// "My name" Network Protocol
-typedef struct _SNP {
-    SNP_HEADER ssSnpHeader;
-    char body[];
-} SNP;
-
-typedef struct _SERVER_THREAD_STRUCT {
-    struct sockaddr_in saAddr;
-    SNP snp;
-    int32_t *iPhoneNumbers;
-    pthread_mutex_t *mutex;
-} SERVER_THREAD_STRUCT;
-
-void *threadServer(void *arg);
-
-int server(int argc, char *argv[]) {
+int server() {
     int iPort = 8080;
     int iStatus = 0;
     int i;
-    int32_t phoneNumbers[THREADS] = {0};
 
-    SERVER_THREAD_STRUCT serverThreadStructs[THREADS];
-    pthread_t threads[THREADS];
+    int32_t aiPhoneNumbers[THREADS] = {0};
+
+    SERVER_THREAD_STRUCT assServerThreadStructs[THREADS];
+    pthread_t aspThreads[THREADS];
 
     pthread_mutex_t phoneNumbersMutex;
     pthread_mutex_init(&phoneNumbersMutex, NULL);
 
+    // Initialize the server thread structs
     for (i = 0; i < THREADS; ++i) {
-        memset(&serverThreadStructs[i], 0, sizeof(SERVER_THREAD_STRUCT));
-        serverThreadStructs[i].saAddr.sin_family = AF_INET;
-        serverThreadStructs[i].saAddr.sin_port = htons(iPort + i);
-        serverThreadStructs[i].saAddr.sin_addr.s_addr = INADDR_ANY;
-        serverThreadStructs[i].iPhoneNumbers = phoneNumbers;
-        serverThreadStructs[i].mutex = &phoneNumbersMutex;
+        memset(&assServerThreadStructs[i], 0, sizeof(SERVER_THREAD_STRUCT));
+        assServerThreadStructs[i].iStatus = 0;
+        assServerThreadStructs[i].saAddr.sin_family = AF_INET;
+        assServerThreadStructs[i].saAddr.sin_port = htons(iPort + i);
+        assServerThreadStructs[i].saAddr.sin_addr.s_addr = INADDR_ANY;
+        assServerThreadStructs[i].iPhoneNumbers = aiPhoneNumbers;
+        assServerThreadStructs[i].mutex = &phoneNumbersMutex;
     }
 
+    // Create the aspThreads
     for (i = 0; i < THREADS; ++i) {
-        if (pthread_create(&threads[i], NULL, threadServer, (void *) &serverThreadStructs[i]) != 0) {
+        if (pthread_create(&aspThreads[i], NULL, threadServer, (void *) &assServerThreadStructs[i]) != 0) {
             iStatus = -1;
             printf("Failed to create thread: %d - Error message: %s\n", i, strerror(errno));
             break;
         }
     }
+    // Cancel the aspThreads if an error occurred
     if (iStatus == -1) {
         for (int j = 0; j <= i; ++j) {
-            pthread_cancel(threads[j]);
+            pthread_cancel(aspThreads[j]);
         }
     } else {
+        // Join the aspThreads after they have finished
         for (int j = 0; j < THREADS; ++j) {
-            if (pthread_join(threads[j], NULL) != 0) {
+            if (pthread_join(aspThreads[j], NULL) != 0) {
                 iStatus = -1;
                 printf("Failed to join thread: %d - Error message: %s\n", j, strerror(errno));
             }
+        }
+    }
+    // Check if any error messages in the aspThreads
+    for (int j = 0; j < THREADS; ++j) {
+        if (assServerThreadStructs[j].iStatus != 0) {
+            iStatus = -1;
         }
     }
     pthread_mutex_destroy(&phoneNumbersMutex);
@@ -89,16 +68,17 @@ int server(int argc, char *argv[]) {
 
 void *threadServer(void *arg) {
     SERVER_THREAD_STRUCT serverThreadStructs = *((SERVER_THREAD_STRUCT *) arg);
+
     ssize_t iSizeOfBody = 0;
-    int addrLen = sizeof(serverThreadStructs.saAddr);
     int sockFd;
     int sockNewFd = 0;
     int irc = 0;
-    int iStatus = 0;
-    char buffer[BUFFERSIZE];
+    int iStatus = serverThreadStructs.iStatus;
     int iPhone = 0;
-    int firstConnection = 0;
     int iIncomingMagicNumber = 0;
+    int iBytes = 0;
+
+    int iAddrLen = sizeof(serverThreadStructs.saAddr);
 
     SNP ssSnp = {0};
     SNP *pssSnp = NULL;
@@ -126,7 +106,7 @@ void *threadServer(void *arg) {
                 printf("Failed to find incoming connection through listen - Error message %s", strerror(errno));
             } else {
 
-                sockNewFd = accept(sockFd, (struct sockaddr *) &saConClient, (socklen_t *) &addrLen);
+                sockNewFd = accept(sockFd, (struct sockaddr *) &saConClient, (socklen_t *) &iAddrLen);
                 if (sockNewFd < 0) {
                     iStatus = -1;
                     printf("Failed to extract first connection request and create new socket - Error message: %s\n",
@@ -146,9 +126,19 @@ void *threadServer(void *arg) {
 
                         printf("Matching protocol\n");
 
-                        recv(sockNewFd, &ssSnpConnect.iIpAddress, sizeof(ssSnpConnect.iIpAddress), 0);
-                        recv(sockNewFd, &ssSnpConnect.iPhoneNumber, sizeof(ssSnpConnect.iPhoneNumber), 0);
+                        iBytes = recv(sockNewFd, &ssSnpConnect.iIpAddress, sizeof(ssSnpConnect.iIpAddress), 0);
+                        if (iBytes <= 0) {
+                            iStatus = -1;
+                            printf("Client disconnected\n");
+                        }
 
+                        iBytes = recv(sockNewFd, &ssSnpConnect.iPhoneNumber, sizeof(ssSnpConnect.iPhoneNumber), 0);
+                        if (iBytes <= 0) {
+                            iStatus = -1;
+                            printf("Client disconnected\n");
+                        }
+
+                        // Check if the phone number is already in use, lock the mutex to ensure no other thread is using the phone number list
                         pthread_mutex_lock(serverThreadStructs.mutex);
 
                         iPhone = ssSnpConnect.iPhoneNumber;
@@ -209,16 +199,22 @@ void *threadServer(void *arg) {
 
                                     memcpy(pssSnp, &ssSnp, sizeof(ssSnp.ssSnpHeader));
 
-                                    recv(sockNewFd, pssSnp->body, pssSnp->ssSnpHeader.iSizeOfBody, 0);
-                                    pssSnp->body[ssSnp.ssSnpHeader.iSizeOfBody] = '\0';
+                                    iBytes = recv(sockNewFd, pssSnp->strBody, pssSnp->ssSnpHeader.iSizeOfBody, 0);
+                                    if (iBytes <= 0) {
+                                        printf("Client: %d disconnected, or read error occurred.\n", iPhone);
+                                        free(pssSnp);
+                                        break;
+                                    }
 
-                                    if (strncmp(pssSnp->body, "exit", 4) == 0) {
+                                    pssSnp->strBody[ssSnp.ssSnpHeader.iSizeOfBody] = '\0';
+
+                                    if (strncmp(pssSnp->strBody, "exit", 4) == 0) {
                                         printf("Exiting\n");
                                         free(pssSnp);
                                         break;
                                     }
 
-                                    printf("Nr %d: %s\n", iPhone, pssSnp->body);
+                                    printf("Nr %d: %s\n", iPhone, pssSnp->strBody);
                                     free(pssSnp);
                                 }
                                 if (iStatus == -1) {
@@ -239,6 +235,9 @@ void *threadServer(void *arg) {
         close(sockFd);
         sockFd = -1;
     }
+
+    serverThreadStructs.iStatus = iStatus;
+
     return 0;
 
 }
