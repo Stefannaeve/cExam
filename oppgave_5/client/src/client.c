@@ -12,8 +12,6 @@
 #define MAGIC_NUMBER_CONNECT 0xCAFE
 #define MAGIC_NUMBER_SNP 0xBABE
 
-
-
 typedef struct _SNP_CONNECT {
     int32_t iMagicNumber;
     int32_t iIpAddress;
@@ -39,143 +37,172 @@ typedef struct _THREAD_STRUCT {
 
 void *threadClient(void *arg);
 
-int userInput(char *buffer, int size);
+int checkArguments(int argc, char *argv[]);
+
+void userInput(char *strBuffer, int iSize);
 
 int client(int argc, char *argv[]) {
-    int sockFd;
     char buffer[BUFFERSIZE];
-    int sizeOfBuffer;
-    srand((unsigned int) time(NULL));
-    int randomNumber = rand() % 100000000;
-    int iIpv4;
-    int port;
-    int phone;
+
+    int sockFd = 0;
+    int iSizeOfBuffer = 0;
+    int iIpv4 = 0;
+    int iPort = 0;
+    int iPhone = 0;
+    int iStatus = 0;
+    int iSizeOfExit = 4;
     ssize_t iBytesSent = 0;
 
-    if (argc != 7) {
-        printf("Usage: %s -server <ip> -port <port> -phone <phoneNumber>[0123]\n", argv[0]);
-        return -1;
-    }
-    if (strcmp(argv[1], "-server") != 0) {
-        printf("Usage: %s -server <ip> -port <port> -phone <phoneNumber>[0123]\n", argv[0]);
-        printf("Second argument is not \"-server\"\n");
-        return -1;
-    }
-    if (strcmp(argv[2], "127.0.0.1") != 0) {
-        printf("Usage: %s -server <ip> -port <port> -phone <phoneNumber>[0123]\n", argv[0]);
-        printf("IP address is not the loopback address\n");
-    }
+    SNP ssSnp = {0};
+    struct sockaddr_in saAddr = {0};
+    SNP_CONNECT ssSnpConnect = {0};
+    SNP *pssSnp = NULL;
 
-    if (strcmp(argv[3], "-port") != 0) {
-        printf("Usage: %s -server <ip> -port <port> -phone <phoneNumber>[0123]\n", argv[0]);
-        printf("Third argument is not \"-port\"\n");
-        return -1;
-    }
-    if (atoi(argv[4]) < 0 || atoi(argv[5]) > 65535) {
-        printf("Usage: %s -server <ip> -port <port> -phone <phoneNumber>[0123]\n", argv[0]);
-        printf("Port number is not in the range of 0-65535\n");
-        return -1;
-    }
+    iStatus = checkArguments(argc, argv);
 
-    if (strcmp(argv[5], "-phone") != 0) {
-        printf("Usage: %s -server <ip> -port <port> -phone <phoneNumber>[0123]\n", argv[0]);
-        printf("Fifth argument is not \"-phone\"\n");
-        return -1;
+    if (iStatus != 0) {
+        return iStatus;
     }
-    if (atoi(argv[6]) < 1000 || atoi(argv[6]) > 9999) {
-        printf("Usage: %s -server <ip> -port <port> -phone <phoneNumber>[0123]\n", argv[0]);
-        printf("Phone number is not in the range of 1000-9999\n");
-        return -1;
-    }
-
-    SNP snp = {0};
 
     iIpv4 = inet_addr(argv[2]);
-    port = atoi(argv[4]);
-    phone = atoi(argv[6]);
+    iPort = atoi(argv[4]);
+    iPhone = atoi(argv[6]);
 
-    struct sockaddr_in saAddr = {0};
-    SNP_CONNECT snpConnect = {0};
     saAddr.sin_family = AF_INET;
-    saAddr.sin_port = htons(port);
+    saAddr.sin_port = htons(iPort);
     saAddr.sin_addr.s_addr = iIpv4; //Home
 
-    snpConnect.iMagicNumber = MAGIC_NUMBER_CONNECT;
-    snpConnect.iIpAddress = saAddr.sin_addr.s_addr;
-    snpConnect.iPhoneNumber = phone;
+    ssSnpConnect.iMagicNumber = MAGIC_NUMBER_CONNECT;
+    ssSnpConnect.iIpAddress = saAddr.sin_addr.s_addr;
+    ssSnpConnect.iPhoneNumber = iPhone;
 
-    snp.ssSnpHeader.iMagicNumber = MAGIC_NUMBER_SNP;
+    ssSnp.ssSnpHeader.iMagicNumber = MAGIC_NUMBER_SNP;
 
     sockFd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockFd < 0) {
+        iStatus = -1;
         printf("Failed to create endpoint and retrieve file descriptor - Error message %s\n", strerror(errno));
-
     } else {
         printf("Successfully created endpoint with socket\n");
 
         if (connect(sockFd, (struct sockaddr *) &saAddr, sizeof(saAddr)) < 0) {
+            iStatus = -1;
             printf("Connection failed: Error message: %s\n", strerror(errno));
-
         } else {
 
-            send(sockFd, &snpConnect, sizeof(snpConnect), 0);
+            iBytesSent = send(sockFd, &ssSnpConnect, sizeof(ssSnpConnect), 0);
+            if (iBytesSent <= 0) {
+                iStatus = -1;
+                printf("Failed to send message - Error message: %s\n", strerror(errno));
+            } else {
 
-            printf("Connect successfully handled\n");
+                printf("Connect successfully handled\n");
 
-            memset(buffer, 0, BUFFERSIZE);
+                memset(buffer, 0, BUFFERSIZE);
 
-            printf("Write your message, write \"exit\" to exit program\n");
+                printf("Write your message, write \"exit\" to exit program\n");
 
-            while (1) {
-                printf("Enter message: ");
-                userInput(buffer, BUFFERSIZE);
+                while (1) {
+                    printf("Enter message: ");
+                    userInput(buffer, BUFFERSIZE);
 
-                sizeOfBuffer = strlen(buffer) + 1;
+                    iSizeOfBuffer = strlen(buffer) + 1;
 
-                if (strcmp(buffer, "exit") == 0) {
-                    break;
-                }
+                    if(strncmp(buffer, "exit", iSizeOfExit) == 0){
+                        break;
+                    }
 
-                SNP *pssSnp = (SNP *) malloc(sizeof(SNP) + sizeOfBuffer * sizeof(char));
-                memset(pssSnp, 0, sizeof(SNP) + sizeOfBuffer * sizeof(char));
-                pssSnp->ssSnpHeader.iMagicNumber = snp.ssSnpHeader.iMagicNumber;
-                pssSnp->ssSnpHeader.iSizeOfBody = sizeOfBuffer - 1;
-                strncpy(pssSnp->body, buffer, sizeOfBuffer);
-                pssSnp->body[sizeOfBuffer - 1] = '\0';
+                    pssSnp = (SNP *) malloc(sizeof(SNP) + iSizeOfBuffer * sizeof(char));
+                    memset(pssSnp, 0, sizeof(SNP) + iSizeOfBuffer * sizeof(char));
+                    pssSnp->ssSnpHeader.iMagicNumber = ssSnp.ssSnpHeader.iMagicNumber;
+                    pssSnp->ssSnpHeader.iSizeOfBody = iSizeOfBuffer - 1;
+                    strncpy(pssSnp->body, buffer, iSizeOfBuffer);
+                    pssSnp->body[iSizeOfBuffer - 1] = '\0';
 
-                signal(SIGPIPE, SIG_IGN);
-                iBytesSent = send(sockFd, pssSnp, sizeof(SNP) + pssSnp->ssSnpHeader.iSizeOfBody, 0);
-                if (iBytesSent <= 0) {
-                    printf("Failed to send message - Error message: %s\n", strerror(errno));
+                    signal(SIGPIPE, SIG_IGN);
+                    iBytesSent = send(sockFd, pssSnp, sizeof(SNP) + pssSnp->ssSnpHeader.iSizeOfBody, 0);
+
                     free(pssSnp);
-                    break;
+
+                    if (iBytesSent <= 0) {
+                        iStatus = -1;
+                        printf("Failed to send message - Error message: %s\n", strerror(errno));
+                        break;
+                    }
                 }
-
-
-                free(pssSnp);
-
             }
-            printf("Closing socket\n");
-
-            close(sockFd);
-            shutdown(sockFd, SHUT_RDWR);
-            sockFd = -1;
         }
+    }
+    printf("Closing socket\n");
+
+    close(sockFd);
+    shutdown(sockFd, SHUT_RDWR);
+    sockFd = -1;
+
+    if (iStatus == -1) {
+        return -1;
     }
 
     return 0;
 }
 
-int userInput(char *buffer, int size) {
-    int bufferLength;
-    fgets(buffer, size - 1, stdin);
+int checkArguments(int argc, char *argv[]) {
+    int iSizeOfServer = 7;
+    int iSizeOfIp = 9;
+    int iSizeOfPort = 5;
+    int iSizeOfPhone = 6;
 
-    bufferLength = strlen(buffer);
-
-    while (buffer[bufferLength - 1] == '\r' || buffer[bufferLength - 1] == '\n') {
-        buffer[bufferLength - 1] = '\0';
-        bufferLength = strlen(buffer);
+    if (argc != 7) {
+        printf("Usage: %s -server <ip> -port <port> -phone <phoneNumber>[1234]\n", argv[0]);
+        return -1;
+    }
+    if(strncmp(argv[1], "-server", iSizeOfServer) != 0){
+        printf("Usage: %s -server <ip> -port <port> -phone <phoneNumber>[1234]\n", argv[0]);
+        printf("First argument is not \"-server\"\n");
+        return -1;
+    }
+    if(strncmp(argv[2], "127.0.0.1", iSizeOfIp) != 0){
+        printf("Usage: %s -server <ip> -port <port> -phone <phoneNumber>[1234]\n", argv[0]);
+        printf("Second argument is not the loop-back address\n");
+        return -1;
     }
 
-    buffer[size - 1] = '\0';
+    if (strncmp(argv[3], "-port", iSizeOfPort) != 0) {
+        printf("Usage: %s -server <ip> -port <port> -phone <phoneNumber>[1234]\n", argv[0]);
+        printf("Third argument is not \"-port\"\n");
+        return -1;
+    }
+
+    if (atoi(argv[4]) < 0 || atoi(argv[5]) > 65535) {
+        printf("Usage: %s -server <ip> -port <port> -phone <phoneNumber>[1234]\n", argv[0]);
+        printf("Port number is not in the range of 0-65535\n");
+        return -1;
+    }
+
+    if (strncmp(argv[5], "-phone", iSizeOfPhone) != 0) {
+        printf("Usage: %s -server <ip> -port <port> -phone <phoneNumber>[1234]\n", argv[0]);
+        printf("Fourth argument is not \"-phone\"\n");
+        return -1;
+    }
+
+    if (atoi(argv[6]) < 1000 || atoi(argv[6]) > 9999) {
+        printf("Usage: %s -server <ip> -port <port> -phone <phoneNumber>[1234]\n", argv[0]);
+        printf("Phone number is not in the range of 1000-9999\n");
+        return -1;
+    }
+    return 0;
+}
+
+void userInput(char *strBuffer, int iSize) {
+    int iBufferLength = 0;
+    fgets(strBuffer, iSize - 1, stdin);
+
+    iBufferLength = strlen(strBuffer);
+
+    while (strBuffer[iBufferLength - 1] == '\r' || strBuffer[iBufferLength - 1] == '\n') {
+        strBuffer[iBufferLength - 1] = '\0';
+        iBufferLength = strlen(strBuffer);
+    }
+
+    strBuffer[iSize - 1] = '\0';
 }
