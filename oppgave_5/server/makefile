@@ -28,9 +28,9 @@ valgrind:
 	make
 	valgrind --leak-check=yes --show-leak-kinds=all --track-origins=yes ./$(TARGET) eksamen_v24_oppgave4_pg2265.txt
 	
-run:
+server:
 	make
-	./$(TARGET)
+	./$(TARGET) -listen 8080
 	
 .PHONY: clean
 clean:

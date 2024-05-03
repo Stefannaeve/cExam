@@ -1,6 +1,9 @@
 #ifndef __SERVER_SERVER_H__
 #define __SERVER_SERVER_H__
 
+#include <stdlib.h>
+#include <netinet/in.h>
+
 #define THREADS 2
 
 #define MAGIC_NUMBER_CONNECT 0xCAFE
@@ -33,6 +36,8 @@ typedef struct _SERVER_THREAD_STRUCT {
 
 void *threadServer(void *arg);
 
-int server();
+int checkArguments(int argc, char *argv[]);
+
+int server(int argc, char *argv[]);
 
 #endif //__SERVER_SERVER_H__

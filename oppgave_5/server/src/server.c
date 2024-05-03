@@ -1,16 +1,23 @@
-#include <netinet/in.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
 #include <pthread.h>
-#include <malloc.h>
 #include "../include/server.h"
 
-int server() {
-    int iPort = 8080;
+int server(int argc, char *argv[]) {
+    int iPort = 0;
     int iStatus = 0;
     int i;
+
+    // Check if the arguments are correct
+    iStatus = checkArguments(argc, argv);
+
+    if (iStatus != 0) {
+        return iStatus;
+    }
+
+    iPort = atoi(argv[2]);
 
     int32_t aiPhoneNumbers[THREADS] = {0};
 
@@ -232,7 +239,7 @@ void *threadServer(void *arg) {
                                     }
 
                                     // Print the message from the user
-                                    printf("Nr %d: %s\n", iPhone, pssSnp->strBody);
+                                    printf("Number %d: %s\n", iPhone, pssSnp->strBody);
                                     free(pssSnp);
                                 }
                                 if (iStatus == -1) {
@@ -259,4 +266,25 @@ void *threadServer(void *arg) {
 
     return 0;
 
+}
+
+int checkArguments(int argc, char *argv[]) {
+    int iSizeOfListen = 7;
+
+    // Check if all arguments are correct
+    if (argc != 3) {
+        printf("Usage: %s -listen <port>\n", argv[0]);
+        return -1;
+    }
+    if(strncmp(argv[1], "-listen", iSizeOfListen) != 0){
+        printf("Usage: %s -listen <port>\n", argv[0]);
+        printf("First argument is not \"-listen\"\n");
+        return -1;
+    }
+    if (atoi(argv[2]) < 0 || atoi(argv[5]) > 65535) {
+        printf("Usage: %s -listen <port>\n", argv[0]);
+        printf("Port number is not in the range of 0-65535\n");
+        return -1;
+    }
+    return 0;
 }
