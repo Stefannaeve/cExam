@@ -161,7 +161,7 @@ int changeWhileLoopsToForLoops(NODE_LIST *list) {
         return -1;
     }
 
-    // Calculate lengths of the strings
+    // Find length of the strings
     iLengthInitialization = strlen(strForInitialization);
     iLengthCondition = strlen(strForCondition);
     iLengthIncrement = strlen(strForIncrement);
