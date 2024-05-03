@@ -174,15 +174,20 @@ void *threadServer(void *arg) {
 
                             pthread_mutex_unlock(serverThreadStructs.mutex);
 
-                            printf("Successfully accepted connection\n");
-                            printf("========================================\n");
+                            printf("\n========================================\n");
+                            printf("%d joined the party\n", iPhone);
+                            printf("========================================\n\n");
 
 
                             while (1) {
                                 // Recv will return 0 or -1 on an orderly shutdown or -1 if an error occurs
                                 iIncomingMagicNumber = recv(sockNewFd, &ssSnp.ssSnpHeader.iMagicNumber,
                                                             sizeof(ssSnp.ssSnpHeader.iMagicNumber), 0);
-                                if (ssSnp.ssSnpHeader.iMagicNumber != MAGIC_NUMBER_SNP || iIncomingMagicNumber <= 0) {
+                                if (iIncomingMagicNumber <= 0){
+                                    printf("Client: %d disconnected, or read error occurred.\n", iPhone);
+                                    break;
+                                }
+                                if (ssSnp.ssSnpHeader.iMagicNumber != MAGIC_NUMBER_SNP) {
                                     iStatus = -1;
                                     printf("Invalid magic number\n");
                                     break;

@@ -118,9 +118,6 @@ int client(int argc, char *argv[]) {
 
         } else {
 
-            printf("Right magic number: %d\n", MAGIC_NUMBER_CONNECT);
-            printf("magic number: %d\n", snpConnect.iMagicNumber);
-
             send(sockFd, &snpConnect, sizeof(snpConnect), 0);
 
             printf("Connect successfully handled\n");
@@ -130,7 +127,7 @@ int client(int argc, char *argv[]) {
             printf("Write your message, write \"exit\" to exit program\n");
 
             while (1) {
-
+                printf("Enter message: ");
                 userInput(buffer, BUFFERSIZE);
 
                 sizeOfBuffer = strlen(buffer) + 1;
