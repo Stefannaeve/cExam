@@ -7,58 +7,41 @@
 #include "../include/eksamen_v24_oppgave4.h"
 #include "../include/sha1.h"
 
-#define BUFFER_SIZE 4096
-#define NUM_THREADS 2
-#define BYTE_RANGE 256
-
-typedef struct _SEND_THREAD {
-    int count[BYTE_RANGE];
-    unsigned char buffer[BUFFER_SIZE];
-    char *filename;
-    pthread_mutex_t mutex;
-    sem_t bufferFull, bufferCleared;
-    int bytes_in_buffer;
-    int isDone;
-} SEND_THREAD;
-
 void *thread_A(void *sendThreadArg) {
-    SEND_THREAD *sendThread = (SEND_THREAD *) sendThreadArg;
+    SEND_THREAD *pssSendThread = (SEND_THREAD *) sendThreadArg;
+    int read_bytes = 0;
 
-    FILE *fp = fopen(sendThread->filename, "r");
+    FILE *fp = fopen(pssSendThread->pszFilename, "r");
     if (!fp) {
         perror("Failed to open file");
-        pthread_exit(NULL);
+        return 0;
     }
 
     while (1) {
 
         // Lock the mutex
-        // Wait for the buffer to empty
-        while (sendThread->bytes_in_buffer > 0) {
-            sem_wait(&sendThread->bufferCleared);
+        // Wait for the strBuffer to empty
+        while (pssSendThread->iBytes_in_buffer > 0) {
+            sem_wait(&pssSendThread->semBufferCleared);
         }
-        pthread_mutex_lock(&sendThread->mutex);
+        pthread_mutex_lock(&pssSendThread->mutex);
 
-        // Read the file into the buffer
-        int read_bytes = fread(sendThread->buffer + sendThread->bytes_in_buffer, 1,
-                               BUFFER_SIZE - sendThread->bytes_in_buffer, fp);
-        sendThread->bytes_in_buffer += read_bytes;
+        // Read the file into the strBuffer
+        read_bytes = fread(pssSendThread->strBuffer + pssSendThread->iBytes_in_buffer, 1,
+                               BUFFER_SIZE - pssSendThread->iBytes_in_buffer, fp);
+        pssSendThread->iBytes_in_buffer += read_bytes;
+        pssSendThread->strBuffer[pssSendThread->iBytes_in_buffer] = '\0';
 
-        /*
-        for (int i = 0; i < sendThread->bytes_in_buffer; ++i) {
-            printf("%c", sendThread->buffer[i]);
-        }
-         */
 
         // Unlock the mutex
-        // Signal the other thread that the buffer is full
-        pthread_mutex_unlock(&sendThread->mutex);
-        sem_post(&sendThread->bufferFull);
+        // Signal the other thread that the strBuffer is full
+        pthread_mutex_unlock(&pssSendThread->mutex);
+        sem_post(&pssSendThread->semBufferFull);
 
         // Signal the other thread that the file has ended
         if (read_bytes == 0 && feof(fp)) {
-            sendThread->isDone = 1;
-            sem_post(&sendThread->bufferFull);
+            pssSendThread->iIsDone = 1;
+            sem_post(&pssSendThread->semBufferFull);
             break;
         }
     }
@@ -66,81 +49,88 @@ void *thread_A(void *sendThreadArg) {
     // Close the file
     // Exit the thread
     fclose(fp);
-    printf("File closed\n");
+    printf("Thread A is done\n");
     fp = NULL;
     return 0;
-    // Pthread_exit made leaks in program
+    // Pthread_exit made leaks in program (more in documentation)
     // pthread_exit(NULL);
 }
 
 void *thread_B(void *sendThreadArg) {
-    SEND_THREAD *sendThread = (SEND_THREAD *) sendThreadArg;
+    SEND_THREAD *pssSendThread = (SEND_THREAD *) sendThreadArg;
+    SHA1_CTX ssCtx;
 
-    int count = 0;
-    int i;
-    int j;
-    unsigned char digest[20];
-    unsigned char array[64];
+    int iCount = 0;
+    int iSizeOfFinalSha1 = 20;
+    unsigned char strDigest[iSizeOfFinalSha1];
 
-    memset(sendThread->count, 0, BYTE_RANGE * sizeof(int));
-    SHA1_CTX ctx;
-    SHA1Init(&ctx);
+    memset(pssSendThread->aiCount, 0, BYTE_RANGE * sizeof(int));
+    memset(&ssCtx, 0, sizeof(SHA1_CTX));
+    memset(strDigest, 0, sizeof(strDigest));
+
+    SHA1Init(&ssCtx);
 
     while (1) {
-        // If buffer is read, wait for it to be full again
-        if (sendThread->bytes_in_buffer == 0) {
+        // If strBuffer is read, wait for it to be full again
+        if (pssSendThread->iBytes_in_buffer == 0) {
             // Check for signal from thread A that the file has ended
-            sem_wait(&sendThread->bufferFull);
+            sem_wait(&pssSendThread->semBufferFull);
 
         }
         // Locks the mutex
-        pthread_mutex_lock(&sendThread->mutex);
+        pthread_mutex_lock(&pssSendThread->mutex);
 
-        // Count the bytes in the buffer
-        for (i = 0; i < sendThread->bytes_in_buffer; i++) {
-            sendThread->count[sendThread->buffer[i]]++;
+        // Count the bytes in the strBuffer
+        for (int i = 0; i < pssSendThread->iBytes_in_buffer; i++) {
+            pssSendThread->aiCount[pssSendThread->strBuffer[i]]++;
         }
 
-        j = 0;
+        // Update sha1 context with new data
+        SHA1Update(&ssCtx, pssSendThread->strBuffer, pssSendThread->iBytes_in_buffer);
 
-        SHA1Update(&ctx, sendThread->buffer, sendThread->bytes_in_buffer);
 
-
-        // Signal the other thread that the buffer is empty
-        sendThread->bytes_in_buffer = 0;
+        // Signal the other thread that the strBuffer is empty
+        pssSendThread->iBytes_in_buffer = 0;
 
         // Unlock the mutex
-        // Signal the other thread that the buffer has been counted
-        pthread_mutex_unlock(&sendThread->mutex);
-        sem_post(&sendThread->bufferCleared);
+        // Signal the other thread that the strBuffer has been counted
+        pthread_mutex_unlock(&pssSendThread->mutex);
+        sem_post(&pssSendThread->semBufferCleared);
 
         // If the file has ended, break the loop
-        if (sendThread->isDone) {
+        if (pssSendThread->iIsDone) {
             break;
         }
-        count++;
+        iCount++;
     }
 
-    printf("\n\n");
-    SHA1Final(digest, &ctx);
-    for (j = 0; j < sizeof(digest); ++j) {
-        printf("%02X", digest[j]);
+    // Finalize the sha1 context and print it
+    printf("\n");
+    SHA1Final(strDigest, &ssCtx);
+
+    for (int j = 0; j < sizeof(strDigest); ++j) {
+        printf("%X", strDigest[j]);
     }
-    printf("\n\n");
+    printf("\n");
 
 
-    for (i = 0; i < BYTE_RANGE; i++) {
-        if (sendThread->count[i] > 0) {
-            printf("%d: %d\n", i, sendThread->count[i]);
+    // Print the iCount of each byte, excluding numbers which has not been counted
+    /*
+    for (int i = 0; i < BYTE_RANGE; i++) {
+        if (pssSendThread->aiCount[i] > 0) {
+            printf("%d: %d\n", i, pssSendThread->aiCount[i]);
         }
     }
+     */
     printf("Thread B is done\n");
     return 0;
-// Pthread_exit made leaks in program
+// Pthread_exit made leaks in program (More in documentation)
 // pthread_exit(NULL);
 }
 
 int main(int argc, char *argv[]) {
+    SEND_THREAD *pssSendThread = NULL;
+    pthread_t threadA, threadB;
 
     if (argc > 2) {
         printf("%s only has one argument\n", argv[0]);
@@ -150,66 +140,53 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    SEND_THREAD *sendThread = (SEND_THREAD *) malloc(sizeof(SEND_THREAD));
-    if (sendThread == NULL) {
+    pssSendThread = (SEND_THREAD *) malloc(sizeof(SEND_THREAD));
+    if (pssSendThread == NULL) {
         printf("Failed to allocate memory for send_thread\n");
     } else {
-
-        if (pthread_mutex_init(&sendThread->mutex, NULL) != 0) {
+        memset(pssSendThread, 0, sizeof(SEND_THREAD));
+        if (pthread_mutex_init(&pssSendThread->mutex, NULL) != 0) {
             perror("Could not initialize mutex");
         } else {
 
-            if (sem_init(&sendThread->bufferFull, 0, 0) != 0) {
-                perror("Could not initialize bufferFull");
+            if (sem_init(&pssSendThread->semBufferFull, 0, 0) != 0) {
+                perror("Could not initialize semBufferFull");
             } else {
-                if (sem_init(&sendThread->bufferCleared, 0, 0) != 0) {
-                    perror("Could not initialize bufferCleared");
+                if (sem_init(&pssSendThread->semBufferCleared, 0, 0) != 0) {
+                    perror("Could not initialize semBufferCleared");
                 } else {
 
-                    sendThread->bytes_in_buffer = 0;
-                    sendThread->isDone = 0;
-                    sendThread->filename = argv[1];
+                    pssSendThread->iBytes_in_buffer = 0;
+                    pssSendThread->iIsDone = 0;
+                    pssSendThread->pszFilename = argv[1];
 
-                    pthread_t threadA, threadB;
 
-                    if (pthread_create(&threadA, NULL, thread_A, (void *) sendThread) != 0) {
+                    if (pthread_create(&threadA, NULL, thread_A, (void *) pssSendThread) != 0) {
                         perror("Could not create thread A");
                     } else {
 
                         printf("Created thread A\n");
-                        if (pthread_create(&threadB, NULL, thread_B, (void *) sendThread) != 0) {
+                        if (pthread_create(&threadB, NULL, thread_B, (void *) pssSendThread) != 0) {
                             perror("Could not create thread B");
                         } else {
                             printf("Created thread B\n");
-                            printf("Thread IDs: A: %lu, B: %lu\n", threadA, threadB);
                             if (pthread_join(threadB, NULL) != 0) {
                                 perror("Could not join thread B");
                             }
-                            printf("Joined thread B\n");
                         }
-
                         if (pthread_join(threadA, NULL) != 0) {
                             perror("Could not join thread A");
                         }
-                        printf("Joined thread A\n");
-                        printf("Thread IDs: A: %lu, B: %lu\n", threadA, threadB);
-
                     } // Created thread A
-
-                    sem_destroy(&sendThread->bufferCleared);
-                    printf("Destroyed bufferCleared\n");
-
-                } // Made semaphore bufferCleared
-                sem_destroy(&sendThread->bufferFull);
-                printf("Destroyed bufferFull\n");
-            } // Made semaphore bufferFull
-            pthread_mutex_destroy(&sendThread->mutex);
-            printf("Destroyed mutex\n");
+                    sem_destroy(&pssSendThread->semBufferCleared);
+                } // Made semaphore semBufferCleared
+                sem_destroy(&pssSendThread->semBufferFull);
+            } // Made semaphore semBufferFull
+            pthread_mutex_destroy(&pssSendThread->mutex);
         } // Made mutex
-        free(sendThread);
-        sendThread = NULL;
-        printf("Freed sendThread\n");
-    } // Made sendThread
+        free(pssSendThread);
+        pssSendThread = NULL;
+    } // Made pssSendThread
     printf("Done\n");
     return 0;
 }
