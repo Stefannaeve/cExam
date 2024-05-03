@@ -1,6 +1,48 @@
 
 
+Oppgave 5 (server)
+[x] Handle arguments from terminal
+[x] Make sure functions which returns gets handled
+[x] Hungerian notation
+[x] Position every variable in the beginning of function
+[x] Remove uneccessary variables
+[x] Change all instances of strcpy, strcmp and etc to strncmp, strncmp and etc
+[x] Cleanup main.c
+[x] Check if headerfiles names is right
+[x] Check if headerfiles have all the intializations of functions, defines and structs
+[x] Remove my name in headers
+[] Add comments
+[] Delete Clion association
+[] Make sure lines is configured for Gedit
+[] Make every String zero terminated ?????????????????????????????
+[] Remove reduntant prints made for debugging
+[] Memset every malloc
+[] Zero terminate every malloc
+
+[x] Add a protocol for connecting and current convo. Use a define for the two different protocol numbers. 
+[x] Use mutex to check for phone numbers according to a common array of numbers. No two numbers should be alike
+
+Oppgave 5 (client)
+[x] Handle arguments from terminal
+[x] Make sure functions which returns gets handled
+[x] Hungerian notation
+[x] Position every variable in the beginning of function
+[x] Remove uneccessary variables
+[x] Change all instances of strcpy, strcmp and etc to strncmp, strncmp and etc
+[x] Cleanup main.c
+[x] Check if headerfiles names is right
+[x] Check if headerfiles have all the intializations of functions, defines and structs
+[x] Remove my name in headers
+[x] Add comments
+[] Delete Clion association
+[] Make sure lines is configured for Gedit
+[x] Make every String zero terminated ?????????????????????????????
+[x] Remove reduntant prints made for debugging
+[x] Memset every malloc
+[x] Zero terminate every malloc
+
 Oppgave 6
+[] Handle arguments from terminal
 [x] Make sure functions which returns gets handled
 [x] Hungerian notation
 [x] Position every variable in the beginning of function
@@ -13,5 +55,6 @@ Oppgave 6
 [] Delete Clion association
 [] Make sure lines is configured for Gedit
 [] Make every String zero terminated ?????????????????????????????
+[] Remove reduntant prints made for debugging
 [x] Memset every malloc
 [x] Zero terminate every malloc

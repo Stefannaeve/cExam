@@ -185,7 +185,7 @@ void *threadServer(void *arg) {
                                 // First recieve the magic number to make sure the protocol is right
                                 iIncomingMagicNumber = recv(sockNewFd, &ssSnp.ssSnpHeader.iMagicNumber,
                                                             sizeof(ssSnp.ssSnpHeader.iMagicNumber), 0);
-                                if (iIncomingMagicNumber <= 0){
+                                if (iIncomingMagicNumber <= 0) {
                                     printf("Client: %d disconnected, or read error occurred.\n", iPhone);
                                     break;
                                 }
