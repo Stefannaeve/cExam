@@ -2,47 +2,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include <time.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <signal.h>
-
-#define BUFFERSIZE 1024
-#define MAGIC_NUMBER_CONNECT 0xCAFE
-#define MAGIC_NUMBER_SNP 0xBABE
-
-typedef struct _SNP_CONNECT {
-    int32_t iMagicNumber;
-    int32_t iIpAddress;
-    int32_t iPhoneNumber;
-} SNP_CONNECT;
-
-typedef struct _SNP_HEADER {
-    int32_t iMagicNumber;
-    int32_t iSizeOfBody;
-} SNP_HEADER;
-
-// "My name" Network Protocol
-typedef struct _SNP {
-    SNP_HEADER ssSnpHeader;
-    char body[];
-} SNP;
-
-typedef struct _THREAD_STRUCT {
-    struct sockaddr_in saAddr;
-    SNP snp;
-    struct _SNP_CONNECT snpConnect;
-} THREAD_STRUCT;
-
-void *threadClient(void *arg);
-
-int checkArguments(int argc, char *argv[]);
-
-void userInput(char *strBuffer, int iSize);
+#include "../include/client.h"
 
 int client(int argc, char *argv[]) {
-    char buffer[BUFFERSIZE];
+    char buffer[BUFFER_SIZE];
 
     int sockFd = 0;
     int iSizeOfBuffer = 0;
@@ -64,6 +30,7 @@ int client(int argc, char *argv[]) {
         return iStatus;
     }
 
+    // Initiation of variables
     iIpv4 = inet_addr(argv[2]);
     iPort = atoi(argv[4]);
     iPhone = atoi(argv[6]);
@@ -78,6 +45,7 @@ int client(int argc, char *argv[]) {
 
     ssSnp.ssSnpHeader.iMagicNumber = MAGIC_NUMBER_SNP;
 
+    // Create a socket
     sockFd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockFd < 0) {
         iStatus = -1;
@@ -85,11 +53,13 @@ int client(int argc, char *argv[]) {
     } else {
         printf("Successfully created endpoint with socket\n");
 
+        // Connect to the server
         if (connect(sockFd, (struct sockaddr *) &saAddr, sizeof(saAddr)) < 0) {
             iStatus = -1;
             printf("Connection failed: Error message: %s\n", strerror(errno));
         } else {
 
+            // Send the connect message to give basic information before sending messages
             iBytesSent = send(sockFd, &ssSnpConnect, sizeof(ssSnpConnect), 0);
             if (iBytesSent <= 0) {
                 iStatus = -1;
@@ -98,20 +68,23 @@ int client(int argc, char *argv[]) {
 
                 printf("Connect successfully handled\n");
 
-                memset(buffer, 0, BUFFERSIZE);
+                memset(buffer, 0, BUFFER_SIZE);
 
                 printf("Write your message, write \"exit\" to exit program\n");
 
+                // While loop to send message until the user writes "exit" or the connection is lost
                 while (1) {
                     printf("Enter message: ");
-                    userInput(buffer, BUFFERSIZE);
+                    userInput(buffer, BUFFER_SIZE);
 
                     iSizeOfBuffer = strlen(buffer) + 1;
 
+                    // Check if the user wants to exit the program
                     if(strncmp(buffer, "exit", iSizeOfExit) == 0){
                         break;
                     }
 
+                    // Allocate memory for the message from userInput
                     pssSnp = (SNP *) malloc(sizeof(SNP) + iSizeOfBuffer * sizeof(char));
                     memset(pssSnp, 0, sizeof(SNP) + iSizeOfBuffer * sizeof(char));
                     pssSnp->ssSnpHeader.iMagicNumber = ssSnp.ssSnpHeader.iMagicNumber;
@@ -119,6 +92,7 @@ int client(int argc, char *argv[]) {
                     strncpy(pssSnp->body, buffer, iSizeOfBuffer);
                     pssSnp->body[iSizeOfBuffer - 1] = '\0';
 
+                    // Send the message to the server, use signal to ignore SIGPIPE for my own error handling
                     signal(SIGPIPE, SIG_IGN);
                     iBytesSent = send(sockFd, pssSnp, sizeof(SNP) + pssSnp->ssSnpHeader.iSizeOfBody, 0);
 
@@ -133,6 +107,8 @@ int client(int argc, char *argv[]) {
             }
         }
     }
+
+    // Close the socket and shutdown the connection
     printf("Closing socket\n");
 
     close(sockFd);
@@ -152,6 +128,7 @@ int checkArguments(int argc, char *argv[]) {
     int iSizeOfPort = 5;
     int iSizeOfPhone = 6;
 
+    // Check if all arguments are correct
     if (argc != 7) {
         printf("Usage: %s -server <ip> -port <port> -phone <phoneNumber>[1234]\n", argv[0]);
         return -1;
@@ -199,6 +176,7 @@ void userInput(char *strBuffer, int iSize) {
 
     iBufferLength = strlen(strBuffer);
 
+    // Remove newline and carriage return from the end of the string
     while (strBuffer[iBufferLength - 1] == '\r' || strBuffer[iBufferLength - 1] == '\n') {
         strBuffer[iBufferLength - 1] = '\0';
         iBufferLength = strlen(strBuffer);
