@@ -59,6 +59,7 @@ int server() {
             iStatus = -1;
         }
     }
+    // Destroy the mutex and return
     pthread_mutex_destroy(&phoneNumbersMutex);
     if (iStatus != 0) {
         return -1;
@@ -86,6 +87,7 @@ void *threadServer(void *arg) {
 
     struct sockaddr_in saConClient = {0};
 
+    // Create a socket
     sockFd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockFd < 0) {
         iStatus = -1;
@@ -93,12 +95,14 @@ void *threadServer(void *arg) {
     } else {
         printf("Successfully created endpoint with socket\n");
 
+        // Bind the socket to the IP address and port
         if (bind(sockFd, (struct sockaddr *) &serverThreadStructs.saAddr, sizeof(serverThreadStructs.saAddr)) < 0) {
             iStatus = -1;
             printf("Failed to bind address and port to socket - Error message: %s\n", strerror(errno));
         } else {
             printf("Socket successfully bound to IP address and port\n");
 
+            // Listen for incoming connections
             irc = listen(sockFd, 5);
 
             if (irc < 0) {
@@ -106,6 +110,7 @@ void *threadServer(void *arg) {
                 printf("Failed to find incoming connection through listen - Error message %s", strerror(errno));
             } else {
 
+                // Accept the first connection request and create a new socket
                 sockNewFd = accept(sockFd, (struct sockaddr *) &saConClient, (socklen_t *) &iAddrLen);
                 if (sockNewFd < 0) {
                     iStatus = -1;
@@ -113,9 +118,11 @@ void *threadServer(void *arg) {
                            strerror(errno));
                 } else {
 
+                    // Receive the magic number to make sure the protocol is right
                     iIncomingMagicNumber = recv(sockNewFd, &ssSnpConnect.iMagicNumber,
                                                 sizeof(ssSnpConnect.iMagicNumber), 0);
 
+                    // Error handling, if the client disconnects or the protocol is wrong
                     if (iIncomingMagicNumber <= 0) {
                         iStatus = -1;
                         printf("Client disconnected\n");
@@ -126,6 +133,7 @@ void *threadServer(void *arg) {
 
                         printf("Matching protocol\n");
 
+                        // Receive the IP address and phone number
                         iBytes = recv(sockNewFd, &ssSnpConnect.iIpAddress, sizeof(ssSnpConnect.iIpAddress), 0);
                         if (iBytes <= 0) {
                             iStatus = -1;
@@ -143,6 +151,7 @@ void *threadServer(void *arg) {
 
                         iPhone = ssSnpConnect.iPhoneNumber;
 
+                        // Loop through all the phone numbers to check if the phone number is already in use
                         for (int i = 0; i < THREADS; ++i) {
                             if (serverThreadStructs.iPhoneNumbers[i] == iPhone) {
                                 iStatus = -1;
@@ -151,10 +160,12 @@ void *threadServer(void *arg) {
                             }
                         }
 
+                        // If the phone number is in use, unlock the mutex and exit
                         if (iStatus != 0) {
                             pthread_mutex_unlock(serverThreadStructs.mutex);
                         } else {
 
+                            // Add phone number if it is not in use
                             for (int i = 0; i < THREADS; ++i) {
                                 if (serverThreadStructs.iPhoneNumbers[i] == 0) {
                                     serverThreadStructs.iPhoneNumbers[i] = iPhone;
@@ -170,7 +181,8 @@ void *threadServer(void *arg) {
 
 
                             while (1) {
-                                // Recv will return 0 or -1 on an orderly shutdown or -1 if an error occurs
+                                // Recv will return 0 on an orderly shutdown or -1 if an error occurs
+                                // First recieve the magic number to make sure the protocol is right
                                 iIncomingMagicNumber = recv(sockNewFd, &ssSnp.ssSnpHeader.iMagicNumber,
                                                             sizeof(ssSnp.ssSnpHeader.iMagicNumber), 0);
                                 if (iIncomingMagicNumber <= 0){
@@ -182,6 +194,8 @@ void *threadServer(void *arg) {
                                     printf("Invalid magic number\n");
                                     break;
                                 }
+
+                                // Receive the size of the body to be bale to read the next part
                                 iSizeOfBody = recv(sockNewFd, &ssSnp.ssSnpHeader.iSizeOfBody,
                                                    sizeof(ssSnp.ssSnpHeader.iSizeOfBody), 0);
 
@@ -190,6 +204,7 @@ void *threadServer(void *arg) {
                                     break;
                                 }
 
+                                // Allocate memory based on the size we got from the user
                                 pssSnp = (SNP *) malloc(sizeof(SNP) + ssSnp.ssSnpHeader.iSizeOfBody + 1);
                                 if (pssSnp == NULL) {
                                     iStatus = -1;
@@ -199,6 +214,7 @@ void *threadServer(void *arg) {
 
                                     memcpy(pssSnp, &ssSnp, sizeof(ssSnp.ssSnpHeader));
 
+                                    // Receive the body of the message
                                     iBytes = recv(sockNewFd, pssSnp->strBody, pssSnp->ssSnpHeader.iSizeOfBody, 0);
                                     if (iBytes <= 0) {
                                         printf("Client: %d disconnected, or read error occurred.\n", iPhone);
@@ -208,12 +224,14 @@ void *threadServer(void *arg) {
 
                                     pssSnp->strBody[ssSnp.ssSnpHeader.iSizeOfBody] = '\0';
 
+                                    // Check if the user wants to exit the program
                                     if (strncmp(pssSnp->strBody, "exit", 4) == 0) {
                                         printf("Exiting\n");
                                         free(pssSnp);
                                         break;
                                     }
 
+                                    // Print the message from the user
                                     printf("Nr %d: %s\n", iPhone, pssSnp->strBody);
                                     free(pssSnp);
                                 }
@@ -236,6 +254,7 @@ void *threadServer(void *arg) {
         sockFd = -1;
     }
 
+    // Set the status of the thread for the server function to check
     serverThreadStructs.iStatus = iStatus;
 
     return 0;
