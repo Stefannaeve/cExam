@@ -26,7 +26,5 @@ void orderFreeLinkedList(ORDER_LIST *list);
 void orderPrintAllOrders(ORDER_LIST *list);
 void orderPrintAllOrdersAndSum(ORDER_LIST *list);
 void printSumForSpecificName(ORDER_LIST *list, char *name);
-int orderPrintSpecificNode(ORDER_LIST *list, int index);
-int orderDeleteSpecificNode(ORDER_LIST *list, int index);
 
 #endif //__TASK_ORDERLIST_H__

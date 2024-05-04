@@ -1,22 +1,24 @@
 Oppgave 3
 menuApplication, orderList, tableReservationList
-[x][][] Handle arguments from terminal
-[x][][] Make sure functions which returns gets handled
-[x][][] Hungerian notation
-[x][][] Position every variable in the beginning of function
-[x][][] Remove uneccessary variables
-[x][][] Change all instances of strcpy, strcmp and etc to strncmp, strncmp and etc
-[x][][] Cleanup main.c
-[x][][] Check if headerfiles names is right
-[x][][] Check if headerfiles have all the intializations of functions, defines and structs
-[x][][] Remove my name in headers
-[x][][] Add comments
+[x][X][x] Handle arguments from terminal
+[x][X][x] Make sure functions which returns gets handled
+[x][X][x] Hungerian notation
+[x][X][x] Position every variable in the beginning of function
+[x][X][x] Remove uneccessary variables
+[x][x][x] Change all instances of strcpy, strcmp and etc to strncmp, strncmp and etc
+[x][x][x] Cleanup main.c
+[x][x][x] Check if headerfiles names is right
+[x][x][x] Check if headerfiles have all the intializations of functions, defines and structs
+[x][x][x] Remove my name in headers
+[x][x][] Add comments
 [][][] Delete Clion association
 [][][] Make sure lines is configured for Gedit
 [][][] Make every String zero terminated ?????????????????????????????
-[][][] Remove reduntant prints made for debugging
-[][][] Memset every malloc
-[][][] Zero terminate every malloc
+[x][x][x] Remove reduntant prints made for debugging
+[X][x][x] Memset every malloc
+[X][x][x] Zero terminate every malloc
+
+[] Check if strncmp uses right values
 
 Oppgave 4
 [x] Handle arguments from terminal

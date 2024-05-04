@@ -3,20 +3,26 @@
 #include <errno.h>
 #include "orderList.h"
 
+// SINGLY LINKED LIST
+
+// Add order to the end of the list
 int orderAdd(ORDER_LIST *psoList, SENT_ORDER *pssSentOrder) {
     ORDER *psoTemp;
     int iLengthOfName = 0;
     int iLengthOfFoodDescription = 0;
 
+    // Make sure the struct is not NULL
     if (pssSentOrder == NULL) {
         errno = EINVAL;
         printf("Struct cannot be NULL- Error message: %s\n", strerror(errno));
         return -1;
     }
 
+    // Find the lengths of the strings in the struct
     iLengthOfName = strlen(pssSentOrder->pszName);
     iLengthOfFoodDescription = strlen(pssSentOrder->pszFoodDescription);
 
+    // Malloc the Order structs for insertion in the list
     psoTemp = (ORDER *) malloc(sizeof(ORDER) + iLengthOfName + 1 + iLengthOfFoodDescription + 1);
     if (psoTemp == NULL) {
         errno = ENOMEM;
@@ -25,6 +31,7 @@ int orderAdd(ORDER_LIST *psoList, SENT_ORDER *pssSentOrder) {
     }
     memset(psoTemp, 0, sizeof(ORDER) + iLengthOfName + 1 + iLengthOfFoodDescription + 1);
 
+    // Malloc the order struct strings and memset and zero terminate them
     psoTemp->pszName = (char *) malloc(iLengthOfName + 1);
     if (psoTemp->pszName == NULL) {
         errno = ENOMEM;
@@ -49,6 +56,7 @@ int orderAdd(ORDER_LIST *psoList, SENT_ORDER *pssSentOrder) {
 
     psoTemp->psoNextOrder = NULL;
 
+    // If the list is empty, add the first order And free the struct from the sent order
     if (psoList->psoHead == NULL) {
         psoList->psoHead = psoTemp;
         psoList->psoTail = psoTemp;
@@ -62,11 +70,13 @@ int orderAdd(ORDER_LIST *psoList, SENT_ORDER *pssSentOrder) {
     free(pssSentOrder->pszFoodDescription);
     free(pssSentOrder);
 
+    // The function to add to the end of the list
     orderAddToEnd(psoList, psoTemp);
 
     return 0;
 }
 
+// Add order to the end of the list
 void orderAddToEnd(ORDER_LIST *psoList, ORDER *psoTemp) {
     psoList->psoTail->psoNextOrder = psoTemp;
     psoList->psoTail = psoTemp;
@@ -74,6 +84,7 @@ void orderAddToEnd(ORDER_LIST *psoList, ORDER *psoTemp) {
     psoList->iSize++;
 }
 
+// Free every node in the list
 void orderFreeLinkedList(ORDER_LIST *psoList) {
     ORDER *psoCurrent = psoList->psoHead;
     ORDER *psoNext;
@@ -87,6 +98,7 @@ void orderFreeLinkedList(ORDER_LIST *psoList) {
     }
 }
 
+// Print all orders in the list with all the necessary information
 void orderPrintAllOrders(ORDER_LIST *psoList) {
     int iCount = 0;
     ORDER *psoCurrent = psoList->psoHead;
@@ -103,6 +115,7 @@ void orderPrintAllOrders(ORDER_LIST *psoList) {
     printf("\n");
 }
 
+// Print all orders in the list with all the necessary information and sum the prices of all food
 void orderPrintAllOrdersAndSum(ORDER_LIST *psoList) {
     ORDER *psoCurrent = psoList->psoHead;
     int iSum = 0;
@@ -119,13 +132,16 @@ void orderPrintAllOrdersAndSum(ORDER_LIST *psoList) {
     printf("Total iPrice: %d\n", iSum);
 }
 
+// Print one order, and the specific sum for a specific person
 void printSumForSpecificName(ORDER_LIST *psoList, char *pszName) {
     ORDER *psoCurrent = psoList->psoHead;
     int iLengthOfCurrentName = 0;
     int iLengthOfName = strlen(pszName);
     int iBiggestLength = 0;
     int iSum = 0;
+    // Loop through the list and compare the names
     while (psoCurrent != NULL) {
+        // find the shortest length of the two strings, to avoid going out of bounds
         iLengthOfCurrentName = strlen(psoCurrent->pszName);
         if (iLengthOfCurrentName > iLengthOfName) {
             iBiggestLength = iLengthOfName;
@@ -142,73 +158,4 @@ void printSumForSpecificName(ORDER_LIST *psoList, char *pszName) {
         psoCurrent = psoCurrent->psoNextOrder;
     }
     printf("Total iPrice for %s: %d\n", pszName, iSum);
-}
-
-int orderPrintSpecificNode(ORDER_LIST *psoList, int iIndex) {
-    ORDER *psoCurrent = psoList->psoHead;
-    int iCounter = 0;
-
-    if (iIndex < 0) {
-        errno = EINVAL;
-        printf("index position cannot be negative - Error message: %s\n", strerror(errno));
-        return -1;
-    }
-
-    while (psoCurrent != NULL && iCounter < iIndex) {
-        psoCurrent = psoCurrent->psoNextOrder;
-        iCounter++;
-    }
-    if (psoCurrent == NULL) {
-        errno = ERANGE;
-        printf("Index position cannot be more than iSize of list - Error message: %s\n", strerror(errno));
-        return -1;
-    }
-
-    printf("Name: %s\n", psoCurrent->pszName);
-    printf("Food Description: %s\n", psoCurrent->pszFoodDescription);
-    printf("Price: %d\n", psoCurrent->iPrice);
-
-    return 0;
-}
-
-int orderDeleteSpecificNode(ORDER_LIST *psoList, int iIndex) {
-    ORDER *psoCurrent = psoList->psoHead;
-    ORDER *psoPrevious = NULL;
-    int iCounter = 0;
-
-    if (iIndex < 0) {
-        errno = EINVAL;
-        printf("index position cannot be negative - Error message: %s\n", strerror(errno));
-        return -1;
-    }
-
-    if (iIndex > psoList->iSize) {
-        errno = ERANGE;
-        printf("Index position cannot be more than iSize of list - Error message: %s\n", strerror(errno));
-        return -1;
-    }
-
-
-    while (psoCurrent != NULL && iCounter < iIndex) {
-        psoPrevious = psoCurrent;
-        psoCurrent = psoCurrent->psoNextOrder;
-        iCounter++;
-    }
-
-    if (psoCurrent == NULL) {
-        errno = ERANGE;
-        printf("Index position cannot be more than iSize of list - Error message: %s\n", strerror(errno));
-        return -1;
-    }
-
-    if (psoPrevious == NULL) {
-        psoList->psoHead = psoCurrent->psoNextOrder;
-    } else {
-        psoPrevious->psoNextOrder = psoCurrent->psoNextOrder;
-    }
-
-    free(psoCurrent);
-    psoList->iSize--;
-
-    return 0;
 }
