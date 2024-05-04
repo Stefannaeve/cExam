@@ -1,27 +1,23 @@
-//
-// Created by stefannaeve on 4/26/24.
-//
-
 #ifndef __TASK_ORDERLIST_H__
 #define __TASK_ORDERLIST_H__
 
 typedef struct _SENT_ORDER {
-    char *name;
-    char *foodDescription;
-    int price;
+    char *pszName;
+    char *pszFoodDescription;
+    int iPrice;
 } SENT_ORDER;
 
 typedef struct _ORDER {
-    struct _ORDER *pNextOrder;
-    char *name;
-    char *foodDescription;
-    int price;
+    struct _ORDER *psoNextOrder;
+    char *pszName;
+    char *pszFoodDescription;
+    int iPrice;
 } ORDER;
 
 typedef struct _ORDER_LIST {
-    ORDER *pHead;
-    ORDER *pTail;
-    int size;
+    ORDER *psoHead;
+    ORDER *psoTail;
+    int iSize;
 } ORDER_LIST;
 
 int orderAdd(ORDER_LIST *list, SENT_ORDER *sentOrder);

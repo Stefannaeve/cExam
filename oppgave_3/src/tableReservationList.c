@@ -5,26 +5,24 @@
 #include "tableReservationList.h"
 #include "orderList.h"
 
-void addToEnd(LIST *list, TABLERESERVATION *temp);
-void addAtIndex(LIST *list, TABLERESERVATION *temp, int index);
-
 int add(LIST *pslList, const SENT_TABLE_RESERVATION *pssSentTableReservation) {
+    int iCounter = 0;
+    TABLERESERVATION *pstTemp;
+    TABLERESERVATION *pstCurrent;
     if (pssSentTableReservation == NULL) {
         errno = EINVAL;
         printf("Struct cannot be NULL - Error message: %s\n", strerror(errno));
         return -1;
     }
-
-    TABLERESERVATION *pstTemp;
     int iLengthOfName = strlen(pssSentTableReservation->pszName);
-    pstTemp = (TABLERESERVATION *) malloc(sizeof(TABLERESERVATION) + iLengthOfName + 1);
 
-    memset(pstTemp, 0, sizeof(TABLERESERVATION) + iLengthOfName + 1);
+    pstTemp = (TABLERESERVATION *) malloc(sizeof(TABLERESERVATION) + iLengthOfName + 1);
     if (pstTemp == NULL) {
         errno = ENOMEM;
         printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
         return -1;
     }
+    memset(pstTemp, 0, sizeof(TABLERESERVATION) + iLengthOfName + 1);
 
     pstTemp->iTableNumber = pssSentTableReservation->iTableNumber;
     pstTemp->iSeats = pssSentTableReservation->iSeats;
@@ -37,7 +35,9 @@ int add(LIST *pslList, const SENT_TABLE_RESERVATION *pssSentTableReservation) {
         free(pstTemp);
         return -1;
     }
-    strcpy(pstTemp->pszName, pssSentTableReservation->pszName);
+    memset(pstTemp->pszName, 0, iLengthOfName + 1);
+    strncpy(pstTemp->pszName, pssSentTableReservation->pszName, iLengthOfName);
+    pstTemp->pszName[iLengthOfName] = '\0';
 
     pstTemp->psoFoodOrders = (ORDER_LIST *) malloc(sizeof(ORDER_LIST));
     if (pstTemp->psoFoodOrders == NULL) {
@@ -46,102 +46,102 @@ int add(LIST *pslList, const SENT_TABLE_RESERVATION *pssSentTableReservation) {
         free(pstTemp);
         return -1;
     }
-    pstTemp->psoFoodOrders->pHead = NULL;
-    pstTemp->psoFoodOrders->pTail = NULL;
-    pstTemp->psoFoodOrders->size = 0;
+    memset(pstTemp->psoFoodOrders, 0, sizeof(ORDER_LIST));
+    pstTemp->psoFoodOrders->psoHead = NULL;
+    pstTemp->psoFoodOrders->psoTail = NULL;
+    pstTemp->psoFoodOrders->iSize = 0;
 
-    if (pslList->pHead == NULL) {
-        pslList->pHead = pstTemp;
-        pslList->pTail = pstTemp;
+    if (pslList->pstHead == NULL) {
+        pslList->pstHead = pstTemp;
+        pslList->pstTail = pstTemp;
         pstTemp->iReservationNumber = 1;
         return 0;
     }
 
-    TABLERESERVATION *pstCurrent = pslList->pHead;
-    int counter = 0;
+    pstCurrent = pslList->pstHead;
+    iCounter = 0;
     while (pstCurrent != NULL) {
         if (strcmp(pstCurrent->pszName, pstTemp->pszName) > 0) {
-            addAtIndex(pslList, pstTemp, counter);
+            addAtIndex(pslList, pstTemp, iCounter);
             return 0;
         }
-        pstCurrent = pstCurrent->pNextReservation;
-        counter++;
+        pstCurrent = pstCurrent->pstNextReservation;
+        iCounter++;
     }
     addToEnd(pslList, pstTemp);
     return 0;
 }
 
 void addToEnd(LIST *pslList, TABLERESERVATION *pstTemp) {
-    pslList->pTail->pNextReservation = pstTemp;
-    pstTemp->iReservationNumber = pslList->pTail->iReservationNumber + 1;
-    pstTemp->pPrevReservation = pslList->pTail;
-    pslList->pTail = pstTemp;
+    pslList->pstTail->pstNextReservation = pstTemp;
+    pstTemp->iReservationNumber = pslList->pstTail->iReservationNumber + 1;
+    pstTemp->pstPrevReservation = pslList->pstTail;
+    pslList->pstTail = pstTemp;
 
-    pslList->size++;
+    pslList->iSize++;
 }
 
 void addAtIndex(LIST *pslList, TABLERESERVATION *pstTemp, int iIndex) {
-
     TABLERESERVATION *pstCurrent;
     int iCounter = 0;
 
-    if (iIndex == pslList->size + 1) {
+    if (iIndex == pslList->iSize + 1) {
         addToEnd(pslList, pstTemp);
         return;
     }
     if (iIndex == 0) {
-        pstTemp->pNextReservation = pslList->pHead;
-        pslList->pHead->pPrevReservation = pstTemp;
-        pslList->pHead = pstTemp;
+        pstTemp->pstNextReservation = pslList->pstHead;
+        pslList->pstHead->pstPrevReservation = pstTemp;
+        pslList->pstHead = pstTemp;
         pstTemp->iReservationNumber = 1;
     } else {
-        pstCurrent = pslList->pHead;
-        while (pstCurrent->pNextReservation != NULL && iCounter < iIndex - 1) {
-            pstCurrent = pstCurrent->pNextReservation;
+        pstCurrent = pslList->pstHead;
+        while (pstCurrent->pstNextReservation != NULL && iCounter < iIndex - 1) {
+            pstCurrent = pstCurrent->pstNextReservation;
             iCounter++;
         }
-        pstTemp->pNextReservation = pstCurrent->pNextReservation;
-        pstTemp->pPrevReservation = pstCurrent;
+        pstTemp->pstNextReservation = pstCurrent->pstNextReservation;
+        pstTemp->pstPrevReservation = pstCurrent;
         pstTemp->iReservationNumber = pstCurrent->iReservationNumber + 1;
-        if (pstCurrent->pNextReservation != NULL) {
-            pstCurrent->pNextReservation->pPrevReservation = pstTemp;
+        if (pstCurrent->pstNextReservation != NULL) {
+            pstCurrent->pstNextReservation->pstPrevReservation = pstTemp;
         }
-        pstCurrent->pNextReservation = pstTemp;
+        pstCurrent->pstNextReservation = pstTemp;
     }
     fixReservationNumbersFromIndex(pslList, pstTemp->iReservationNumber-1);
-    pslList->size++;
+    pslList->iSize++;
 }
 
 void fixReservationNumbersFromIndex(LIST *pslList, int iIndex) {
-    TABLERESERVATION *current = pslList->pHead;
-    int counter = 0;
-    while (current != NULL) {
-        if (counter >= iIndex) {
-            current->iReservationNumber = counter + 1;
+    TABLERESERVATION *pstCurrent = pslList->pstHead;
+    int iCounter = 0;
+    while (pstCurrent != NULL) {
+        if (iCounter >= iIndex) {
+            pstCurrent->iReservationNumber = iCounter + 1;
         }
-        current = current->pNextReservation;
-        counter++;
+        pstCurrent = pstCurrent->pstNextReservation;
+        iCounter++;
     }
 }
 
 void freeLinkedList(LIST *pslList) {
-    TABLERESERVATION *pstCurrent = pslList->pHead;
-    TABLERESERVATION *next;
+    TABLERESERVATION *pstCurrent = pslList->pstHead;
+    TABLERESERVATION *pstNext;
     while (pstCurrent != NULL) {
-        next = pstCurrent->pNextReservation;
-        pstCurrent->pNextReservation = NULL;
+        pstNext = pstCurrent->pstNextReservation;
+        pstCurrent->pstNextReservation = NULL;
         if (pstCurrent->psoFoodOrders != NULL) {
             orderFreeLinkedList(pstCurrent->psoFoodOrders);
             free(pstCurrent->psoFoodOrders);
         }
         free(pstCurrent->pszName);
         free(pstCurrent);
-        pstCurrent = next;
+        pstCurrent = pstNext;
     }
 }
 
 int printAllNodes(LIST *pslList) {
-    TABLERESERVATION *pstCurrent = pslList->pHead;
+    TABLERESERVATION *pstCurrent = pslList->pstHead;
     if(pstCurrent == NULL) {
         printf("You have no reservations\n");
         return -1;
@@ -152,7 +152,7 @@ int printAllNodes(LIST *pslList) {
         printf("  Table Number: %d\n", pstCurrent->iTableNumber);
         printf("  Seats: %d\n", pstCurrent->iSeats);
         printf("  Time: %d\n\n", pstCurrent->iTime);
-        pstCurrent = pstCurrent->pNextReservation;
+        pstCurrent = pstCurrent->pstNextReservation;
     }
     printf("\n");
     return 0;
@@ -161,20 +161,21 @@ int printAllNodes(LIST *pslList) {
 int printSpecificNodeAndFood(LIST *pslList, int iReservationNumber) {
     int iCounter = 0;
     int iIndex = iReservationNumber - 1;
+    TABLERESERVATION *pstCurrent;
     if (iIndex < 0) {
         errno = EINVAL;
         printf("reservationNumber position cannot be negative - Error message: %s\n", strerror(errno));
         return -1;
     }
 
-    TABLERESERVATION *pstCurrent = pslList->pHead;
+    pstCurrent = pslList->pstHead;
     while (pstCurrent != NULL && iCounter < iIndex) {
-        pstCurrent = pstCurrent->pNextReservation;
+        pstCurrent = pstCurrent->pstNextReservation;
         iCounter++;
     }
     if (pstCurrent == NULL) {
         errno = ERANGE;
-        printf("Index position cannot be more than size of list - Error message: %s\n", strerror(errno));
+        printf("Index position cannot be more than iSize of list - Error message: %s\n", strerror(errno));
         return -1;
     }
     printf("Name: %s\n", pstCurrent->pszName);
@@ -187,7 +188,7 @@ int printSpecificNodeAndFood(LIST *pslList, int iReservationNumber) {
 }
 
 int printSpecificReservationByReservationNumber(LIST *pslList, int iReservationNumber) {
-    TABLERESERVATION *pstCurrent = pslList->pHead;
+    TABLERESERVATION *pstCurrent = pslList->pstHead;
     int iCounter = 0;
 
     if (iReservationNumber < 1) {
@@ -196,9 +197,9 @@ int printSpecificReservationByReservationNumber(LIST *pslList, int iReservationN
         return -1;
     }
 
-    if (iReservationNumber - 1 > pslList->size) {
+    if (iReservationNumber - 1 > pslList->iSize) {
         errno = ERANGE;
-        printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
+        printf("Reservation number cannot be more than iSize of list - Error message: %s\n", strerror(errno));
         return -1;
     }
 
@@ -206,12 +207,12 @@ int printSpecificReservationByReservationNumber(LIST *pslList, int iReservationN
         if(pstCurrent->iReservationNumber == iReservationNumber){
             break;
         }
-        pstCurrent = pstCurrent->pNextReservation;
+        pstCurrent = pstCurrent->pstNextReservation;
         iCounter++;
     }
     if (pstCurrent == NULL) {
         errno = ERANGE;
-        printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
+        printf("Reservation number cannot be more than iSize of list - Error message: %s\n", strerror(errno));
         return -1;
     }
     printf("Name: %s\n", pstCurrent->pszName);
@@ -225,7 +226,7 @@ int printSpecificReservationByReservationNumber(LIST *pslList, int iReservationN
 
 int printReservationByName(LIST *pslList, const char *pszName) {
     int iFoundReservation = 0;
-    TABLERESERVATION *pstCurrent = pslList->pHead;
+    TABLERESERVATION *pstCurrent = pslList->pstHead;
 
     if (pszName == NULL) {
         errno = EINVAL;
@@ -241,7 +242,7 @@ int printReservationByName(LIST *pslList, const char *pszName) {
             printf("  Time: %d\n\n", pstCurrent->iTime);
             iFoundReservation = 1;
         }
-        pstCurrent = pstCurrent->pNextReservation;
+        pstCurrent = pstCurrent->pstNextReservation;
     }
     if (iFoundReservation != 1) {
         errno = ENOENT;
@@ -252,7 +253,7 @@ int printReservationByName(LIST *pslList, const char *pszName) {
 }
 
 int printReservationOrdersAndSum(LIST *pslList, const int iReservationNumber) {
-    TABLERESERVATION *pstCurrent = pslList->pHead;
+    TABLERESERVATION *pstCurrent = pslList->pstHead;
     int iCounter = 0;
 
     if (iReservationNumber < 1) {
@@ -261,9 +262,9 @@ int printReservationOrdersAndSum(LIST *pslList, const int iReservationNumber) {
         return -1;
     }
 
-    if (iReservationNumber - 1 > pslList->size) {
+    if (iReservationNumber - 1 > pslList->iSize) {
         errno = ERANGE;
-        printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
+        printf("Reservation number cannot be more than iSize of list - Error message: %s\n", strerror(errno));
         return -1;
     }
 
@@ -271,12 +272,12 @@ int printReservationOrdersAndSum(LIST *pslList, const int iReservationNumber) {
         if(pstCurrent->iReservationNumber == iReservationNumber){
             break;
         }
-        pstCurrent = pstCurrent->pNextReservation;
+        pstCurrent = pstCurrent->pstNextReservation;
         iCounter++;
     }
     if (pstCurrent == NULL) {
         errno = ERANGE;
-        printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
+        printf("Reservation number cannot be more than iSize of list - Error message: %s\n", strerror(errno));
         return -1;
     }
     printf("Name: %s\n", pstCurrent->pszName);
@@ -288,32 +289,32 @@ int printReservationOrdersAndSum(LIST *pslList, const int iReservationNumber) {
     return 0;
 }
 
-int printReservationOrdersForSpecificName(LIST *pslList, int reservationNumber, char *pszName){
-    TABLERESERVATION *pstCurrent = pslList->pHead;
+int printReservationOrdersForSpecificName(LIST *pslList, int iReservationNumber, char *pszName){
+    TABLERESERVATION *pstCurrent = pslList->pstHead;
     int iCounter = 0;
 
-    if (reservationNumber < 1) {
+    if (iReservationNumber < 1) {
         errno = EINVAL;
         printf("reservation number cannot be negative - Error message: %s\n", strerror(errno));
         return -1;
     }
 
-    if (reservationNumber - 1 > pslList->size) {
+    if (iReservationNumber - 1 > pslList->iSize) {
         errno = ERANGE;
-        printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
+        printf("Reservation number cannot be more than iSize of list - Error message: %s\n", strerror(errno));
         return -1;
     }
 
     while (pstCurrent != NULL) {
-        if(pstCurrent->iReservationNumber == reservationNumber){
+        if(pstCurrent->iReservationNumber == iReservationNumber){
             break;
         }
-        pstCurrent = pstCurrent->pNextReservation;
+        pstCurrent = pstCurrent->pstNextReservation;
         iCounter++;
     }
     if (pstCurrent == NULL) {
         errno = ERANGE;
-        printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
+        printf("Reservation number cannot be more than iSize of list - Error message: %s\n", strerror(errno));
         return -1;
     }
     printSumForSpecificName(pstCurrent->psoFoodOrders, pszName);
@@ -321,7 +322,7 @@ int printReservationOrdersForSpecificName(LIST *pslList, int reservationNumber, 
 }
 
 int deleteSpecificReservation(LIST *pslList, int iReservationNumber) {
-    TABLERESERVATION *pstCurrent = pslList->pHead;
+    TABLERESERVATION *pstCurrent = pslList->pstHead;
     int iIndex = iReservationNumber - 1;
     int iCounter = 0;
 
@@ -331,9 +332,9 @@ int deleteSpecificReservation(LIST *pslList, int iReservationNumber) {
         return -1;
     }
 
-    if (iIndex > pslList->size) {
+    if (iIndex > pslList->iSize) {
         errno = ERANGE;
-        printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
+        printf("Reservation number cannot be more than iSize of list - Error message: %s\n", strerror(errno));
         return -1;
     }
 
@@ -341,26 +342,26 @@ int deleteSpecificReservation(LIST *pslList, int iReservationNumber) {
         if(pstCurrent->iReservationNumber == iReservationNumber){
             break;
         }
-        pstCurrent = pstCurrent->pNextReservation;
+        pstCurrent = pstCurrent->pstNextReservation;
         iCounter++;
     }
 
     if (pstCurrent == NULL) {
         errno = ERANGE;
-        printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
+        printf("Reservation number cannot be more than iSize of list - Error message: %s\n", strerror(errno));
         return -1;
     }
 
-    if (pstCurrent->pPrevReservation == NULL) {
-        pslList->pHead = pstCurrent->pNextReservation;
+    if (pstCurrent->pstPrevReservation == NULL) {
+        pslList->pstHead = pstCurrent->pstNextReservation;
     } else {
-        pstCurrent->pPrevReservation->pNextReservation = pstCurrent->pNextReservation;
+        pstCurrent->pstPrevReservation->pstNextReservation = pstCurrent->pstNextReservation;
     }
 
-    if (pstCurrent->pNextReservation == NULL) {
-        pslList->pTail = pstCurrent->pPrevReservation;
+    if (pstCurrent->pstNextReservation == NULL) {
+        pslList->pstTail = pstCurrent->pstPrevReservation;
     } else {
-        pstCurrent->pNextReservation->pPrevReservation = pstCurrent->pPrevReservation;
+        pstCurrent->pstNextReservation->pstPrevReservation = pstCurrent->pstPrevReservation;
     }
 
     if (pstCurrent->psoFoodOrders != NULL) {
@@ -372,13 +373,13 @@ int deleteSpecificReservation(LIST *pslList, int iReservationNumber) {
     fixReservationNumbersFromIndex(pslList, pstCurrent->iReservationNumber-1);
 
     free(pstCurrent);
-    pslList->size--;
+    pslList->iSize--;
 
     return 0;
 }
 
 int addFoodToSpecificReservation(LIST *pslList, int iReservationNumber, SENT_ORDER *pssSentOrder) {
-    TABLERESERVATION *pstCurrent = pslList->pHead;
+    TABLERESERVATION *pstCurrent = pslList->pstHead;
     int iStatus;
 
     if (pssSentOrder == NULL) {
@@ -393,9 +394,9 @@ int addFoodToSpecificReservation(LIST *pslList, int iReservationNumber, SENT_ORD
         return -1;
     }
 
-    if (iReservationNumber - 1 > pslList->size) {
+    if (iReservationNumber - 1 > pslList->iSize) {
         errno = ERANGE;
-        printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
+        printf("Reservation number cannot be more than iSize of list - Error message: %s\n", strerror(errno));
         return -1;
     }
 
@@ -404,11 +405,11 @@ int addFoodToSpecificReservation(LIST *pslList, int iReservationNumber, SENT_ORD
         if(pstCurrent->iReservationNumber == iReservationNumber){
             break;
         }
-        pstCurrent = pstCurrent->pNextReservation;
+        pstCurrent = pstCurrent->pstNextReservation;
     }
     if (pstCurrent == NULL) {
         errno = ERANGE;
-        printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
+        printf("Reservation number cannot be more than iSize of list - Error message: %s\n", strerror(errno));
         return -1;
     }
 

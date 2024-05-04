@@ -11,8 +11,8 @@ typedef struct _SENT_TABLE_RESERVATION {
 } SENT_TABLE_RESERVATION;
 
 typedef struct _TABLERESERVATION {
-    struct _TABLERESERVATION *pNextReservation;
-    struct _TABLERESERVATION *pPrevReservation;
+    struct _TABLERESERVATION *pstNextReservation;
+    struct _TABLERESERVATION *pstPrevReservation;
     int iReservationNumber;
     int iTableNumber;
     int iSeats;
@@ -22,9 +22,9 @@ typedef struct _TABLERESERVATION {
 } TABLERESERVATION;
 
 typedef struct LIST {
-    TABLERESERVATION *pHead;
-    TABLERESERVATION *pTail;
-    int size;
+    TABLERESERVATION *pstHead;
+    TABLERESERVATION *pstTail;
+    int iSize;
 } LIST;
 
 int add(LIST *list, const SENT_TABLE_RESERVATION *sentTableReservation);
@@ -33,12 +33,14 @@ int addAt(LIST *list, const SENT_TABLE_RESERVATION *sentTableReservation, int in
 void fixReservationNumbersFromIndex(LIST *list, int index);
 void freeLinkedList(LIST *list);
 int printAllNodes(LIST *list);
-int printReservationOrdersForSpecificName(LIST *list, int reservationNumber, char *name);
+int printReservationOrdersForSpecificName(LIST *list, int iReservationNumber, char *name);
 int printSpecificNodeAndFood(LIST *list, int reservationNumber);
 int printReservationByName(LIST *list, const char *name);
 int printSpecificReservationByReservationNumber(LIST *list, int reservationNumber);
 int printReservationOrdersAndSum(LIST *list, const int reservationNumber);
 int deleteSpecificReservation(LIST *list, int reservationNumber);
 int addFoodToSpecificReservation(LIST *list, int reservationNumber, SENT_ORDER *sentOrder);
+void addToEnd(LIST *list, TABLERESERVATION *temp);
+void addAtIndex(LIST *list, TABLERESERVATION *temp, int index);
 
 #endif //__TASK_TABLERESERVATIONLIST_H__
