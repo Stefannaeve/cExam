@@ -8,14 +8,18 @@
 // Functino to add node to end of list, or to add at the head
 int add(LIST *pslList, const SENT_TABLE_RESERVATION *pssSentTableReservation) {
     int iCounter = 0;
+    int iLengthOfCurrentName = 0;
+    int iLengthOfName = 0;
+    int iBiggestLength = 0;
     TABLERESERVATION *pstTemp;
     TABLERESERVATION *pstCurrent;
+
     if (pssSentTableReservation == NULL) {
         errno = EINVAL;
         printf("Struct cannot be NULL - Error message: %s\n", strerror(errno));
         return -1;
     }
-    int iLengthOfName = strlen(pssSentTableReservation->pszName);
+    iLengthOfName = strlen(pssSentTableReservation->pszName);
 
     // Ready the list for a TABLERESERVATION instead of a SENT_TABLE_RESERVATION
     pstTemp = (TABLERESERVATION *) malloc(sizeof(TABLERESERVATION) + iLengthOfName + 1);
@@ -66,7 +70,15 @@ int add(LIST *pslList, const SENT_TABLE_RESERVATION *pssSentTableReservation) {
     pstCurrent = pslList->pstHead;
     iCounter = 0;
     while (pstCurrent != NULL) {
-        if (strcmp(pstCurrent->pszName, pstTemp->pszName) > 0) {
+        // find the shortest length of the two strings, to avoid going out of bounds
+        iLengthOfCurrentName = strlen(pstCurrent->pszName);
+        if (iLengthOfCurrentName > iLengthOfName) {
+            iBiggestLength = iLengthOfName;
+        } else {
+            iBiggestLength = iLengthOfCurrentName;
+        }
+        // iBiggestLength + 1 to include the null terminator for accurate comparison
+        if (strncmp(pstCurrent->pszName, pstTemp->pszName, iBiggestLength) > 0) {
             addAtIndex(pslList, pstTemp, iCounter);
             return 0;
         }
@@ -190,7 +202,7 @@ int printSpecificNodeAndFood(LIST *pslList, int iReservationNumber) {
     }
     if (pstCurrent == NULL) {
         errno = ERANGE;
-        printf("Index position cannot be more than iSize of list - Error message: %s\n", strerror(errno));
+        printf("Index position cannot be more than size of list - Error message: %s\n", strerror(errno));
         return -1;
     }
     printf("Name: %s\n", pstCurrent->pszName);
@@ -215,7 +227,7 @@ int printSpecificReservationByReservationNumber(LIST *pslList, int iReservationN
 
     if (iReservationNumber - 1 > pslList->iSize) {
         errno = ERANGE;
-        printf("Reservation number cannot be more than iSize of list - Error message: %s\n", strerror(errno));
+        printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
         return -1;
     }
 
@@ -231,7 +243,7 @@ int printSpecificReservationByReservationNumber(LIST *pslList, int iReservationN
     // If node is not found
     if (pstCurrent == NULL) {
         errno = ERANGE;
-        printf("Reservation number cannot be more than iSize of list - Error message: %s\n", strerror(errno));
+        printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
         return -1;
     }
 
@@ -249,6 +261,9 @@ int printSpecificReservationByReservationNumber(LIST *pslList, int iReservationN
 int printReservationByName(LIST *pslList, const char *pszName) {
     int iFoundReservation = 0;
     TABLERESERVATION *pstCurrent = pslList->pstHead;
+    int iLengthOfCurrentName = 0;
+    int iLengthOfName = strlen(pszName);
+    int iBiggestLength = 0;
 
     if (pszName == NULL) {
         errno = EINVAL;
@@ -258,7 +273,15 @@ int printReservationByName(LIST *pslList, const char *pszName) {
 
     // Find node(s) with the right name
     while (pstCurrent != NULL) {
-        if (strcmp(pstCurrent->pszName, pszName) == 0) {
+        // find the shortest length of the two strings, to avoid going out of bounds
+        iLengthOfCurrentName = strlen(pstCurrent->pszName);
+        if (iLengthOfCurrentName > iLengthOfName) {
+            iBiggestLength = iLengthOfName;
+        } else {
+            iBiggestLength = iLengthOfCurrentName;
+        }
+        // iBiggestLength + 1 to include the null terminator for accurate comparison
+        if (strncmp(pstCurrent->pszName, pszName, iBiggestLength + 1) == 0) {
             printf("Name: %s\n", pstCurrent->pszName);
             printf("Reservation Number: %d\n", pstCurrent->iReservationNumber);
             printf("  Table Number: %d\n", pstCurrent->iTableNumber);
@@ -290,7 +313,7 @@ int printReservationOrdersAndSum(LIST *pslList, const int iReservationNumber) {
 
     if (iReservationNumber - 1 > pslList->iSize) {
         errno = ERANGE;
-        printf("Reservation number cannot be more than iSize of list - Error message: %s\n", strerror(errno));
+        printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
         return -1;
     }
 
@@ -305,7 +328,7 @@ int printReservationOrdersAndSum(LIST *pslList, const int iReservationNumber) {
     // If node is not found
     if (pstCurrent == NULL) {
         errno = ERANGE;
-        printf("Reservation number cannot be more than iSize of list - Error message: %s\n", strerror(errno));
+        printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
         return -1;
     }
     // Print all information about the reservation if found
@@ -331,7 +354,7 @@ int printReservationOrdersForSpecificName(LIST *pslList, int iReservationNumber,
 
     if (iReservationNumber - 1 > pslList->iSize) {
         errno = ERANGE;
-        printf("Reservation number cannot be more than iSize of list - Error message: %s\n", strerror(errno));
+        printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
         return -1;
     }
 
@@ -347,7 +370,7 @@ int printReservationOrdersForSpecificName(LIST *pslList, int iReservationNumber,
     // If node is not found
     if (pstCurrent == NULL) {
         errno = ERANGE;
-        printf("Reservation number cannot be more than iSize of list - Error message: %s\n", strerror(errno));
+        printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
         return -1;
     }
 
@@ -370,7 +393,7 @@ int deleteSpecificReservation(LIST *pslList, int iReservationNumber) {
 
     if (iIndex > pslList->iSize) {
         errno = ERANGE;
-        printf("Reservation number cannot be more than iSize of list - Error message: %s\n", strerror(errno));
+        printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
         return -1;
     }
 
@@ -386,7 +409,7 @@ int deleteSpecificReservation(LIST *pslList, int iReservationNumber) {
     // If node is not found
     if (pstCurrent == NULL) {
         errno = ERANGE;
-        printf("Reservation number cannot be more than iSize of list - Error message: %s\n", strerror(errno));
+        printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
         return -1;
     }
 
@@ -442,7 +465,7 @@ int addFoodToSpecificReservation(LIST *pslList, int iReservationNumber, SENT_ORD
 
     if (iReservationNumber - 1 > pslList->iSize) {
         errno = ERANGE;
-        printf("Reservation number cannot be more than iSize of list - Error message: %s\n", strerror(errno));
+        printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
         return -1;
     }
 
@@ -456,7 +479,7 @@ int addFoodToSpecificReservation(LIST *pslList, int iReservationNumber, SENT_ORD
     // If node is not found
     if (pstCurrent == NULL) {
         errno = ERANGE;
-        printf("Reservation number cannot be more than iSize of list - Error message: %s\n", strerror(errno));
+        printf("Reservation number cannot be more than size of list - Error message: %s\n", strerror(errno));
         return -1;
     }
 

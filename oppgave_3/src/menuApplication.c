@@ -13,7 +13,7 @@ int menuApplication() {
             "Delete reservation",
             "Add food to reservation",
             "Print specific reservation with sum",
-            "Print table sum for one pszName",
+            "Print table sum for one name",
             "Quit"
     };
     int iStatus = TRUE;
@@ -102,7 +102,7 @@ int printSumForSpesificNameAtSpesificTable(LIST *pslList) {
                 }
             } else {
                 // Ask user for pszName
-                printf("What is the pszName you are after?\n");
+                printf("What is the name you are after?\n");
                 iStatus = askUserQuestion("Name: ", pszName, USER_INPUT_SIZE);
                 if (iStatus != TRUE) {
                     if (iStatus == QUIT) {
@@ -226,7 +226,7 @@ int makeOrder(SENT_ORDER *pssSentOrder) {
     memset(pssSentOrder, 0, sizeof(struct _SENT_ORDER));
 
     // Ask user for pszName, food description and iPrice
-    printf("Please insert the pszName of the person ordering\n");
+    printf("Please insert the name of the person ordering\n");
     iStatus = askUserQuestion("Name: ", pszName, USER_INPUT_SIZE);
     if (iStatus != TRUE) {
         if (iStatus == QUIT) {
@@ -265,7 +265,7 @@ int makeOrder(SENT_ORDER *pssSentOrder) {
                     pssSentOrder->pszFoodDescription[strlen(pszName)] = '\0';
                     memset(pszName, 0, USER_INPUT_SIZE);
 
-                    printf("Please insert the iPrice of the food\n");
+                    printf("Please insert the price of the food\n");
                     iStatus = askUserQuestion("Price: ", pszName, USER_INPUT_SIZE);
                     if (iStatus != TRUE) {
                         if (iStatus == QUIT) {
@@ -337,7 +337,7 @@ int getReservation(LIST *pslList, char *pszInputArray) {
 
     char *array[] = {
             "Get all reservations",
-            "Get reservation by pszName",
+            "Get reservation by name",
             "Get reservation by reservation number",
             "Quit"
     };
@@ -364,7 +364,7 @@ int getReservation(LIST *pslList, char *pszInputArray) {
                 case '2':
                     // Bigger switch for more logic
                     // Ask user for pszName
-                    printf("What is the pszName you are after?\n");
+                    printf("What is the name you are after?\n");
                     iStatus = askUserQuestion("Name: ", pszName, USER_INPUT_SIZE);
                     if (iStatus != TRUE) {
                         if (iStatus == QUIT) {
@@ -426,7 +426,7 @@ int addReservation(LIST *pslList) {
     // Ask user for pszName, seats, time and table number
     // Though multiple nested ifs
     printf("You will be asked to fill in a various number of values\n");
-    printf("Please insert the pszName of the reservation holder\n");
+    printf("Please insert the name of the reservation holder\n");
     pszName = (char *) malloc(sizeof(char) * USER_INPUT_SIZE);
     if (pszName == NULL) {
         iStatus = ERROR;
