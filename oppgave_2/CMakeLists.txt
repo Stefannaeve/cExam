@@ -19,4 +19,7 @@ add_executable(task
         include/eksamen_v24_oppgave2_heterogram.h
         include/eksamen_v24_oppgave2_palindrom.h
         include/main.h
-        src/main.c)
+        src/main.c
+        include/program.h
+        src/program.c
+        src/program.c)

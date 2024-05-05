@@ -49,13 +49,6 @@ cmake_ninja_workdir = /home/stefannaeve/cExam/oppgave_2/cmake-build-debug/
 
 build cmake_object_order_depends_target_task: phony || CMakeFiles/task.dir
 
-build CMakeFiles/task.dir/src/main.c.o: C_COMPILER__task_unscanned_Debug /home/stefannaeve/cExam/oppgave_2/src/main.c || cmake_object_order_depends_target_task
-  DEP_FILE = CMakeFiles/task.dir/src/main.c.o.d
-  FLAGS = -g -std=gnu11 -fdiagnostics-color=always
-  INCLUDES = -I/home/stefannaeve/cExam/oppgave_2/include
-  OBJECT_DIR = CMakeFiles/task.dir
-  OBJECT_FILE_DIR = CMakeFiles/task.dir/src
-
 build CMakeFiles/task.dir/src/eksamen_v24_oppgave2_all_lower.c.o: C_COMPILER__task_unscanned_Debug /home/stefannaeve/cExam/oppgave_2/src/eksamen_v24_oppgave2_all_lower.c || cmake_object_order_depends_target_task
   DEP_FILE = CMakeFiles/task.dir/src/eksamen_v24_oppgave2_all_lower.c.o.d
   FLAGS = -g -std=gnu11 -fdiagnostics-color=always
@@ -98,8 +91,15 @@ build CMakeFiles/task.dir/src/eksamen_v24_oppgave2_palindrom.c.o: C_COMPILER__ta
   OBJECT_DIR = CMakeFiles/task.dir
   OBJECT_FILE_DIR = CMakeFiles/task.dir/src
 
-build CMakeFiles/task.dir/src/main2.c.o: C_COMPILER__task_unscanned_Debug /home/stefannaeve/cExam/oppgave_2/src/main2.c || cmake_object_order_depends_target_task
-  DEP_FILE = CMakeFiles/task.dir/src/main2.c.o.d
+build CMakeFiles/task.dir/src/main.c.o: C_COMPILER__task_unscanned_Debug /home/stefannaeve/cExam/oppgave_2/src/main.c || cmake_object_order_depends_target_task
+  DEP_FILE = CMakeFiles/task.dir/src/main.c.o.d
+  FLAGS = -g -std=gnu11 -fdiagnostics-color=always
+  INCLUDES = -I/home/stefannaeve/cExam/oppgave_2/include
+  OBJECT_DIR = CMakeFiles/task.dir
+  OBJECT_FILE_DIR = CMakeFiles/task.dir/src
+
+build CMakeFiles/task.dir/src/program.c.o: C_COMPILER__task_unscanned_Debug /home/stefannaeve/cExam/oppgave_2/src/program.c || cmake_object_order_depends_target_task
+  DEP_FILE = CMakeFiles/task.dir/src/program.c.o.d
   FLAGS = -g -std=gnu11 -fdiagnostics-color=always
   INCLUDES = -I/home/stefannaeve/cExam/oppgave_2/include
   OBJECT_DIR = CMakeFiles/task.dir
@@ -113,7 +113,7 @@ build CMakeFiles/task.dir/src/main2.c.o: C_COMPILER__task_unscanned_Debug /home/
 #############################################
 # Link the executable task
 
-build task: C_EXECUTABLE_LINKER__task_Debug CMakeFiles/task.dir/src/main.c.o CMakeFiles/task.dir/src/eksamen_v24_oppgave2_all_lower.c.o CMakeFiles/task.dir/src/eksamen_v24_oppgave2_all_upper.c.o CMakeFiles/task.dir/src/eksamen_v24_oppgave2_anagram.c.o CMakeFiles/task.dir/src/eksamen_v24_oppgave2_disjoint.c.o CMakeFiles/task.dir/src/eksamen_v24_oppgave2_heterogram.c.o CMakeFiles/task.dir/src/eksamen_v24_oppgave2_palindrom.c.o CMakeFiles/task.dir/src/main2.c.o
+build task: C_EXECUTABLE_LINKER__task_Debug CMakeFiles/task.dir/src/eksamen_v24_oppgave2_all_lower.c.o CMakeFiles/task.dir/src/eksamen_v24_oppgave2_all_upper.c.o CMakeFiles/task.dir/src/eksamen_v24_oppgave2_anagram.c.o CMakeFiles/task.dir/src/eksamen_v24_oppgave2_disjoint.c.o CMakeFiles/task.dir/src/eksamen_v24_oppgave2_heterogram.c.o CMakeFiles/task.dir/src/eksamen_v24_oppgave2_palindrom.c.o CMakeFiles/task.dir/src/main.c.o CMakeFiles/task.dir/src/program.c.o
   FLAGS = -g
   OBJECT_DIR = CMakeFiles/task.dir
   POST_BUILD = :
