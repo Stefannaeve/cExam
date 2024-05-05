@@ -10,7 +10,7 @@ menuApplication, orderList, tableReservationList
 [x][x][x] Check if headerfiles names is right
 [x][x][x] Check if headerfiles have all the intializations of functions, defines and structs
 [x][x][x] Remove my name in headers
-[x][x][] Add comments
+[x][x][x] Add comments
 [][][] Delete Clion association
 [][][] Make sure lines is configured for Gedit
 [][][] Make every String zero terminated ?????????????????????????????

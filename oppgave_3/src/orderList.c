@@ -51,15 +51,18 @@ int orderAdd(ORDER_LIST *psoList, SENT_ORDER *pssSentOrder) {
                 psoTemp->iPrice = pssSentOrder->iPrice;
                 psoTemp->psoNextOrder = NULL;
 
+                // Free the struct from called from function
                 free(pssSentOrder->pszName);
                 free(pssSentOrder->pszFoodDescription);
                 free(pssSentOrder);
 
+                // If the list is empty, add the first order
                 if (psoList->psoHead == NULL) {
                     psoList->psoHead = psoTemp;
                     psoList->psoTail = psoTemp;
                     return 0;
                 }
+                // The function to add to the end of the list
                 orderAddToEnd(psoList, psoTemp);
                 return 0;
             }
@@ -68,14 +71,12 @@ int orderAdd(ORDER_LIST *psoList, SENT_ORDER *pssSentOrder) {
         free(psoTemp);
     }
 
-    // If the list is empty, add the first order And free the struct from the sent order
 
 
     free(pssSentOrder->pszName);
     free(pssSentOrder->pszFoodDescription);
     free(pssSentOrder);
 
-    // The function to add to the end of the list
     return -1;
 }
 
