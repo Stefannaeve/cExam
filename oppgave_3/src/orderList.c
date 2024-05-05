@@ -27,53 +27,56 @@ int orderAdd(ORDER_LIST *psoList, SENT_ORDER *pssSentOrder) {
     if (psoTemp == NULL) {
         errno = ENOMEM;
         printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
-        return -1;
+    } else {
+        memset(psoTemp, 0, sizeof(ORDER) + iLengthOfName + 1 + iLengthOfFoodDescription + 1);
+        // Malloc the order struct strings and memset and zero terminate them
+        psoTemp->pszName = (char *) malloc(iLengthOfName + 1);
+        if (psoTemp->pszName == NULL) {
+            errno = ENOMEM;
+            printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
+        } else {
+            memset(psoTemp->pszName, 0, iLengthOfName + 1);
+            strncpy(psoTemp->pszName, pssSentOrder->pszName, iLengthOfName);
+            psoTemp->pszName[iLengthOfName] = '\0';
+
+            psoTemp->pszFoodDescription = (char *) malloc(iLengthOfFoodDescription + 1);
+            if (psoTemp->pszFoodDescription == NULL) {
+                errno = ENOMEM;
+                printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
+            } else {
+                memset(psoTemp->pszFoodDescription, 0, iLengthOfFoodDescription + 1);
+                strncpy(psoTemp->pszFoodDescription, pssSentOrder->pszFoodDescription, iLengthOfFoodDescription);
+                psoTemp->pszFoodDescription[iLengthOfFoodDescription] = '\0';
+
+                psoTemp->iPrice = pssSentOrder->iPrice;
+                psoTemp->psoNextOrder = NULL;
+
+                free(pssSentOrder->pszName);
+                free(pssSentOrder->pszFoodDescription);
+                free(pssSentOrder);
+
+                if (psoList->psoHead == NULL) {
+                    psoList->psoHead = psoTemp;
+                    psoList->psoTail = psoTemp;
+                    return 0;
+                }
+                orderAddToEnd(psoList, psoTemp);
+                return 0;
+            }
+            free(psoTemp->pszName);
+        }
+        free(psoTemp);
     }
-    memset(psoTemp, 0, sizeof(ORDER) + iLengthOfName + 1 + iLengthOfFoodDescription + 1);
-
-    // Malloc the order struct strings and memset and zero terminate them
-    psoTemp->pszName = (char *) malloc(iLengthOfName + 1);
-    if (psoTemp->pszName == NULL) {
-        errno = ENOMEM;
-        printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
-        return -1;
-    }
-    memset(psoTemp->pszName, 0, iLengthOfName + 1);
-    strncpy(psoTemp->pszName, pssSentOrder->pszName, iLengthOfName);
-    psoTemp->pszName[iLengthOfName] = '\0';
-
-    psoTemp->pszFoodDescription = (char *) malloc(iLengthOfFoodDescription + 1);
-    if (psoTemp->pszFoodDescription == NULL) {
-        errno = ENOMEM;
-        printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
-        return -1;
-    }
-    memset(psoTemp->pszFoodDescription, 0, iLengthOfFoodDescription + 1);
-    strncpy(psoTemp->pszFoodDescription, pssSentOrder->pszFoodDescription, iLengthOfFoodDescription);
-    psoTemp->pszFoodDescription[iLengthOfFoodDescription] = '\0';
-
-    psoTemp->iPrice = pssSentOrder->iPrice;
-
-    psoTemp->psoNextOrder = NULL;
 
     // If the list is empty, add the first order And free the struct from the sent order
-    if (psoList->psoHead == NULL) {
-        psoList->psoHead = psoTemp;
-        psoList->psoTail = psoTemp;
-        free(pssSentOrder->pszName);
-        free(pssSentOrder->pszFoodDescription);
-        free(pssSentOrder);
-        return 0;
-    }
+
 
     free(pssSentOrder->pszName);
     free(pssSentOrder->pszFoodDescription);
     free(pssSentOrder);
 
     // The function to add to the end of the list
-    orderAddToEnd(psoList, psoTemp);
-
-    return 0;
+    return -1;
 }
 
 // Add order to the end of the list
@@ -103,7 +106,7 @@ void orderPrintAllOrders(ORDER_LIST *psoList) {
     int iCount = 0;
     ORDER *psoCurrent = psoList->psoHead;
     while (psoCurrent != NULL) {
-        if(iCount == 0){
+        if (iCount == 0) {
             printf("  Food:\n");
         }
         printf("     Name: %s\n", psoCurrent->pszName);
@@ -120,7 +123,7 @@ void orderPrintAllOrdersAndSum(ORDER_LIST *psoList) {
     ORDER *psoCurrent = psoList->psoHead;
     int iSum = 0;
     while (psoCurrent != NULL) {
-        if(iSum == 0){
+        if (iSum == 0) {
             printf("  Food:\n");
         }
         printf("     Name: %s\n", psoCurrent->pszName);
@@ -129,7 +132,7 @@ void orderPrintAllOrdersAndSum(ORDER_LIST *psoList) {
         iSum += psoCurrent->iPrice;
         psoCurrent = psoCurrent->psoNextOrder;
     }
-    printf("Total iPrice: %d\n", iSum);
+    printf("Total price: %d\n", iSum);
 }
 
 // Print one order, and the specific sum for a specific person
@@ -139,6 +142,7 @@ void printSumForSpecificName(ORDER_LIST *psoList, char *pszName) {
     int iLengthOfName = strlen(pszName);
     int iBiggestLength = 0;
     int iSum = 0;
+
     // Loop through the list and compare the names
     while (psoCurrent != NULL) {
         // find the shortest length of the two strings, to avoid going out of bounds
@@ -157,5 +161,10 @@ void printSumForSpecificName(ORDER_LIST *psoList, char *pszName) {
         }
         psoCurrent = psoCurrent->psoNextOrder;
     }
-    printf("Total iPrice for %s: %d\n", pszName, iSum);
+
+    if (psoCurrent == NULL && iSum == 0) {
+        printf("No orders found for %s\n", pszName);
+        return;
+    }
+    printf("Total price for %s: %d\n", pszName, iSum);
 }
