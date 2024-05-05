@@ -401,9 +401,7 @@ int getReservation(LIST *pslList, char *pszInputArray) {
             }
         }
     }
-    printf("1\n");
     free(pszName);
-    printf("2\n");
 
     if (iStatus == ERROR) {
         return ERROR;

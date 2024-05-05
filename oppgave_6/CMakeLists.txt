@@ -10,6 +10,5 @@ add_executable(oppgave_6 src/main.c
         src/beautifier.c
         include/linkedList.h
         src/linkedList.c
-        src/beautified_oppgave6_test.c
 
 )

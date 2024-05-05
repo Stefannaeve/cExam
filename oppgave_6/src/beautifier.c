@@ -118,6 +118,7 @@ int changeWhileLoopsToForLoops(NODE_LIST *list) {
     int iFoundWhile = 0;
     int iPlacementOfFor = 0;
     int iStatus = 0;
+    int sizeOfList = list->size;
 
     int iLengthInitialization = 0;
     int iLengthCondition = 0;
@@ -135,98 +136,122 @@ int changeWhileLoopsToForLoops(NODE_LIST *list) {
     NODE *psnCurrent = NULL;
     SENT_NODE psnTemp = {NULL, 0};
 
-    // Find the condition for the for loop
-    iStatus = findCondition(&iPlacementOfFor, &iNodeWithWhilePosition, &iNodePosition, list, strForCondition, &iFoundWhile);
-    if (iStatus != 0) {
-        printf("Error in findCondition...\n");
-        return -1;
-    }
+    for (int m = 0; m < sizeOfList; ++m) {
 
-    // findCondition will return 0 if it finds a while loop
-    // Find the initialization part of the for loop
-    if (iFoundWhile) {
-        iStatus = findInitialization(list, iNodeWithWhilePosition, iNodePosition, strForInitialization);
-    }
-    if (iStatus != 0) {
-        printf("Error in findInitialization...\n");
-        return -1;
-    }
+        iPlacementOfFor = 0;
+        iNodeWithWhilePosition = 0;
+        iNodePosition = 0;
+        iFoundWhile = 0;
+        memset(strForInitialization, 0, MAX_STRING_LENGTH);
+        memset(strForCondition, 0, MAX_STRING_LENGTH);
+        memset(strForIncrement, 0, MAX_STRING_LENGTH);
 
-    // Find the increment part of the for loop
-    if (iFoundWhile) {
-        iStatus = findIncrement(list, &iNodePosition, strForIncrement);
-    }
-    if (iStatus != 0) {
-        printf("Error in findIncrement...\n");
-        return -1;
-    }
-
-    // Find length of the strings
-    iLengthInitialization = strlen(strForInitialization);
-    iLengthCondition = strlen(strForCondition);
-    iLengthIncrement = strlen(strForIncrement);
-
-    // Replace the while loop with a for loop
-    if (iFoundWhile){
-        psnCurrent = list->pHead;
-        // Find the node with the while loop
-        for (int i = 0; i < iNodeWithWhilePosition - 1; ++i) {
-            psnCurrent = psnCurrent->pNextNode;
-        }
-        // start at the position of the "for", and increment until we find the first and second parenthesis
-        for (int i = iPlacementOfFor; i < psnCurrent->size; ++i) {
-            if (psnCurrent->line[i] == '('){
-                iPositionOfFirstParenthesis = i;
-            }
-            if (psnCurrent->line[i] == ')' && iPositionOfFirstParenthesis != 0){
-                iPositionOfSecondParenthesis = i;
-                break;
-            }
-        }
-            pszTemp = (char *) malloc(iPositionOfFirstParenthesis + iLengthInitialization + iLengthCondition + iLengthIncrement + psnCurrent->size - iPositionOfSecondParenthesis + 1);
-        if (pszTemp == NULL) {
-            printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
-            return - 1;
-        }
-        memset(pszTemp, 0, iPositionOfFirstParenthesis + iLengthInitialization + iLengthCondition + iLengthIncrement + psnCurrent->size - iPositionOfSecondParenthesis + 1);
-        pszTemp[iPositionOfFirstParenthesis + iLengthInitialization + iLengthCondition + iLengthIncrement + psnCurrent->size - iPositionOfSecondParenthesis] = '\0';
-
-        // Copy everything before the first parenthesis, which will include the "for"
-        for (int i = 0; i < iPositionOfFirstParenthesis + 1; ++i) {
-            pszTemp[i] = psnCurrent->line[i];
-        }
-
-        // Copy the initialization, condition and increment into the new string
-        for (int i = 0; i < iLengthInitialization; ++i) {
-            pszTemp[iPositionOfFirstParenthesis + 1 + i] = strForInitialization[i];
-        }
-        for (int i = 0; i < iLengthCondition; ++i) {
-            pszTemp[iPositionOfFirstParenthesis + iLengthInitialization + 1 + i] = strForCondition[i];
-        }
-        for (int i = 0; i < iLengthIncrement; ++i) {
-            pszTemp[iPositionOfFirstParenthesis + iLengthInitialization + iLengthCondition + 1 + i] = strForIncrement[i];
-        }
-
-        // Copy the rest of the string after the second parenthesis
-        for (int i = 0; i < psnCurrent->size - iPositionOfSecondParenthesis; ++i) {
-            pszTemp[iPositionOfFirstParenthesis + iLengthInitialization + iLengthCondition + iLengthIncrement + 1 + i] = psnCurrent->line[iPositionOfSecondParenthesis + i];
-        }
-        pszTemp[iPositionOfFirstParenthesis + iLengthInitialization + iLengthCondition + iLengthIncrement + psnCurrent->size - iPositionOfSecondParenthesis + 1] = '\0';
-        psnCurrent->size = psnCurrent->size + iLengthInitialization + iLengthCondition + iLengthIncrement;
-
-        memset(&psnTemp, 0, sizeof(SENT_NODE));
-        psnTemp.line = pszTemp;
-        psnTemp.size = psnCurrent->size;
-
-        // Delete the old node and add the new node with the for loop
-        iStatus = deleteSpecificNode(list, iNodeWithWhilePosition - 1);
+        // Find the condition for the for loop
+        iStatus = findCondition(&iPlacementOfFor, &iNodeWithWhilePosition, &iNodePosition, list, strForCondition,
+                                &iFoundWhile);
         if (iStatus != 0) {
-            printf("Error in changeWhileLoopsToForLoops...\n");
-        } else {
-            iStatus = addAtIndex(list, &psnTemp, iNodeWithWhilePosition - 1);
+            printf("Error in findCondition...\n");
+            return -1;
         }
 
-        free(pszTemp);
+        // findCondition will return 0 if it finds a while loop
+        // Find the initialization part of the for loop
+        if (iFoundWhile) {
+            iStatus = findInitialization(list, iNodeWithWhilePosition, iNodePosition, strForInitialization);
+        }
+        if (iStatus != 0) {
+            printf("Error in findInitialization...\n");
+            return -1;
+        }
+
+        // Find the increment part of the for loop
+        if (iFoundWhile) {
+            iStatus = findIncrement(list, &iNodePosition, strForIncrement);
+        }
+        if (iStatus != 0) {
+            printf("Error in findIncrement...\n");
+            return -1;
+        }
+
+        // Find length of the strings
+        iLengthInitialization = strlen(strForInitialization);
+        iLengthCondition = strlen(strForCondition);
+        iLengthIncrement = strlen(strForIncrement);
+
+        // Replace the while loop with a for loop
+        if (iFoundWhile) {
+            psnCurrent = list->pHead;
+            // Find the node with the while loop
+            for (int i = 0; i < iNodeWithWhilePosition - 1; ++i) {
+                psnCurrent = psnCurrent->pNextNode;
+            }
+            // start at the position of the "for", and increment until we find the first and second parenthesis
+            for (int i = iPlacementOfFor; i < psnCurrent->size; ++i) {
+                if (psnCurrent->line[i] == '(') {
+                    iPositionOfFirstParenthesis = i;
+                }
+                if (psnCurrent->line[i] == ')' && iPositionOfFirstParenthesis != 0) {
+                    iPositionOfSecondParenthesis = i;
+                    break;
+                }
+            }
+            pszTemp = (char *) malloc(
+                    iPositionOfFirstParenthesis + iLengthInitialization + iLengthCondition + iLengthIncrement +
+                    psnCurrent->size - iPositionOfSecondParenthesis + 1);
+            if (pszTemp == NULL) {
+                printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
+                return -1;
+            }
+            memset(pszTemp, 0,
+                   iPositionOfFirstParenthesis + iLengthInitialization + iLengthCondition + iLengthIncrement +
+                   psnCurrent->size - iPositionOfSecondParenthesis + 1);
+            pszTemp[iPositionOfFirstParenthesis + iLengthInitialization + iLengthCondition + iLengthIncrement +
+                    psnCurrent->size - iPositionOfSecondParenthesis] = '\0';
+
+            // Copy everything before the first parenthesis, which will include the "for"
+            for (int i = 0; i < iPositionOfFirstParenthesis + 1; ++i) {
+                pszTemp[i] = psnCurrent->line[i];
+            }
+
+            // Copy the initialization, condition and increment into the new string
+            for (int i = 0; i < iLengthInitialization; ++i) {
+                pszTemp[iPositionOfFirstParenthesis + 1 + i] = strForInitialization[i];
+            }
+            for (int i = 0; i < iLengthCondition; ++i) {
+                pszTemp[iPositionOfFirstParenthesis + iLengthInitialization + 1 + i] = strForCondition[i];
+            }
+            for (int i = 0; i < iLengthIncrement; ++i) {
+                pszTemp[iPositionOfFirstParenthesis + iLengthInitialization + iLengthCondition + 1 +
+                        i] = strForIncrement[i];
+            }
+
+            // Copy the rest of the string after the second parenthesis
+            for (int i = 0; i < psnCurrent->size - iPositionOfSecondParenthesis; ++i) {
+                pszTemp[iPositionOfFirstParenthesis + iLengthInitialization + iLengthCondition + iLengthIncrement + 1 +
+                        i] = psnCurrent->line[iPositionOfSecondParenthesis + i];
+            }
+            pszTemp[iPositionOfFirstParenthesis + iLengthInitialization + iLengthCondition + iLengthIncrement +
+                    psnCurrent->size - iPositionOfSecondParenthesis + 1] = '\0';
+            psnCurrent->size = psnCurrent->size + iLengthInitialization + iLengthCondition + iLengthIncrement;
+
+            memset(&psnTemp, 0, sizeof(SENT_NODE));
+            psnTemp.line = pszTemp;
+            psnTemp.size = psnCurrent->size;
+
+            // Delete the old node and add the new node with the for loop
+            iStatus = deleteSpecificNode(list, iNodeWithWhilePosition - 1);
+            if (iStatus != 0) {
+                printf("Error in changeWhileLoopsToForLoops...\n");
+            } else {
+                iStatus = addAtIndex(list, &psnTemp, iNodeWithWhilePosition - 1);
+            }
+
+            free(pszTemp);
+        }
+        if (iFoundWhile) {
+            printAllNodes(list);
+        }
+        sizeOfList = list->size;
     }
 
     return 0;
@@ -242,7 +267,7 @@ int findIncrement(NODE_LIST *psnList, int *iNodePosition, char *strForIncrement)
     int iCurrentLength = 0;
 
     int iCommentPosition = 0;
-    for (int i = 0; i < *iNodePosition + 1; ++i) {
+    for (int i = 0; i < *iNodePosition; ++i) {
         psnPrev = psnCurrent;
         psnCurrent = psnCurrent->pNextNode;
     }
@@ -288,7 +313,7 @@ int findIncrement(NODE_LIST *psnList, int *iNodePosition, char *strForIncrement)
             i++;
         }
         // We delete this since the for loop will have the increment in the for loop
-        iStatus = deleteSpecificNode(psnList, iPositionOfWhileEnd);
+        iStatus = deleteSpecificNode(psnList, iPositionOfWhileEnd-1);
         if (iStatus != 0) {
             printf("Error in findIncrement...\n");
             return -1;
@@ -366,7 +391,7 @@ int findCondition(int *piPlacementOfFor, int *piNodeWithWhilePosition, int *piNo
                 *piFoundWhile = 1;
                 j += iSizeOfFor;
                 // Exclude spaces
-                while (pszCurrentLine[j] == ' ') {
+                while (pszCurrentLine[j] == ' ' || pszCurrentLine[j] == '\t') {
                     if (pszCurrentLine[j] == '(') {
                         break;
                     }
