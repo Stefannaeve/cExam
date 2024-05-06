@@ -11,7 +11,7 @@ int oppgave_6() {
 	 int c;
 	 for	 (c = 0; c < 1; c++)	  {
 		  printf("%d\n", c+1);
-		  // This is another comment }
+		  // This is also a comment }
 
 
 

@@ -29,8 +29,9 @@ int beautify(char *filename) {
 
         pszTempChar = (char *) malloc(iLength + 1);
         if (pszTempChar == NULL) {
+            iStatus = -1;
             printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
-            return - 1;
+            break;
         }
         memset(pszTempChar, 0, iLength + 1);
 
@@ -49,62 +50,65 @@ int beautify(char *filename) {
 
         i++;
     }
-    iStatus = fclose(pfdCFile);
     if (iStatus != 0) {
-        printf("Could not close pfdCFile - Error message: %s\n", strerror(errno));
+
         return -1;
-    }
+    } else {
+        iStatus = fclose(pfdCFile);
+        if (iStatus != 0) {
+            printf("Could not close pfdCFile - Error message: %s\n", strerror(errno));
+        } else {
 
-    // Remove every three spaces in a row and replace with \t
-    iStatus = removeEveryConcurrentlyTreeLinesOfSpace(&snList);
+            // Remove every three spaces in a row and replace with \t
+            iStatus = removeEveryConcurrentlyTreeLinesOfSpace(&snList);
 
-    if (iStatus != 0) {
-        printf("Error in beautifier...\n");
-        return -1;
-    }
+            if (iStatus != 0) {
+                printf("Error in beautifier...\n");
+                return -1;
+            }
 
-    printAllNodes(&snList);
+            printAllNodes(&snList);
 
-    // Change all char variable names to hungerian notation
-    iStatus = changeAllCharVariableNamesToHungerianNotation(&snList);
+            // Change all char variable names to hungerian notation
+            iStatus = changeAllCharVariableNamesToHungerianNotation(&snList);
 
-    if (iStatus != 0) {
-        printf("Error in beautifier...\n");
-        return -1;
-    }
+            if (iStatus != 0) {
+                printf("Error in beautifier...\n");
+                return -1;
+            }
 
-    printAllNodes(&snList);
+            // Change while loop name and condition into a for loop
+            iStatus = changeWhileLoopsToForLoops(&snList);
 
-    // Change while loop name and condition into a for loop
-    iStatus = changeWhileLoopsToForLoops(&snList);
+            if (iStatus != 0) {
+                printf("Error in beautifier...\n");
+                return -1;
+            }
 
-    if (iStatus != 0) {
-        printf("Error in beautifier...\n");
-        return -1;
-    }
-
-    printAllNodes(&snList);
-
-
-    // Open file to write beautified code to
-    pfdBeautifiedFile = fopen("src/beautified_oppgave6_test.c", "w");
+            printAllNodes(&snList);
 
 
-    if (pfdBeautifiedFile == NULL) {
-        printf("Could not open pfdBeautifiedFile - Error message: %s\n", strerror(errno));
-        return -1;
-    }
+            // Open file to write beautified code to
+            pfdBeautifiedFile = fopen("src/beautified_oppgave6_test.c", "w");
 
-    psnCurrent = snList.pHead;
-    while (psnCurrent != NULL) {
-        fprintf(pfdBeautifiedFile, "%s", psnCurrent->line);
-        psnCurrent = psnCurrent->pNextNode;
-    }
 
-    iStatus = fclose(pfdBeautifiedFile);
-    if (iStatus != 0) {
-        printf("Could not close pfdBeautifiedFile - Error message: %s\n", strerror(errno));
-        return -1;
+            if (pfdBeautifiedFile == NULL) {
+                printf("Could not open pfdBeautifiedFile - Error message: %s\n", strerror(errno));
+                return -1;
+            }
+
+            psnCurrent = snList.pHead;
+            while (psnCurrent != NULL) {
+                fprintf(pfdBeautifiedFile, "%s", psnCurrent->line);
+                psnCurrent = psnCurrent->pNextNode;
+            }
+
+            iStatus = fclose(pfdBeautifiedFile);
+            if (iStatus != 0) {
+                printf("Could not close pfdBeautifiedFile - Error message: %s\n", strerror(errno));
+                return -1;
+            }
+        }
     }
 
     freeLinkedList(&snList);
@@ -386,6 +390,12 @@ int findCondition(int *piPlacementOfFor, int *piNodeWithWhilePosition, int *piNo
                     printf("Error in changeWhileToFor...\n");
                     return -1;
                 }
+                // Get back to the same position, with the new node
+                psnCurrent = psnList->pHead;
+                for (int i = 0; i < *piNodePosition; ++i) {
+                    psnCurrent = psnCurrent->pNextNode;
+                }
+                pszCurrentLine = psnCurrent->line;
                 *piPlacementOfFor = j;
                 *piNodeWithWhilePosition = *piNodePosition;
                 *piFoundWhile = 1;
@@ -412,7 +422,6 @@ int findCondition(int *piPlacementOfFor, int *piNodeWithWhilePosition, int *piNo
                     // Add a semicolon to the end of the condition to make it make sense in the for loop
                     pstrForCondition[k] = ';';
                 }
-                printf("For condition 2: %s\n", pstrForCondition);
                 break;
             }
         }
@@ -457,9 +466,13 @@ int changeWhileToFor(NODE *psnCurrent, int iPositionOfWhile, int iNodePosition, 
     pszTemp[psnCurrent->size + iSizeOfFor - iSizeOfWhile] = '\0';
     psnCurrent->size = psnCurrent->size - iSizeOfWhile + iSizeOfFor;
 
+    printf("ChangeWhileToFor: %s\n", pszTemp);
+
     memset(&psnTemp, 0, sizeof(SENT_NODE));
     psnTemp.line = pszTemp;
     psnTemp.size = psnCurrent->size;
+
+    printf("ChangeWhileToFor: %s\n", psnTemp.line);
 
     // Delete the old node and add the new node with the for loop
     iStatus = deleteSpecificNode(psnList, iNodePosition);
