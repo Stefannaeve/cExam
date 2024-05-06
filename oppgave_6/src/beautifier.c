@@ -617,6 +617,7 @@ int changeAllCharVariableNamesToHungerianNotation(NODE_LIST *psnList) {
 
                 if (iStatus != 0) {
                     printf("Error in changeAllCharVariableNamesToHungerianNotation...\n");
+                    free(pszTempString);
                     return -1;
                 }
 
@@ -624,6 +625,7 @@ int changeAllCharVariableNamesToHungerianNotation(NODE_LIST *psnList) {
 
                 if (iStatus != 0) {
                     printf("Error in changeAllCharVariableNamesToHungerianNotation...\n");
+                    free(pszTempString);
                     return -1;
                 }
 
@@ -686,6 +688,7 @@ int removeEveryConcurrentlyTreeLinesOfSpace(NODE_LIST *psnList) {
 
         if (iStatus != 0) {
             printf("Error in removeEveryConcurrentlyTreeLinesOfSpace...\n");
+            free(pszTemp);
             return -1;
         }
 
@@ -693,6 +696,7 @@ int removeEveryConcurrentlyTreeLinesOfSpace(NODE_LIST *psnList) {
 
         if (iStatus != 0) {
             printf("Error in removeEveryConcurrentlyTreeLinesOfSpace...\n");
+            free(pszTemp);
             return -1;
         }
 
