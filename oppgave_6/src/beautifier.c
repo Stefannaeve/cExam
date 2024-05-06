@@ -52,7 +52,6 @@ int beautify(char *filename) {
     }
     if (iStatus != 0) {
 
-        return -1;
     } else {
         iStatus = fclose(pfdCFile);
         if (iStatus != 0) {
@@ -63,55 +62,56 @@ int beautify(char *filename) {
             iStatus = removeEveryConcurrentlyTreeLinesOfSpace(&snList);
 
             if (iStatus != 0) {
-                printf("Error in beautifier...\n");
-                return -1;
-            }
+                printf("Error in Removing spaces for tabs...\n");
+            } else {
 
-            printAllNodes(&snList);
+                printAllNodes(&snList);
 
-            // Change all char variable names to hungerian notation
-            iStatus = changeAllCharVariableNamesToHungerianNotation(&snList);
+                // Change all char variable names to hungerian notation
+                iStatus = changeAllCharVariableNamesToHungerianNotation(&snList);
 
-            if (iStatus != 0) {
-                printf("Error in beautifier...\n");
-                return -1;
-            }
+                if (iStatus != 0) {
+                    printf("Error in Hungerian notation changer...\n");
+                } else {
 
-            // Change while loop name and condition into a for loop
-            iStatus = changeWhileLoopsToForLoops(&snList);
+                    // Change while loop name and condition into a for loop
+                    iStatus = changeWhileLoopsToForLoops(&snList);
 
-            if (iStatus != 0) {
-                printf("Error in beautifier...\n");
-                return -1;
-            }
+                    if (iStatus != 0) {
+                        printf("Error in changing while loops...\n");
+                    } else {
 
-            printAllNodes(&snList);
-
-
-            // Open file to write beautified code to
-            pfdBeautifiedFile = fopen("src/beautified_oppgave6_test.c", "w");
+                        printAllNodes(&snList);
+                        // Open file to write beautified code to
+                        pfdBeautifiedFile = fopen("src/beautified_oppgave6_test.c", "w");
 
 
-            if (pfdBeautifiedFile == NULL) {
-                printf("Could not open pfdBeautifiedFile - Error message: %s\n", strerror(errno));
-                return -1;
-            }
+                        if (pfdBeautifiedFile == NULL) {
+                            printf("Could not open pfdBeautifiedFile - Error message: %s\n", strerror(errno));
+                        } else {
 
-            psnCurrent = snList.pHead;
-            while (psnCurrent != NULL) {
-                fprintf(pfdBeautifiedFile, "%s", psnCurrent->line);
-                psnCurrent = psnCurrent->pNextNode;
-            }
+                            psnCurrent = snList.pHead;
+                            while (psnCurrent != NULL) {
+                                fprintf(pfdBeautifiedFile, "%s", psnCurrent->line);
+                                psnCurrent = psnCurrent->pNextNode;
+                            }
 
-            iStatus = fclose(pfdBeautifiedFile);
-            if (iStatus != 0) {
-                printf("Could not close pfdBeautifiedFile - Error message: %s\n", strerror(errno));
-                return -1;
+                            iStatus = fclose(pfdBeautifiedFile);
+                            if (iStatus != 0) {
+                                printf("Could not close pfdBeautifiedFile - Error message: %s\n", strerror(errno));
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 
     freeLinkedList(&snList);
+
+    if (iStatus != 0) {
+        return -1;
+    }
 
     return 0;
 }
