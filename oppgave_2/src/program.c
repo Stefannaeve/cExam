@@ -17,6 +17,7 @@ int program(){
     int iLength = 0;
     int i = 0;
     int iStatus = 0;
+    int firstInstance = 0;
     char *pszFirstWord = NULL;
     char string[MAX_STRING_LENGTH];
 
@@ -43,17 +44,22 @@ int program(){
 
         iLength = strlen(string);
         // Allocate memory for the first word
-        if (pszFirstWord == NULL) {
+        if (firstInstance == 0) {
             pszFirstWord = (char *) malloc(sizeof(char) * iLength + 1);
+            printf("1: %d\n", iLength);
         }
         // Break while if memory allocation failed
         if (pszFirstWord == NULL) {
             iStatus = -1;
             printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
         } else {
-            memset(pszFirstWord, 0, iLength + 1);
-            strncpy(pszFirstWord, string, iLength);
-            pszFirstWord[iLength] = '\0';
+            if (firstInstance == 0){
+                memset(pszFirstWord, 0, iLength + 1);
+                printf("2: %d\n", iLength);
+                strncpy(pszFirstWord, string, iLength);
+                pszFirstWord[iLength] = '\0';
+                firstInstance = 1;
+            }
 
             // Allocate memory for the struct
             pstWord = (TASK2_WORD_METADATA *) malloc(sizeof(TASK2_WORD_METADATA) + iLength + 1);
