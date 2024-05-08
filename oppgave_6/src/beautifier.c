@@ -201,7 +201,7 @@ int changeWhileLoopsToForLoops(NODE_LIST *list) {
                 }
             }
             pszTemp = (char *) malloc(
-                    iPositionOfFirstParenthesis + iLengthInitialization + iLengthCondition + iLengthIncrement +
+                    iPositionOfFirstParenthesis +1 + iLengthInitialization + iLengthCondition + iLengthIncrement +
                     psnCurrent->size - iPositionOfSecondParenthesis + 1);
             if (pszTemp == NULL) {
                 printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
@@ -210,7 +210,7 @@ int changeWhileLoopsToForLoops(NODE_LIST *list) {
             memset(pszTemp, 0,
                    iPositionOfFirstParenthesis + iLengthInitialization + iLengthCondition + iLengthIncrement +
                    psnCurrent->size - iPositionOfSecondParenthesis + 1);
-            pszTemp[iPositionOfFirstParenthesis + iLengthInitialization + iLengthCondition + iLengthIncrement +
+            pszTemp[iPositionOfFirstParenthesis +1 + iLengthInitialization + iLengthCondition + iLengthIncrement +
                     psnCurrent->size - iPositionOfSecondParenthesis] = '\0';
 
             // Copy everything before the first parenthesis, which will include the "for"
@@ -237,7 +237,8 @@ int changeWhileLoopsToForLoops(NODE_LIST *list) {
             }
             pszTemp[iPositionOfFirstParenthesis + iLengthInitialization + iLengthCondition + iLengthIncrement +
                     psnCurrent->size - iPositionOfSecondParenthesis + 1] = '\0';
-            psnCurrent->size = psnCurrent->size + iLengthInitialization + iLengthCondition + iLengthIncrement;
+            psnCurrent->size = iPositionOfFirstParenthesis +1 + iLengthInitialization + iLengthCondition + iLengthIncrement +
+                               psnCurrent->size - iPositionOfSecondParenthesis + 1;
 
             memset(&psnTemp, 0, sizeof(SENT_NODE));
             psnTemp.line = pszTemp;
@@ -375,55 +376,70 @@ int findCondition(int *piPlacementOfFor, int *piNodeWithWhilePosition, int *piNo
     int iCommentPosition = 0;
     int iStatus = 0;
 
+    int iLengthOfCurrentLine = 0;
+
     while (psnCurrent != NULL) {
         iCommentPosition = 0;
         pszCurrentLine = psnCurrent->line;
 
         // Check if line contains comment
+        printf("Size of current line: %d\n", psnCurrent->size);
         iCommentPosition = checkIfLineHasComment(pszCurrentLine, psnCurrent->size);
 
-        // Loop though string in node until comment or end of line
-        for (int j = 0; j < (iCommentPosition == 0 ? psnCurrent->size : iCommentPosition); j++) {
-            // Check if the line contains "while", if it does, change position to possible start of variable
-            if (strncmp(&pszCurrentLine[j], pszWhile, iSizeOfWhile) == 0) {
-                iStatus = changeWhileToFor(psnCurrent, j, *piNodePosition, psnList);
-                if (iStatus != 0) {
-                    printf("Error in changeWhileToFor...\n");
-                    return -1;
-                }
-                // Get back to the same position, with the new node
-                psnCurrent = psnList->pHead;
-                for (int i = 0; i < *piNodePosition; ++i) {
-                    psnCurrent = psnCurrent->pNextNode;
-                }
-                pszCurrentLine = psnCurrent->line;
-                *piPlacementOfFor = j;
-                *piNodeWithWhilePosition = *piNodePosition;
-                *piFoundWhile = 1;
-                j += iSizeOfFor;
-                // Exclude spaces
-                while (pszCurrentLine[j] == ' ' || pszCurrentLine[j] == '\t') {
-                    if (pszCurrentLine[j] == '(') {
-                        break;
+        // Check the length of the line with or without comment
+        // Change the node if the length is less then size of while
+        if (iCommentPosition == 0) {
+            iLengthOfCurrentLine = psnCurrent->size;
+        } else {
+            iLengthOfCurrentLine = iCommentPosition;
+        }
+
+        if (iLengthOfCurrentLine > iSizeOfWhile) {
+
+            // Loop though string in node until comment or end of line
+            for (int j = 0; j < (iCommentPosition == 0 ? psnCurrent->size - iSizeOfWhile : iCommentPosition - iSizeOfWhile); j++) {
+                // Check if the line contains "while", if it does, change position to possible start of variable
+
+                if (strncmp(&pszCurrentLine[j], pszWhile, iSizeOfWhile) == 0) {
+                    iStatus = changeWhileToFor(psnCurrent, j, *piNodePosition, psnList);
+                    if (iStatus != 0) {
+                        printf("Error in changeWhileToFor...\n");
+                        return -1;
                     }
-                    j++;
-                }
-                // Check if the line contains "(", if it does, change position to possible start of variable
-                pstrForCondition[0] = ' ';
-                // It is expected that this position is the start of the "(", read from this position until we find the end of the condition
-                if (pszCurrentLine[j] == '(') {
-                    j++;
-                    int k = 0;
-                    // Copy the condition into a new string, stop when we find the end of the condition
-                    while (pszCurrentLine[j] != ')') {
-                        pstrForCondition[k + 1] = pszCurrentLine[j];
-                        k++;
+                    // Get back to the same position, with the new node
+                    psnCurrent = psnList->pHead;
+                    for (int i = 0; i < *piNodePosition; ++i) {
+                        psnCurrent = psnCurrent->pNextNode;
+                    }
+                    pszCurrentLine = psnCurrent->line;
+                    *piPlacementOfFor = j;
+                    *piNodeWithWhilePosition = *piNodePosition;
+                    *piFoundWhile = 1;
+                    j += iSizeOfFor;
+                    // Exclude spaces
+                    while (pszCurrentLine[j] == ' ' || pszCurrentLine[j] == '\t') {
+                        if (pszCurrentLine[j] == '(') {
+                            break;
+                        }
                         j++;
                     }
-                    // Add a semicolon to the end of the condition to make it make sense in the for loop
-                    pstrForCondition[k] = ';';
+                    // Check if the line contains "(", if it does, change position to possible start of variable
+                    pstrForCondition[0] = ' ';
+                    // It is expected that this position is the start of the "(", read from this position until we find the end of the condition
+                    if (pszCurrentLine[j] == '(') {
+                        j++;
+                        int k = 0;
+                        // Copy the condition into a new string, stop when we find the end of the condition
+                        while (pszCurrentLine[j] != ')') {
+                            pstrForCondition[k + 1] = pszCurrentLine[j];
+                            k++;
+                            j++;
+                        }
+                        // Add a semicolon to the end of the condition to make it make sense in the for loop
+                        pstrForCondition[k] = ';';
+                    }
+                    break;
                 }
-                break;
             }
         }
         // If we found the while loop, break the loop
@@ -494,7 +510,14 @@ int changeWhileToFor(NODE *psnCurrent, int iPositionOfWhile, int iNodePosition, 
 
 int checkIfLineHasComment(char *pszCurrentLine, int iSize) {
     // Loop through until we find two slashes, which indicates a comment
-    for (int j = 0; j < iSize - 1; j++) {
+    if (iSize < 2) {
+        return 0;
+    }
+    if (iSize == 34){
+        printf("%s\n" , pszCurrentLine);
+    }
+    for (int j = 0; j < iSize-1; j++) {
+        //printf("size: %d, j: %d\n", iSize, j+1);
         if (pszCurrentLine[j] == '/' && pszCurrentLine[j + 1] == '/') {
             return j;
         }
