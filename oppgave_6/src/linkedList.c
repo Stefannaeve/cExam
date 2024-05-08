@@ -26,7 +26,9 @@ int add(NODE_LIST *psnList, SENT_NODE *pssSentNode) {
         return -1;
     }
 
-    strcpy(psoTemp->line, pssSentNode->line);
+    memset(psoTemp->line, 0, strlen(pssSentNode->line) + 1);
+    strncpy(psoTemp->line, pssSentNode->line, strlen(pssSentNode->line));
+    psoTemp->line[strlen(pssSentNode->line)] = '\0';
     psoTemp->size = pssSentNode->size;
 
     psoTemp->pNextNode = NULL;
@@ -72,8 +74,15 @@ int addAtIndex(NODE_LIST *psnList, SENT_NODE *pssSentNode, int iIndex) {
         return - 1;
     }
 
-    strcpy(psoTemp->line, pssSentNode->line);
+    memset(psoTemp->line, 0, strlen(pssSentNode->line) + 1);
+    strncpy(psoTemp->line, pssSentNode->line, strlen(pssSentNode->line));
+    psoTemp->line[strlen(pssSentNode->line)] = '\0';
     psoTemp->size = pssSentNode->size;
+
+    printf("pssSentNode->line: %s\n", pssSentNode->line);
+    printf("pssSentNode->size: %d\n", pssSentNode->size);
+    printf("psoTemp->line: %s\n", psoTemp->line);
+    printf("psoTemp->size: %d\n", psoTemp->size);
 
     psoTemp->pNextNode = NULL;
 
@@ -170,6 +179,7 @@ int deleteSpecificNode(NODE_LIST *psnList, int iIndex) {
 
     free(psoCurrent->line);
     free(psoCurrent);
+    psoCurrent = NULL;
     psnList->size--;
 
     return 0;

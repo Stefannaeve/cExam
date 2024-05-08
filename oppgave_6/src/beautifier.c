@@ -383,7 +383,6 @@ int findCondition(int *piPlacementOfFor, int *piNodeWithWhilePosition, int *piNo
         pszCurrentLine = psnCurrent->line;
 
         // Check if line contains comment
-        printf("Size of current line: %d\n", psnCurrent->size);
         iCommentPosition = checkIfLineHasComment(pszCurrentLine, psnCurrent->size);
 
         // Check the length of the line with or without comment
@@ -457,16 +456,19 @@ int changeWhileToFor(NODE *psnCurrent, int iPositionOfWhile, int iNodePosition, 
     int iSizeOfFor = 3;
     int iSizeOfWhile = 5;
     int iStatus = 0;
+    int sizeOfTemp = 0;
 
     SENT_NODE psnTemp = {NULL, 0};
 
-    char *pszTemp = (char *) malloc(psnCurrent->size + iSizeOfFor - iSizeOfWhile);
+    sizeOfTemp = psnCurrent->size + iSizeOfFor - iSizeOfWhile;
+
+    char *pszTemp = (char *) malloc(sizeOfTemp + 1);
     if (pszTemp == NULL) {
         printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
         return - 1;
     }
-    memset(pszTemp, 0, psnCurrent->size + iSizeOfFor - iSizeOfWhile);
-    pszTemp[psnCurrent->size + iSizeOfFor - iSizeOfWhile + 1] = '\0';
+    memset(pszTemp, 0, sizeOfTemp);
+    pszTemp[sizeOfTemp] = '\0';
 
     // Copy everything before the while loop, add "for" instead of "while"
     for (int k = 0; k < iPositionOfWhile; ++k) {
@@ -477,19 +479,16 @@ int changeWhileToFor(NODE *psnCurrent, int iPositionOfWhile, int iNodePosition, 
         pszTemp[iPositionOfWhile + k] = strFor[k];
     }
     // Copy the rest of the string after the while loop
-    for (int k = iPositionOfWhile + iSizeOfFor; k < psnCurrent->size; k++) {
+    for (int k = iPositionOfWhile + iSizeOfFor; k < sizeOfTemp; k++) {
         pszTemp[k] = psnCurrent->line[k + iSizeOfWhile - iSizeOfFor];
     }
     pszTemp[psnCurrent->size + iSizeOfFor - iSizeOfWhile] = '\0';
-    psnCurrent->size = psnCurrent->size - iSizeOfWhile + iSizeOfFor;
-
-    printf("ChangeWhileToFor: %s\n", pszTemp);
+    psnCurrent->size = sizeOfTemp;
 
     memset(&psnTemp, 0, sizeof(SENT_NODE));
     psnTemp.line = pszTemp;
+    psnTemp.line[psnCurrent->size] = '\0';
     psnTemp.size = psnCurrent->size;
-
-    printf("ChangeWhileToFor: %s\n", psnTemp.line);
 
     // Delete the old node and add the new node with the for loop
     iStatus = deleteSpecificNode(psnList, iNodePosition);
@@ -628,13 +627,13 @@ int changeAllCharVariableNamesToHungerianNotation(NODE_LIST *psnList) {
                     printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
                     return - 1;
                 }
-                memset(pszTempString, 0, iLengthOfNewLine + 1);
-                pszTempString[iLengthOfNewLine] = '\0';
+                memset(pszTempString, 0, iLengthOfNewLine);
                 strncpy(pszTempString, strNewLine, iLengthOfNewLine);
                 pszTempString[iLengthOfNewLine] = '\0';
 
                 memset(&psnTemp, 0, sizeof(SENT_NODE));
                 psnTemp.line = pszTempString;
+                psnTemp.line[iLengthOfNewLine] = '\0';
                 psnTemp.size = iLengthOfNewLine;
 
                 iStatus = deleteSpecificNode(psnList, iListPosition);
