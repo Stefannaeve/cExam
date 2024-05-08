@@ -26,7 +26,7 @@ $(TARGET): $(OBJS)
 	
 valgrind:
 	make
-	valgrind --leak-check=yes --show-leak-kinds=all --track-origins=yes ./$(TARGET)
+	valgrind ./$(TARGET)
 
 run:
 	make

@@ -50,6 +50,7 @@ int beautify(char *filename) {
 
         i++;
     }
+
     if (iStatus != 0) {
 
     } else {
@@ -493,7 +494,7 @@ int changeWhileToFor(NODE *psnCurrent, int iPositionOfWhile, int iNodePosition, 
 
 int checkIfLineHasComment(char *pszCurrentLine, int iSize) {
     // Loop through until we find two slashes, which indicates a comment
-    for (int j = 0; j < iSize; j++) {
+    for (int j = 0; j < iSize - 1; j++) {
         if (pszCurrentLine[j] == '/' && pszCurrentLine[j + 1] == '/') {
             return j;
         }
