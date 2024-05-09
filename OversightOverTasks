@@ -17,8 +17,10 @@ menuApplication, orderList, tableReservationList
 [x][x][x] Remove reduntant prints made for debugging
 [X][x][x] Memset every malloc
 [X][x][x] Zero terminate every malloc
+[][][] Check for dangling pointers
 
 [] Check if strncmp uses right values
+[] Check for dangling pointers
 
 Oppgave 4
 [x] Handle arguments from terminal
@@ -38,6 +40,7 @@ Oppgave 4
 [x] Remove reduntant prints made for debugging
 [x] Memset every malloc
 [x] Zero terminate every malloc
+[] Check for dangling pointers
 
 Oppgave 5 (server)
 [x] Handle arguments from terminal
@@ -57,6 +60,7 @@ Oppgave 5 (server)
 [x] Remove reduntant prints made for debugging
 [x] Memset every malloc
 [x] Zero terminate every malloc
+[] Check for dangling pointers
 
 [x] Add a protocol for connecting and current convo. Use a define for the two different protocol numbers. 
 [x] Use mutex to check for phone numbers according to a common array of numbers. No two numbers should be alike
@@ -79,6 +83,7 @@ Oppgave 5 (client)
 [x] Remove reduntant prints made for debugging
 [x] Memset every malloc
 [x] Zero terminate every malloc
+[] Check for dangling pointers
 
 Oppgave 6
 [] Handle arguments from terminal
@@ -97,3 +102,4 @@ Oppgave 6
 [] Remove reduntant prints made for debugging
 [x] Memset every malloc
 [x] Zero terminate every malloc
+[] Check for dangling pointers

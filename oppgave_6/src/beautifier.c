@@ -547,6 +547,7 @@ int changeAllCharVariableNamesToHungerianNotation(NODE_LIST *psnList) {
     int iLengthOfNewLine = 0;
     int iCurrentLengthOfNewVariable = 0;
     int iRemainingSize = 0;
+    int iFoundChar = 0;
 
     int iCommentPosition = 0;
 
@@ -636,6 +637,9 @@ int changeAllCharVariableNamesToHungerianNotation(NODE_LIST *psnList) {
                 psnTemp.line[iLengthOfNewLine] = '\0';
                 psnTemp.size = iLengthOfNewLine;
 
+                psnCurrent = psnCurrent->pNextNode;
+                iFoundChar = 1;
+
                 iStatus = deleteSpecificNode(psnList, iListPosition);
 
                 if (iStatus != 0) {
@@ -661,7 +665,12 @@ int changeAllCharVariableNamesToHungerianNotation(NODE_LIST *psnList) {
             }
         }
         iListPosition++;
-        psnCurrent = psnCurrent->pNextNode;
+        // This is definitively the problem, I think, dangling pointer, fix tomorrow, sleep now
+        if (iFoundChar == 0){
+            psnCurrent = psnCurrent->pNextNode;
+        } else {
+            iFoundChar = 0;
+        }
     }
     return 0;
 }
