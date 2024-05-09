@@ -11,7 +11,7 @@ int changeAllCharVariableNamesToHungerianNotation(NODE_LIST *psnList);
 
 int changeWhileLoopsToForLoops(NODE_LIST *list);
 
-int checkIfLineHasComment(char *pszCurrentLine, int iSize);
+int checkIfLineHasComment(char const *pszCurrentLine, int iSize);
 
 int changeWhileToFor(NODE *psnCurrent, int iPositionOfWhile, int iNodePosition, NODE_LIST *psnList);
 

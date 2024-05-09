@@ -254,6 +254,10 @@ int changeWhileLoopsToForLoops(NODE_LIST *list) {
 
             free(pszTemp);
         }
+        if (iStatus != 0) {
+            printf("Error in changeWhileLoopsToForLoops...\n");
+            return -1;
+        }
         if (iFoundWhile) {
             printAllNodes(list);
         }
@@ -512,7 +516,7 @@ int changeWhileToFor(NODE *psnCurrent, int iPositionOfWhile, int iNodePosition, 
     return 0;
 }
 
-int checkIfLineHasComment(char *pszCurrentLine, int iSize) {
+int checkIfLineHasComment(char const *pszCurrentLine, int iSize) {
     // Loop through until we find two slashes, which indicates a comment
     if (iSize < 2) {
         return 0;
