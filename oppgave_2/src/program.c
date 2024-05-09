@@ -46,7 +46,6 @@ int program(){
         // Allocate memory for the first word
         if (firstInstance == 0) {
             pszFirstWord = (char *) malloc(sizeof(char) * iLength + 1);
-            printf("1: %d\n", iLength);
         }
         // Break while if memory allocation failed
         if (pszFirstWord == NULL) {
@@ -55,7 +54,6 @@ int program(){
         } else {
             if (firstInstance == 0){
                 memset(pszFirstWord, 0, iLength + 1);
-                printf("2: %d\n", iLength);
                 strncpy(pszFirstWord, string, iLength);
                 pszFirstWord[iLength] = '\0';
                 firstInstance = 1;
@@ -112,6 +110,8 @@ int program(){
         }
         memset(string, 0, sizeof(string));
     } // while loop
+
+    printf("Finished writing to binary file\n");
 
     // cleanup
     free(pszFirstWord);
