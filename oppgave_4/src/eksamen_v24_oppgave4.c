@@ -108,6 +108,7 @@ void *thread_B(void *sendThreadArg) {
     printf("\n");
     SHA1Final(strDigest, &ssCtx);
 
+    printf("Hashing done\n");
     for (int j = 0; j < sizeof(strDigest); ++j) {
         printf("%X", strDigest[j]);
     }
