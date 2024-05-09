@@ -2,7 +2,7 @@
 
 int oppgave_6() {
 	 // char this is a comment
-	 char *pszB= "Hello, World!";
+	 char *pszB = "Hello, World!";
 	 int a;
 	 for (a = 0; a < 1; a++) {
 		  printf("%d\n", a+1);
@@ -16,6 +16,6 @@ int oppgave_6() {
 
 
 	 }
-	 char *pszNokka= "nokka";
+	 char *pszNokka = "nokka";
 	return 0;
 }

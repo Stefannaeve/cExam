@@ -15,11 +15,11 @@ int checkIfLineHasComment(char *pszCurrentLine, int iSize);
 
 int changeWhileToFor(NODE *psnCurrent, int iPositionOfWhile, int iNodePosition, NODE_LIST *psnList);
 
-int findCondition(int *piPlacementOfFor, int *piNodeWithWhilePosition, int *piNodePosition, NODE_LIST *psnList, char *pstrForCondition, int *piFoundWhile);
+int findCondition(int *piPlacementOfFor, int *piNodeWithWhilePosition, int *piNodePosition, NODE_LIST *psnList, char *aszForCondition, int *piFoundWhile);
 
-int findInitialization(NODE_LIST *psnList, int iNodeWithWhilePosition, int iNodePosition, char *strForInitialization);
+int findInitialization(NODE_LIST *psnList, int iNodeWithWhilePosition, int iNodePosition, char *aszForInitialization);
 
-int findIncrement(NODE_LIST *psnList, int *iNodePosition, char *strForIncrement);
+int findIncrement(NODE_LIST *psnList, int *iNodePosition, char *aszForIncrement);
 
 int beautify(char *filename);
 
