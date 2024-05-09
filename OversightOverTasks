@@ -83,7 +83,7 @@ Oppgave 5 (client)
 [x] Remove reduntant prints made for debugging
 [x] Memset every malloc
 [x] Zero terminate every malloc
-[] Check for dangling pointers
+[x] Check for dangling pointers
 
 Oppgave 6
 [] Handle arguments from terminal
@@ -98,8 +98,8 @@ Oppgave 6
 [x] Add comments
 [] Delete Clion association
 [] Make sure lines is configured for Gedit
-[] Make every String zero terminated ?????????????????????????????
+[x] Make every String zero terminated ?????????????????????????????
 [] Remove reduntant prints made for debugging
 [x] Memset every malloc
 [x] Zero terminate every malloc
-[] Check for dangling pointers
+[x] Check for dangling pointers

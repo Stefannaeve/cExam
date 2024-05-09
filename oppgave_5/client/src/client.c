@@ -97,6 +97,7 @@ int client(int argc, char *argv[]) {
                     iBytesSent = send(sockFd, pssSnp, sizeof(SNP) + pssSnp->ssSnpHeader.iSizeOfBody, 0);
 
                     free(pssSnp);
+                    pssSnp = NULL;
 
                     if (iBytesSent <= 0) {
                         iStatus = -1;

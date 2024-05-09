@@ -226,6 +226,7 @@ void *threadServer(void *arg) {
                                     if (iBytes <= 0) {
                                         printf("Client: %d disconnected, or read error occurred.\n", iPhone);
                                         free(pssSnp);
+                                        pssSnp = NULL;
                                         break;
                                     }
 
@@ -235,12 +236,14 @@ void *threadServer(void *arg) {
                                     if (strncmp(pssSnp->strBody, "exit", 4) == 0) {
                                         printf("Exiting\n");
                                         free(pssSnp);
+                                        pssSnp = NULL;
                                         break;
                                     }
 
                                     // Print the message from the user
                                     printf("Number %d: %s\n", iPhone, pssSnp->strBody);
                                     free(pssSnp);
+                                    pssSnp = NULL;
                                 }
                                 if (iStatus == -1) {
                                     break;
