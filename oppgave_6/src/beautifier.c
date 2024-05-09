@@ -50,6 +50,12 @@ int beautify(char *filename) {
         i++;
     }
 
+    printf("\n+--------------------------+\n");
+    printf("|  Before beautification   |\n");
+    printf("+--------------------------+\n\n");
+
+    printAllNodes(&snList);
+
     if (iStatus != 0) {
 
     } else {
@@ -65,7 +71,6 @@ int beautify(char *filename) {
                 printf("Error in Removing spaces for tabs...\n");
             } else {
 
-                printAllNodes(&snList);
 
                 // Change all char variable names to hungerian notation
                 iStatus = changeAllCharVariableNamesToHungerianNotation(&snList);
@@ -81,7 +86,6 @@ int beautify(char *filename) {
                         printf("Error in changing while loops...\n");
                     } else {
 
-                        printAllNodes(&snList);
                         // Open file to write beautified code to
                         pfdBeautifiedFile = fopen("src/beautified_oppgave6_test.c", "w");
 
@@ -106,6 +110,12 @@ int beautify(char *filename) {
             }
         }
     }
+
+    printf("\n+--------------------------+\n");
+    printf("|   After beautification   |\n");
+    printf("+--------------------------+\n\n");
+
+    printAllNodes(&snList);
 
     freeLinkedList(&snList);
 
@@ -258,9 +268,6 @@ int changeWhileLoopsToForLoops(NODE_LIST *list) {
             printf("Error in changeWhileLoopsToForLoops...\n");
             return -1;
         }
-        if (iFoundWhile) {
-            printAllNodes(list);
-        }
         iSizeOfList = list->size;
     }
 
@@ -329,7 +336,6 @@ int findIncrement(NODE_LIST *psnList, int *iNodePosition, char *aszForIncrement)
             printf("Error in findIncrement...\n");
             return -1;
         }
-        printf("For increment: %s\n", aszForIncrement);
     }
     return 0;
 }
@@ -368,8 +374,6 @@ int findInitialization(NODE_LIST *psnList, int iNodeWithWhilePosition, int iNode
         printf("Error in findInitialization...\n");
         return -1;
     }
-
-    printf("For initialization: %s\n", aszForInitialization);
     return 0;
 }
 
@@ -661,10 +665,6 @@ int changeAllCharVariableNamesToHungerianNotation(NODE_LIST *psnList) {
                 }
 
                 free(pszTempString);
-
-                printf("Old variable: %s\n", aszOldVariable);
-                printf("New variable: %s\n", aszNewVariable);
-                printf("\n");
 
             }
         }

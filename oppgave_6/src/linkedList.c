@@ -79,11 +79,6 @@ int addAtIndex(NODE_LIST *psnList, SENT_NODE *pssSentNode, int iIndex) {
     psoTemp->line[strlen(pssSentNode->line)] = '\0';
     psoTemp->size = pssSentNode->size;
 
-    printf("pssSentNode->line: %s\n", pssSentNode->line);
-    printf("pssSentNode->size: %d\n", pssSentNode->size);
-    printf("psoTemp->line: %s\n", psoTemp->line);
-    printf("psoTemp->size: %d\n", psoTemp->size);
-
     psoTemp->pNextNode = NULL;
 
     if (psnList->pHead == NULL) {
