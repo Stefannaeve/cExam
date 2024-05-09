@@ -102,6 +102,7 @@ int program(){
 
                 // Free the memory
                 free(pstWord);
+                pstWord = NULL;
                 i++;
             } // if pstWord != NULL
         }
@@ -114,10 +115,13 @@ int program(){
 
     // cleanup
     free(pszFirstWord);
+    pszFirstWord = NULL;
 
     fclose(fdFile);
+    fdFile = NULL;
 
     fclose(fdBinaryFile);
+    fdBinaryFile = NULL;
 
     printf("\nClosing project...\n");
 
