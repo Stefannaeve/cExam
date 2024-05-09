@@ -19,7 +19,7 @@ int beautify(char *filename) {
     FILE *pfdBeautifiedFile;
     FILE *pfdCFile = fopen(filename, "r");
     if (pfdCFile == NULL) {
-        printf("Could not open pfdCFile %s - Error message: %s\n", filename, strerror(errno));
+        printf("Could not open File %s - Error message: %s\n", filename, strerror(errno));
         return -1;
     }
 
@@ -55,7 +55,7 @@ int beautify(char *filename) {
     } else {
         iStatus = fclose(pfdCFile);
         if (iStatus != 0) {
-            printf("Could not close pfdCFile - Error message: %s\n", strerror(errno));
+            printf("Could not close File - Error message: %s\n", strerror(errno));
         } else {
 
             // Remove every three spaces in a row and replace with \t
@@ -87,7 +87,7 @@ int beautify(char *filename) {
 
 
                         if (pfdBeautifiedFile == NULL) {
-                            printf("Could not open pfdBeautifiedFile - Error message: %s\n", strerror(errno));
+                            printf("Could not open BeautifiedFile - Error message: %s\n", strerror(errno));
                         } else {
 
                             psnCurrent = snList.pHead;
@@ -98,7 +98,7 @@ int beautify(char *filename) {
 
                             iStatus = fclose(pfdBeautifiedFile);
                             if (iStatus != 0) {
-                                printf("Could not close pfdBeautifiedFile - Error message: %s\n", strerror(errno));
+                                printf("Could not close BeautifiedFile - Error message: %s\n", strerror(errno));
                             }
                         }
                     }
@@ -517,11 +517,7 @@ int checkIfLineHasComment(char *pszCurrentLine, int iSize) {
     if (iSize < 2) {
         return 0;
     }
-    if (iSize == 34) {
-        printf("%s\n", pszCurrentLine);
-    }
     for (int j = 0; j < iSize - 1; j++) {
-        //printf("size: %d, j: %d\n", iSize, j+1);
         if (pszCurrentLine[j] == '/' && pszCurrentLine[j + 1] == '/') {
             return j;
         }
