@@ -715,6 +715,8 @@ int removeEveryConcurrentlyTreeLinesOfSpace(NODE_LIST *psnList) {
         psnTemp.line = pszTemp;
         psnTemp.size = iNewSize;
 
+        // Change node before deleting
+        psnCurrent = psnCurrent->pNextNode;
         // Remove old node and add new node with replaced spaces
         iStatus = deleteSpecificNode(psnList, iCurrentNode);
 
@@ -734,7 +736,6 @@ int removeEveryConcurrentlyTreeLinesOfSpace(NODE_LIST *psnList) {
 
         free(pszTemp);
 
-        psnCurrent = psnCurrent->pNextNode;
         iCurrentNode++;
     }
     return 0;
