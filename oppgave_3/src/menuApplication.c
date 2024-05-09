@@ -69,6 +69,7 @@ int menuApplication() {
 
     }
     free(pszInputArray);
+    pszInputArray = NULL;
     freeLinkedList(&slList);
 
     return 0;
@@ -116,8 +117,10 @@ int printSumForSpesificNameAtSpesificTable(LIST *pslList) {
                 }
             }
             free(pszName);
+            pszName = NULL;
         } // NAME
         free(pszReservationNumber);
+        pszReservationNumber = NULL;
     } // RESERVATION NUMBER
     if (iStatus == ERROR) {
         return ERROR;
@@ -148,6 +151,7 @@ int printSpecificReservationWithSum(LIST *pslList) {
             iStatus = printReservationOrdersAndSum(pslList, atoi(pszReservationNumber));
         }
         free(pszReservationNumber);
+        pszReservationNumber = NULL;
     }
     if (iStatus == ERROR) {
         return ERROR;
@@ -195,6 +199,7 @@ int addFoodToReservation(LIST *pslList) {
                         iStatus = makeOrder(pssSentOrder);
                         if (iStatus == ERROR) {
                             free(pssSentOrder);
+                            pssSentOrder = NULL;
                         } else {
                             // Function for adding food to specific reservation
                             iStatus = addFoodToSpecificReservation(pslList, atoi(pszReservationNumber), pssSentOrder);
@@ -207,6 +212,7 @@ int addFoodToReservation(LIST *pslList) {
             }
         }
         free(pszReservationNumber);
+        pszReservationNumber = NULL;
     }
     if (iStatus == ERROR) {
         return ERROR;
@@ -266,7 +272,7 @@ int makeOrder(SENT_ORDER *pssSentOrder) {
                     memset(pszName, 0, USER_INPUT_SIZE);
 
                     printf("Please insert the price of the food\n");
-                    iStatus = askUserQuestion("Price: ", pszName, USER_INPUT_SIZE);
+                    iStatus = askUserQuestionInt("Price: ", pszName, USER_INPUT_SIZE);
                     if (iStatus != TRUE) {
                         if (iStatus == QUIT) {
                             printf("Returning\n");
@@ -281,6 +287,7 @@ int makeOrder(SENT_ORDER *pssSentOrder) {
         }
     }
     free(pszName);
+    pszName = NULL;
     if (iStatus == ERROR) {
         return ERROR;
     }
@@ -325,6 +332,7 @@ int deleteReservation(LIST *pslList) {
 
     }
     free(pszReservationNumber);
+    pszReservationNumber = NULL;
     if (iStatus == ERROR) {
         return ERROR;
     }
@@ -402,7 +410,7 @@ int getReservation(LIST *pslList, char *pszInputArray) {
         }
     }
     free(pszName);
-
+    pszName = NULL;
     if (iStatus == ERROR) {
         return ERROR;
     }
@@ -490,15 +498,19 @@ int addReservation(LIST *pslList) {
                                     add(pslList, &sentTableReservation);
                                 }
                                 free(pszTableNumber);
+                                pszTableNumber = NULL;
                             } // TABLE NUMBER
                         }
                         free(pszTempTime);
+                        pszTempTime = NULL;
                     } // TIME
                 }
                 free(pszTempSeats);
+                pszTempSeats = NULL;
             } // SEATS
         }
         free(pszName);
+        pszName = NULL;
     } // NAME
     if (iStatus == ERROR) {
         return ERROR;

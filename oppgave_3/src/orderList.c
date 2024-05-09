@@ -53,8 +53,11 @@ int orderAdd(ORDER_LIST *psoList, SENT_ORDER *pssSentOrder) {
 
                 // Free the struct from called from function
                 free(pssSentOrder->pszName);
+                pssSentOrder->pszName = NULL;
                 free(pssSentOrder->pszFoodDescription);
+                pssSentOrder->pszFoodDescription = NULL;
                 free(pssSentOrder);
+                pssSentOrder = NULL;
 
                 // If the list is empty, add the first order
                 if (psoList->psoHead == NULL) {
@@ -67,15 +70,20 @@ int orderAdd(ORDER_LIST *psoList, SENT_ORDER *pssSentOrder) {
                 return 0;
             }
             free(psoTemp->pszName);
+            psoTemp->pszName = NULL;
         }
         free(psoTemp);
+        psoTemp = NULL;
     }
 
 
 
     free(pssSentOrder->pszName);
+    pssSentOrder->pszName = NULL;
     free(pssSentOrder->pszFoodDescription);
+    pssSentOrder->pszFoodDescription = NULL;
     free(pssSentOrder);
+    pssSentOrder = NULL;
 
     return -1;
 }
@@ -96,10 +104,17 @@ void orderFreeLinkedList(ORDER_LIST *psoList) {
         psoNext = psoCurrent->psoNextOrder;
         psoCurrent->psoNextOrder = NULL;
         free(psoCurrent->pszName);
+        psoCurrent->pszName = NULL;
         free(psoCurrent->pszFoodDescription);
+        psoCurrent->pszFoodDescription = NULL;
         free(psoCurrent);
         psoCurrent = psoNext;
     }
+    psoList->psoHead = NULL;
+    psoList->psoTail = NULL;
+    psoList->iSize = 0;
+    psoCurrent = NULL;
+    psoNext = NULL;
 }
 
 // Print all orders in the list with all the necessary information

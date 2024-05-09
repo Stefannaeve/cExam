@@ -40,6 +40,7 @@ int add(LIST *pslList, const SENT_TABLE_RESERVATION *pssSentTableReservation) {
         errno = ENOMEM;
         printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
         free(pstTemp);
+        pstTemp = NULL;
         return -1;
     }
     memset(pstTemp->pszName, 0, iLengthOfName + 1);
@@ -52,6 +53,7 @@ int add(LIST *pslList, const SENT_TABLE_RESERVATION *pssSentTableReservation) {
         errno = ENOMEM;
         printf("Failed to allocate memory - Error message: %s\n", strerror(errno));
         free(pstTemp);
+        pstTemp = NULL;
         return -1;
     }
     memset(pstTemp->psoFoodOrders, 0, sizeof(ORDER_LIST));
@@ -159,11 +161,18 @@ void freeLinkedList(LIST *pslList) {
         if (pstCurrent->psoFoodOrders != NULL) {
             orderFreeLinkedList(pstCurrent->psoFoodOrders);
             free(pstCurrent->psoFoodOrders);
+            pstCurrent->psoFoodOrders = NULL;
         }
         free(pstCurrent->pszName);
+        pstCurrent->pszName = NULL;
         free(pstCurrent);
         pstCurrent = pstNext;
     }
+    pslList->pstHead = NULL;
+    pslList->pstTail = NULL;
+    pslList->iSize = 0;
+    pstCurrent = NULL;
+    pstNext = NULL;
 }
 
 // Function to print all nodes in list including all necessary information
@@ -433,14 +442,17 @@ int deleteSpecificReservation(LIST *pslList, int iReservationNumber) {
     if (pstCurrent->psoFoodOrders != NULL) {
         orderFreeLinkedList(pstCurrent->psoFoodOrders);
         free(pstCurrent->psoFoodOrders);
+        pstCurrent->psoFoodOrders = NULL;
     }
 
     // Fix reservation numbers and free
     free(pstCurrent->pszName);
+    pstCurrent->pszName = NULL;
 
     fixReservationNumbersFromIndex(pslList, pstCurrent->iReservationNumber-1);
 
     free(pstCurrent);
+    pstCurrent = NULL;
     pslList->iSize--;
 
     return 0;
